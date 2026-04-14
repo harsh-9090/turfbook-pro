@@ -1,0 +1,69 @@
+import { Link } from "react-router-dom";
+import { MapPin, Phone, Mail, Clock } from "lucide-react";
+
+export default function FooterSection() {
+  return (
+    <footer id="contact" className="py-16 border-t border-border">
+      <div className="container mx-auto px-4 lg:px-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-gradient-turf flex items-center justify-center">
+                <span className="font-heading font-bold text-primary-foreground text-lg">T</span>
+              </div>
+              <span className="font-heading font-bold text-xl text-foreground">
+                Turf<span className="text-gradient-turf">Zone</span>
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Premium sports turf with world-class facilities. Book online, show up, and play.
+            </p>
+          </div>
+
+          <div>
+            <h4 className="font-heading font-semibold text-foreground mb-4">Quick Links</h4>
+            <ul className="space-y-2">
+              {[{ name: "Home", path: "/" }, { name: "Book Now", path: "/book" }, { name: "Gallery", path: "/#gallery" }, { name: "Pricing", path: "/#pricing" }].map((link) => (
+                <li key={link.name}>
+                  <Link to={link.path} className="text-sm text-muted-foreground hover:text-primary transition-colors">{link.name}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-heading font-semibold text-foreground mb-4">Contact</h4>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                <MapPin className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
+                123 Sports Complex, Green Park, Mumbai 400001
+              </li>
+              <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Phone className="w-4 h-4 text-primary flex-shrink-0" />
+                +91 98765 43210
+              </li>
+              <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Mail className="w-4 h-4 text-primary flex-shrink-0" />
+                hello@turfzone.com
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-heading font-semibold text-foreground mb-4">Hours</h4>
+            <ul className="space-y-2">
+              <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="w-4 h-4 text-primary flex-shrink-0" />
+                Mon–Sun: 6:00 AM – 11:00 PM
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="border-t border-border pt-8 text-center">
+          <p className="text-sm text-muted-foreground">© 2026 TurfZone. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  );
+}
