@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Star, Users, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-arena.jpg";
+import logoImage from "@/assets/logo.png";
 
 export default function HeroSection() {
   return (
@@ -19,9 +20,18 @@ export default function HeroSection() {
       <div className="container mx-auto px-4 lg:px-8 relative z-10 pt-20">
         <div className="max-w-3xl">
           <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7 }}
+            className="mb-6"
+          >
+            <img src={logoImage} alt="Akola Sports Arena logo" className="w-24 h-24 sm:w-32 sm:h-32 rounded-full shadow-turf-lg object-cover" />
+          </motion.div>
+
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6"
           >
             <Star className="w-4 h-4 text-primary" />
