@@ -4,7 +4,7 @@ import { Environment } from "@react-three/drei";
 import * as THREE from "three";
 
 function CricketBall() {
-  const ref = useRef<THREE.Mesh>(null);
+  const ref = useRef<THREE.Group>(null);
   const startTime = useRef(0);
 
   useFrame(({ clock }) => {
