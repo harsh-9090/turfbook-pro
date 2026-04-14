@@ -9,24 +9,38 @@ export default function FooterSection() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-lg bg-gradient-turf flex items-center justify-center">
-                <span className="font-heading font-bold text-primary-foreground text-lg">T</span>
+                <span className="font-heading font-bold text-primary-foreground text-lg">S</span>
               </div>
               <span className="font-heading font-bold text-xl text-foreground">
-                Turf<span className="text-gradient-turf">Zone</span>
+                Strike<span className="text-gradient-turf">Arena</span>
               </span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Premium sports turf with world-class facilities. Book online, show up, and play.
+              Premium sports arena with cricket turf, snooker & pool. Book online, show up, and play.
             </p>
           </div>
 
           <div>
             <h4 className="font-heading font-semibold text-foreground mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              {[{ name: "Home", path: "/" }, { name: "Book Now", path: "/book" }, { name: "Gallery", path: "/#gallery" }, { name: "Pricing", path: "/#pricing" }].map((link) => (
+              {[
+                { name: "Home", path: "/" },
+                { name: "Book Now", path: "/book" },
+                { name: "Facilities", path: "/#facilities" },
+                { name: "Pricing", path: "/#pricing" },
+              ].map((link) => (
                 <li key={link.name}>
                   <Link to={link.path} className="text-sm text-muted-foreground hover:text-primary transition-colors">{link.name}</Link>
                 </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-heading font-semibold text-foreground mb-4">Our Sports</h4>
+            <ul className="space-y-2">
+              {["Cricket Nets", "Snooker Tables", "Pool Tables", "Tournaments"].map((s) => (
+                <li key={s} className="text-sm text-muted-foreground">{s}</li>
               ))}
             </ul>
           </div>
@@ -44,24 +58,18 @@ export default function FooterSection() {
               </li>
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-                hello@turfzone.com
+                hello@strikearena.com
               </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-heading font-semibold text-foreground mb-4">Hours</h4>
-            <ul className="space-y-2">
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="w-4 h-4 text-primary flex-shrink-0" />
-                Mon–Sun: 6:00 AM – 11:00 PM
+                Mon–Sun: 6:00 AM – 12:00 AM
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-border pt-8 text-center">
-          <p className="text-sm text-muted-foreground">© 2026 TurfZone. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">© 2026 StrikeArena. All rights reserved.</p>
         </div>
       </div>
     </footer>

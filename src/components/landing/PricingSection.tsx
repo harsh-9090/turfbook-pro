@@ -5,28 +5,31 @@ import { Button } from "@/components/ui/button";
 
 const plans = [
   {
-    name: "Weekday",
-    subtitle: "Mon – Fri (6AM – 5PM)",
-    price: "₹800",
-    unit: "/hour",
-    features: ["Standard lighting", "Changing rooms access", "Free parking", "Drinking water"],
-    popular: false,
-  },
-  {
-    name: "Evening & Weekend",
-    subtitle: "Mon–Fri (5PM+) & Sat–Sun",
+    name: "Cricket Turf",
+    subtitle: "Per lane, per hour",
     price: "₹1,200",
     unit: "/hour",
-    features: ["LED flood lights", "Changing rooms access", "Free parking", "Drinking water", "Bibs provided", "Priority support"],
+    features: ["Weekday rate (6AM–5PM)", "Weekend: ₹1,800/hr", "Peak hours (5PM+): +₹300", "Bowling machine included", "Stumps & safety gear", "LED floodlights"],
     popular: true,
+    facility: "cricket",
   },
   {
-    name: "Tournament",
-    subtitle: "Full day / Half day",
-    price: "₹8,000",
-    unit: "/half day",
-    features: ["Full day: ₹15,000", "Dedicated coordinator", "Score tracking", "Referee available", "Refreshments", "Trophy included"],
+    name: "Snooker",
+    subtitle: "Per table, per hour",
+    price: "₹400",
+    unit: "/hour",
+    features: ["Weekday rate", "Weekend: ₹500/hr", "Peak hours (6PM+): +₹100", "Championship table", "Premium cues provided", "AC lounge"],
     popular: false,
+    facility: "snooker",
+  },
+  {
+    name: "Pool",
+    subtitle: "Per table, per hour",
+    price: "₹300",
+    unit: "/hour",
+    features: ["Weekday rate", "Weekend: ₹400/hr", "Peak hours (6PM+): +₹100", "Tournament table", "Quality cues provided", "Music & ambiance"],
+    popular: false,
+    facility: "pool",
   },
 ];
 
@@ -44,7 +47,7 @@ export default function PricingSection() {
           <h2 className="font-heading text-3xl lg:text-5xl font-bold mb-4">
             Simple, <span className="text-gradient-turf">Transparent</span> Pricing
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">No hidden fees. Book a slot and play.</p>
+          <p className="text-muted-foreground max-w-2xl mx-auto">No hidden fees. Pick your sport, book a slot, and play.</p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
@@ -82,14 +85,12 @@ export default function PricingSection() {
                   </li>
                 ))}
               </ul>
-              <Link to="/book">
-                <Button
-                  className={`w-full font-semibold ${
-                    plan.popular
-                      ? "bg-gradient-turf text-primary-foreground shadow-turf hover:opacity-90"
-                      : "bg-secondary text-secondary-foreground hover:bg-surface-hover"
-                  }`}
-                >
+              <Link to={`/book?facility=${plan.facility}`}>
+                <Button className={`w-full font-semibold ${
+                  plan.popular
+                    ? "bg-gradient-turf text-primary-foreground shadow-turf hover:opacity-90"
+                    : "bg-secondary text-secondary-foreground hover:bg-surface-hover"
+                }`}>
                   Book Now
                 </Button>
               </Link>
