@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { Calendar, DollarSign, TrendingUp, Users, ArrowUpRight, Clock } from "lucide-react";
-import { stats, mockBookings } from "@/lib/mock-data";
+import { Calendar, DollarSign, TrendingUp, Clock, ArrowUpRight } from "lucide-react";
+import { stats, mockBookings, facilityLabels } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 
 const statCards = [
@@ -15,13 +15,8 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card, i) => (
-          <motion.div
-            key={card.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="rounded-xl bg-card border border-border p-5"
-          >
+          <motion.div key={card.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+            className="rounded-xl bg-card border border-border p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <card.icon className="w-5 h-5 text-primary" />
@@ -38,7 +33,6 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Recent Bookings */}
       <div className="rounded-xl bg-card border border-border">
         <div className="px-5 py-4 border-b border-border">
           <h3 className="font-heading font-semibold text-foreground">Recent Bookings</h3>
@@ -49,6 +43,7 @@ export default function AdminDashboard() {
               <tr className="border-b border-border">
                 <th className="text-left px-5 py-3 text-muted-foreground font-medium">ID</th>
                 <th className="text-left px-5 py-3 text-muted-foreground font-medium">Customer</th>
+                <th className="text-left px-5 py-3 text-muted-foreground font-medium">Facility</th>
                 <th className="text-left px-5 py-3 text-muted-foreground font-medium">Date</th>
                 <th className="text-left px-5 py-3 text-muted-foreground font-medium">Time</th>
                 <th className="text-left px-5 py-3 text-muted-foreground font-medium">Status</th>
@@ -62,6 +57,9 @@ export default function AdminDashboard() {
                   <td className="px-5 py-3">
                     <p className="font-medium text-foreground">{b.customerName}</p>
                     <p className="text-xs text-muted-foreground">{b.phone}</p>
+                  </td>
+                  <td className="px-5 py-3">
+                    <Badge variant="outline" className="text-primary border-primary/20">{facilityLabels[b.facility]}</Badge>
                   </td>
                   <td className="px-5 py-3 text-foreground">{b.date}</td>
                   <td className="px-5 py-3 text-foreground">{b.startTime}–{b.endTime}</td>
