@@ -1,14 +1,17 @@
 import { motion } from "framer-motion";
+import cricketImg from "@/assets/cricket-turf.jpg";
+import snookerImg from "@/assets/snooker-room.jpg";
+import poolImg from "@/assets/pool-room.jpg";
+import heroImg from "@/assets/hero-arena.jpg";
 import gallery1 from "@/assets/turf-gallery-1.jpg";
 import gallery2 from "@/assets/turf-gallery-2.jpg";
-import gallery3 from "@/assets/turf-gallery-3.jpg";
-import heroImg from "@/assets/hero-turf.jpg";
 
 const images = [
-  { src: heroImg, alt: "Aerial view of the turf", span: "md:col-span-2 md:row-span-2" },
-  { src: gallery1, alt: "Evening game at the turf", span: "" },
-  { src: gallery2, alt: "Premium turf surface quality", span: "" },
-  { src: gallery3, alt: "Modern changing facilities", span: "md:col-span-2" },
+  { src: heroImg, alt: "StrikeArena cricket nets aerial view", span: "md:col-span-2 md:row-span-2" },
+  { src: cricketImg, alt: "Professional cricket practice nets", span: "" },
+  { src: snookerImg, alt: "Premium snooker lounge", span: "" },
+  { src: poolImg, alt: "Modern pool tables", span: "" },
+  { src: gallery1, alt: "Evening game at the arena", span: "" },
 ];
 
 export default function GallerySection() {
@@ -23,26 +26,22 @@ export default function GallerySection() {
         >
           <p className="text-primary font-semibold mb-2 uppercase tracking-wider text-sm">Gallery</p>
           <h2 className="font-heading text-3xl lg:text-5xl font-bold mb-4">
-            See Our <span className="text-gradient-turf">Arena</span>
+            Inside <span className="text-gradient-turf">StrikeArena</span>
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-5xl mx-auto">
           {images.map((img, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ delay: i * 0.08 }}
               className={`overflow-hidden rounded-2xl ${img.span}`}
             >
-              <img
-                src={img.src}
-                alt={img.alt}
-                loading="lazy"
-                className="w-full h-full object-cover min-h-[200px] hover:scale-105 transition-transform duration-500"
-              />
+              <img src={img.src} alt={img.alt} loading="lazy"
+                className="w-full h-full object-cover min-h-[160px] hover:scale-105 transition-transform duration-500" />
             </motion.div>
           ))}
         </div>

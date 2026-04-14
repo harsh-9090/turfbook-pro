@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 const navLinks = [
   { name: "Home", path: "/" },
   { name: "Book Now", path: "/book" },
-  { name: "Gallery", path: "/#gallery" },
+  { name: "Facilities", path: "/#facilities" },
   { name: "Pricing", path: "/#pricing" },
   { name: "Contact", path: "/#contact" },
 ];
@@ -22,10 +22,10 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 lg:h-20">
           <Link to="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-gradient-turf flex items-center justify-center">
-              <span className="font-heading font-bold text-primary-foreground text-lg">T</span>
+              <span className="font-heading font-bold text-primary-foreground text-lg">S</span>
             </div>
             <span className="font-heading font-bold text-xl text-foreground">
-              Turf<span className="text-gradient-turf">Zone</span>
+              Strike<span className="text-gradient-turf">Arena</span>
             </span>
           </Link>
 
@@ -47,9 +47,7 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center gap-3">
             <Link to="/admin/login">
-              <Button variant="ghost" size="sm" className="text-muted-foreground">
-                Admin
-              </Button>
+              <Button variant="ghost" size="sm" className="text-muted-foreground">Admin</Button>
             </Link>
             <Link to="/book">
               <Button size="sm" className="bg-gradient-turf text-primary-foreground font-semibold shadow-turf hover:opacity-90 transition-opacity">
@@ -74,12 +72,8 @@ export default function Navbar() {
           >
             <div className="container mx-auto px-4 py-4 space-y-2">
               {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  onClick={() => setIsOpen(false)}
-                  className="block px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                >
+                <Link key={link.name} to={link.path} onClick={() => setIsOpen(false)}
+                  className="block px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
                   {link.name}
                 </Link>
               ))}

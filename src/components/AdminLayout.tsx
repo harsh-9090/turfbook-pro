@@ -22,29 +22,21 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 lg:translate-x-0 lg:static ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex items-center gap-2 px-6 h-16 border-b border-border">
           <div className="w-8 h-8 rounded-lg bg-gradient-turf flex items-center justify-center">
-            <span className="font-heading font-bold text-primary-foreground text-sm">T</span>
+            <span className="font-heading font-bold text-primary-foreground text-sm">S</span>
           </div>
-          <span className="font-heading font-bold text-foreground">TurfZone <span className="text-primary text-xs">Admin</span></span>
+          <span className="font-heading font-bold text-foreground">StrikeArena <span className="text-primary text-xs">Admin</span></span>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto text-muted-foreground"><X size={20} /></button>
         </div>
         <nav className="p-4 space-y-1">
           {sidebarLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              onClick={() => setSidebarOpen(false)}
+            <Link key={link.path} to={link.path} onClick={() => setSidebarOpen(false)}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === link.path
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <link.icon className="w-4 h-4" />
-              {link.name}
+                location.pathname === link.path ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}>
+              <link.icon className="w-4 h-4" />{link.name}
             </Link>
           ))}
         </nav>
@@ -55,10 +47,8 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Overlay */}
       {sidebarOpen && <div className="fixed inset-0 z-40 bg-background/80 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Main */}
       <div className="flex-1 flex flex-col min-h-screen">
         <header className="h-16 border-b border-border flex items-center px-4 lg:px-8 gap-4">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-muted-foreground"><Menu size={20} /></button>

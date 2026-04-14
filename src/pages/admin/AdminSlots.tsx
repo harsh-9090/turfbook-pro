@@ -2,52 +2,58 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { generateSlots, type Slot } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
+import { generateSlots, type Slot, type FacilityType, facilityLabels } from "@/lib/mock-data";
 import { Lock, Unlock } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminSlots() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [slots, setSlots] = useState<Slot[]>(generateSlots(new Date()));
+  const [facility, setFacility] = useState<FacilityType>("cricket");
+  const [slots, setSlots] = useState<Slot[]>(generateSlots(new Date(), "cricket"));
 
   const handleDateChange = (date: Date | undefined) => {
     if (!date) return;
     setSelectedDate(date);
-    setSlots(generateSlots(date));
+    setSlots(generateSlots(date, facility));
+  };
+
+  const handleFacilityChange = (f: FacilityType) => {
+    setFacility(f);
+    setSlots(generateSlots(selectedDate, f));
   };
 
   const toggleSlot = (id: string) => {
-    setSlots((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, isAvailable: !s.isAvailable } : s))
-    );
+    setSlots((prev) => prev.map((s) => (s.id === id ? { ...s, isAvailable: !s.isAvailable } : s)));
     const slot = slots.find((s) => s.id === id);
     toast.success(`Slot ${slot?.startTime} ${slot?.isAvailable ? "blocked" : "unblocked"}`);
   };
 
   return (
     <div className="space-y-6">
+      {/* Facility filter */}
+      <div className="flex gap-2">
+        {(["cricket", "snooker", "pool"] as FacilityType[]).map((f) => (
+          <Button key={f} size="sm" variant={facility === f ? "default" : "outline"}
+            onClick={() => handleFacilityChange(f)}
+            className={facility === f ? "bg-gradient-turf text-primary-foreground" : ""}>
+            {facilityLabels[f]}
+          </Button>
+        ))}
+      </div>
+
       <div className="flex flex-col lg:flex-row gap-6">
         <div>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={handleDateChange}
-            className="rounded-xl border border-border bg-card p-4 pointer-events-auto"
-          />
+          <Calendar mode="single" selected={selectedDate} onSelect={handleDateChange}
+            className="rounded-xl border border-border bg-card p-4 pointer-events-auto" />
         </div>
         <div className="flex-1">
           <h3 className="font-heading font-semibold text-foreground mb-4">
-            Slots for {format(selectedDate, "EEEE, MMMM d, yyyy")}
+            {facilityLabels[facility]} — {format(selectedDate, "EEEE, MMMM d, yyyy")}
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {slots.map((slot) => (
-              <div
-                key={slot.id}
-                className={`p-4 rounded-xl border transition-all ${
-                  slot.isAvailable ? "bg-card border-primary/20" : "bg-muted/30 border-border"
-                }`}
-              >
+              <div key={slot.id}
+                className={`p-4 rounded-xl border transition-all ${slot.isAvailable ? "bg-card border-primary/20" : "bg-muted/30 border-border"}`}>
                 <p className="font-semibold text-foreground text-sm">{slot.startTime} – {slot.endTime}</p>
                 <p className="text-xs text-muted-foreground mb-2">₹{slot.price}</p>
                 <div className="flex items-center justify-between">
