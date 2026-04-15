@@ -25,7 +25,7 @@ export default function HeroSection() {
             transition={{ duration: 0.7 }}
             className="mb-6"
           >
-            <img src={logoImage} alt="Akola Sports Arena logo" className="w-24 h-24 sm:w-32 sm:h-32 rounded-full shadow-turf-lg object-cover" />
+            <img src={logoImage} alt="Akola Sports Arena logo" className="w-24 h-24 sm:w-32 sm:h-32 rounded-full shadow-turf-lg object-cover mx-auto" />
           </motion.div>
 
           <motion.div
@@ -53,7 +53,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg sm:text-xl text-muted-foreground max-w-xl mb-8"
+            className="text-lg sm:text-xl text-muted-foreground max-w-xl mb-8 mx-auto"
           >
             Premium cricket turf with professional nets, plus exclusive snooker & pool lounge. Book your session in seconds and just show up to play.
           </motion.p>
@@ -62,7 +62,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 mb-12"
+            className="flex flex-col sm:flex-row gap-4 mb-12 justify-center"
           >
             <Link to="/book">
               <Button size="lg" className="bg-gradient-turf text-primary-foreground font-semibold text-lg px-8 shadow-turf hover:opacity-90 transition-opacity group">
@@ -81,7 +81,7 @@ export default function HeroSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="flex flex-wrap gap-8"
+            className="flex flex-wrap gap-8 justify-center"
           >
             {[
               { icon: Users, label: "10,000+", sub: "Sessions Played" },
