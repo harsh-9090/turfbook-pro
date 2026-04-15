@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/ThemeProvider";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -15,6 +16,7 @@ const navLinks = [
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-strong">
@@ -46,6 +48,13 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             <Link to="/admin/login">
               <Button variant="ghost" size="sm" className="text-muted-foreground">Admin</Button>
             </Link>
@@ -56,9 +65,18 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <button className="md:hidden text-foreground" onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 rounded-lg flex items-center justify-center text-foreground"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button className="text-foreground" onClick={() => setIsOpen(!isOpen)}>
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
 
