@@ -18,7 +18,7 @@ export default function HeroSection() {
       <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-accent/10 rounded-full blur-[100px]" />
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10 pt-20">
-        <div className="max-w-3xl">
+        <div className="max-w-3xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
