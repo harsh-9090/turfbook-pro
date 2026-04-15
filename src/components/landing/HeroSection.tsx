@@ -5,18 +5,74 @@ import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-arena.jpg";
 import logoImage from "@/assets/logo.png";
 
+const floatingParticles = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  size: Math.random() * 4 + 2,
+  x: Math.random() * 100,
+  y: Math.random() * 100,
+  duration: Math.random() * 8 + 6,
+  delay: Math.random() * 5,
+}));
+
 export default function HeroSection() {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
+      {/* Background Image */}
       <div className="absolute inset-0">
-        <img src={heroImage} alt="StrikeArena premium sports facility" className="w-full h-full object-cover" width={1920} height={1080} />
+        <img src={heroImage} alt="Akola Sports Arena premium sports facility" className="w-full h-full object-cover" width={1920} height={1080} />
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background/90" />
         <div className="absolute inset-0 bg-background/40" />
       </div>
 
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/20 rounded-full blur-[120px]" />
-      <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-accent/10 rounded-full blur-[100px]" />
+      {/* Animated Glowing Orbs */}
+      <motion.div
+        className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/20 rounded-full blur-[120px]"
+        animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.15, 1] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute bottom-1/4 right-0 w-80 h-80 bg-accent/15 rounded-full blur-[100px]"
+        animate={{ x: [0, -50, 0], y: [0, 40, 0], scale: [1, 1.2, 1] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+      />
+      <motion.div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px]"
+        animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      />
 
+      {/* Floating Particles */}
+      <div className="absolute inset-0 z-[1] pointer-events-none">
+        {floatingParticles.map((p) => (
+          <motion.div
+            key={p.id}
+            className="absolute rounded-full bg-primary/30"
+            style={{ width: p.size, height: p.size, left: `${p.x}%`, top: `${p.y}%` }}
+            animate={{
+              y: [0, -60, 0],
+              x: [0, Math.random() > 0.5 ? 20 : -20, 0],
+              opacity: [0, 0.8, 0],
+            }}
+            transition={{
+              duration: p.duration,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: p.delay,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Subtle Grid Overlay */}
+      <div
+        className="absolute inset-0 z-[1] opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`,
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+      {/* Content */}
       <div className="container mx-auto px-4 lg:px-8 relative z-10 pt-20">
         <div className="max-w-3xl mx-auto text-center">
           <motion.div
@@ -25,7 +81,13 @@ export default function HeroSection() {
             transition={{ duration: 0.7 }}
             className="mb-6"
           >
-            <img src={logoImage} alt="Akola Sports Arena logo" className="w-24 h-24 sm:w-32 sm:h-32 rounded-full shadow-turf-lg object-cover mx-auto" />
+            <motion.img
+              src={logoImage}
+              alt="Akola Sports Arena logo"
+              className="w-24 h-24 sm:w-32 sm:h-32 rounded-full shadow-turf-lg object-cover mx-auto"
+              animate={{ boxShadow: ["0 0 20px hsl(var(--primary) / 0.2)", "0 0 40px hsl(var(--primary) / 0.4)", "0 0 20px hsl(var(--primary) / 0.2)"] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
           </motion.div>
 
           <motion.div
