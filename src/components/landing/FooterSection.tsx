@@ -12,7 +12,7 @@ export default function FooterSection() {
                 <span className="font-heading font-bold text-primary-foreground text-lg">S</span>
               </div>
               <span className="font-heading font-bold text-xl text-foreground">
-                Strike<span className="text-gradient-turf">Arena</span>
+                Akola <span className="text-gradient-turf">Sports</span>
               </span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -58,7 +58,7 @@ export default function FooterSection() {
               </li>
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-                hello@strikearena.com
+                hello@akolasportsarena.com
               </li>
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="w-4 h-4 text-primary flex-shrink-0" />
@@ -69,7 +69,7 @@ export default function FooterSection() {
         </div>
 
         <div className="border-t border-border pt-8 text-center">
-          <p className="text-sm text-muted-foreground">© 2026 StrikeArena. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">© 2026 Akola Sports Arena. All rights reserved.</p>
         </div>
       </div>
     </footer>

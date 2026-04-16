@@ -27,7 +27,7 @@ export default function Navbar() {
               <span className="font-heading font-bold text-primary-foreground text-lg">S</span>
             </div>
             <span className="font-heading font-bold text-xl text-foreground">
-              Strike<span className="text-gradient-turf">Arena</span>
+              Akola <span className="text-gradient-turf">Sports</span>
             </span>
           </Link>
 
