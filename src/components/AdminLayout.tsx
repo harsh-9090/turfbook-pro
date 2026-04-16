@@ -27,7 +27,7 @@ export default function AdminLayout() {
           <div className="w-8 h-8 rounded-lg bg-gradient-turf flex items-center justify-center">
             <span className="font-heading font-bold text-primary-foreground text-sm">S</span>
           </div>
-          <span className="font-heading font-bold text-foreground">StrikeArena <span className="text-primary text-xs">Admin</span></span>
+          <span className="font-heading font-bold text-foreground">Akola Sports <span className="text-primary text-xs">Admin</span></span>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto text-muted-foreground"><X size={20} /></button>
         </div>
         <nav className="p-4 space-y-1">
