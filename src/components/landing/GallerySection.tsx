@@ -7,7 +7,7 @@ import gallery1 from "@/assets/turf-gallery-1.jpg";
 import gallery2 from "@/assets/turf-gallery-2.jpg";
 
 const images = [
-  { src: heroImg, alt: "StrikeArena cricket nets aerial view", span: "md:col-span-2 md:row-span-2" },
+  { src: heroImg, alt: "Akola Sports Arena cricket nets aerial view", span: "md:col-span-2 md:row-span-2" },
   { src: cricketImg, alt: "Professional cricket practice nets", span: "" },
   { src: snookerImg, alt: "Premium snooker lounge", span: "" },
   { src: poolImg, alt: "Modern pool tables", span: "" },
@@ -26,7 +26,7 @@ export default function GallerySection() {
         >
           <p className="text-primary font-semibold mb-2 uppercase tracking-wider text-sm">Gallery</p>
           <h2 className="font-heading text-3xl lg:text-5xl font-bold mb-4">
-            Inside <span className="text-gradient-turf">StrikeArena</span>
+            Inside <span className="text-gradient-turf">Akola Sports Arena</span>
           </h2>
         </motion.div>
 
