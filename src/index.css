@@ -150,10 +150,34 @@
     animation: pulse-glow 2s ease-in-out infinite;
   }
   .glass {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+    @apply bg-card/80 border border-border/50;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
   .glass-strong {
-    @apply bg-card/90 backdrop-blur-2xl border border-border/60;
+    @apply bg-card/90 border border-border/60;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  .hero-overlay {
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--background) / 0.4),
+      hsl(var(--background) / 0.35),
+      hsl(var(--background) / 0.5)
+    );
+  }
+  .light .hero-overlay,
+  :root.light .hero-overlay {
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--background) / 0.45),
+      hsl(var(--background) / 0.35),
+      hsl(var(--background) / 0.55)
+    );
+  }
+  .hero-text-shadow {
+    text-shadow: 0 2px 12px hsl(var(--background) / 0.6);
   }
 }
 
