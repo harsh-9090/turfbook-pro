@@ -11,7 +11,13 @@ import AdminLayout from "./components/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminSlots from "./pages/admin/AdminSlots";
+import AdminFacilities from "./pages/admin/AdminFacilities";
+import AdminSchedules from "./pages/admin/AdminSchedules";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminTables from "./pages/admin/AdminTables";
+import AdminPricing from "./pages/admin/AdminPricing";
+import AdminGallery from "./pages/admin/AdminGallery";
+import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,7 +50,13 @@ const App = () => (
               <Route index element={<AdminDashboard />} />
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="slots" element={<AdminSlots />} />
+              <Route path="facilities" element={<AdminFacilities />} />
+              <Route path="schedules" element={<AdminSchedules />} />
+              <Route path="tables" element={<AdminTables />} />
               <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="pricing" element={<AdminPricing />} />
+              <Route path="gallery" element={<AdminGallery />} />
+              <Route path="testimonials" element={<AdminTestimonials />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

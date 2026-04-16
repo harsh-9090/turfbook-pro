@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { format, addDays } from "date-fns";
+import { format, addDays, startOfDay, parse, isAfter } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, Clock, User, Phone, ArrowRight, CheckCircle2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { generateSlots, type Slot, type FacilityType, facilityLabels } from "@/lib/mock-data";
+import { type Slot, type FacilityType, facilityLabels } from "@/lib/mock-data";
+import api from "@/lib/api";
+import { useSocket } from "@/hooks/useSocket";
 import Navbar from "@/components/Navbar";
 import FooterSection from "@/components/landing/FooterSection";
 import { toast } from "sonner";
@@ -30,28 +32,105 @@ export default function BookingPage() {
   const [step, setStep] = useState<Step>(preselected ? "date" : "facility");
   const [facility, setFacility] = useState<FacilityType>(preselected || "cricket");
   const [selectedDate, setSelectedDate] = useState<Date>();
-  const [slots, setSlots] = useState<Slot[]>([]);
-  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [groupedSlots, setGroupedSlots] = useState<{ time: string, price: number, slots: any[], availableSlots: any[], isAvailable: boolean }[]>([]);
+  const [selectedSlotGroup, setSelectedSlotGroup] = useState<any | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<any | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  
+  // Table-based state for snooker/pool
+  const [tableStatus, setTableStatus] = useState<any[]>([]);
+  const [selectedTableSlot, setSelectedTableSlot] = useState<any | null>(null);
 
-  const handleFacilitySelect = (f: FacilityType) => {
+  const isTableSport = facility === "snooker" || facility === "pool";
+
+  const handleFacilitySelect = async (f: FacilityType) => {
     setFacility(f);
-    setStep("date");
+    if (f === "snooker" || f === "pool") {
+      // Fetch live table status instead of date-based slots
+      try {
+        const res = await api.get(`/facilities/tables-status/${f}`);
+        setTableStatus(res.data);
+      } catch { toast.error("Failed to load table status"); }
+      setStep("slot"); // Skip date, go straight to table view
+    } else {
+      setStep("date");
+    }
   };
 
-  const handleDateSelect = (date: Date | undefined) => {
+  const handleDateSelect = async (date: Date | undefined) => {
     if (!date) return;
     setSelectedDate(date);
-    setSlots(generateSlots(date, facility));
-    setSelectedSlot(null);
-    setStep("slot");
+    try {
+      const formattedDate = format(date, "yyyy-MM-dd");
+      const response = await api.get(`/slots?date=${formattedDate}&facility_type=${facility}`);
+      
+      const groups: Record<string, any[]> = {};
+      response.data.forEach((s: any) => {
+        const time = s.start_time.substring(0, 5) + " – " + s.end_time.substring(0, 5);
+        if (!groups[time]) groups[time] = [];
+        groups[time].push(s);
+      });
+
+      const mappedGroups = Object.entries(groups).map(([time, arr]) => {
+        let availableSlots = arr.filter(s => s.is_available);
+        
+        const now = new Date();
+        availableSlots = availableSlots.filter(s => {
+          const slotDateTime = parse(`${formattedDate} ${s.start_time.substring(0, 5)}`, "yyyy-MM-dd HH:mm", new Date());
+          return isAfter(slotDateTime, now);
+        });
+
+        return {
+          time,
+          price: Number(arr[0].price),
+          slots: arr,
+          availableSlots,
+          isAvailable: availableSlots.length > 0
+        };
+      });
+      
+      setGroupedSlots(mappedGroups);
+      setSelectedSlotGroup(null);
+      setSelectedSlot(null);
+      setStep("slot");
+    } catch (error) {
+      toast.error("Failed to load slots");
+    }
   };
 
-  const handleSlotSelect = (slot: Slot) => {
-    if (!slot.isAvailable) return;
-    setSelectedSlot(slot);
+  useSocket('booking_updated', () => {
+    if (selectedDate && step === "slot") handleDateSelect(selectedDate);
+  });
+
+  useSocket('slot_updated', () => {
+    if (selectedDate && step === "slot") handleDateSelect(selectedDate);
+  });
+
+  const handleGroupSelect = (group: any) => {
+    setSelectedSlotGroup(group);
+    setSelectedSlot(group.availableSlots[0]);
     setStep("details");
+  };
+
+  const handleTableSelect = async (facility_id: string, tableName: string, hourlyRate: number) => {
+    // For snooker/pool: user picks an available table, we find/create a slot for it
+    const today = format(new Date(), "yyyy-MM-dd");
+    try {
+      const slotsRes = await api.get(`/slots?date=${today}&turf_id=${facility_id}`);
+      const availableSlot = slotsRes.data.find((s: any) => s.is_available);
+      if (availableSlot) {
+        setSelectedSlot(availableSlot);
+        setSelectedTableSlot({ name: tableName, rate: hourlyRate });
+        setSelectedDate(new Date());
+        setSelectedSlotGroup({ time: 'Walk-in Session', price: hourlyRate });
+        setStep("details");
+      } else {
+        toast.error("No available booking slots for this table today.");
+      }
+    } catch {
+      toast.error("Failed to book this table.");
+    }
   };
 
   const handleSubmit = () => {
@@ -62,15 +141,27 @@ export default function BookingPage() {
     setStep("confirm");
   };
 
-  const handleConfirmBooking = () => {
-    toast.success("Booking confirmed! Confirmation sent to your phone.");
-    setStep("success");
+  const handleConfirmBooking = async () => {
+    if (!selectedSlot) return;
+    try {
+      await api.post('/bookings', {
+        name,
+        phone,
+        slot_id: selectedSlot.id
+      });
+      toast.success("Booking confirmed! Confirmation sent to your phone.");
+      setStep("success");
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Booking failed");
+    }
   };
 
   const resetBooking = () => {
     setStep("facility");
     setSelectedDate(undefined);
     setSelectedSlot(null);
+    setSelectedTableSlot(null);
+    setTableStatus([]);
     setName("");
     setPhone("");
   };
@@ -141,41 +232,108 @@ export default function BookingPage() {
                     mode="single"
                     selected={selectedDate}
                     onSelect={handleDateSelect}
-                    disabled={(date) => date < new Date() || date > addDays(new Date(), 30)}
+                    disabled={(date) => date < startOfDay(new Date()) || date > addDays(new Date(), 30)}
                     className="rounded-2xl border border-border bg-card p-4 pointer-events-auto"
                   />
                 </div>
               </motion.div>
             )}
 
-            {/* Step 3: Slot */}
+            {/* Step 3: Slot / Table View */}
             {step === "slot" && (
               <motion.div key="slot" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <div className="text-center mb-8">
-                  <h1 className="font-heading text-3xl lg:text-4xl font-bold mb-2">Choose a <span className="text-gradient-turf">Slot</span></h1>
-                  <p className="text-muted-foreground">
-                    <span className="text-primary font-medium">{facilityLabels[facility]}</span> · {selectedDate && format(selectedDate, "EEEE, MMMM d, yyyy")}
-                    <button onClick={() => setStep("date")} className="ml-2 text-primary hover:underline text-sm">Change</button>
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {slots.map((slot) => (
-                    <button key={slot.id} disabled={!slot.isAvailable} onClick={() => handleSlotSelect(slot)}
-                      className={`p-4 rounded-xl border text-left transition-all duration-200 ${
-                        !slot.isAvailable ? "bg-muted/30 border-border/50 opacity-50 cursor-not-allowed"
-                          : selectedSlot?.id === slot.id ? "bg-primary/10 border-primary shadow-turf"
-                          : "bg-card border-border hover:border-primary/40 hover:shadow-turf cursor-pointer"
-                      }`}>
-                      <div className="flex items-center gap-1 mb-1">
-                        <Clock className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-sm font-semibold text-foreground">{slot.startTime}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{slot.startTime} – {slot.endTime}</p>
-                      <p className="text-sm font-bold text-primary mt-1">₹{slot.price}</p>
-                      {!slot.isAvailable && <p className="text-xs text-destructive mt-1">Booked</p>}
-                    </button>
-                  ))}
-                </div>
+                {isTableSport ? (
+                  /* ------- TABLE-BASED VIEW (Snooker/Pool) ------- */
+                  <>
+                    <div className="text-center mb-8">
+                      <button onClick={() => setStep("facility")} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-4 transition-colors">
+                        <ArrowLeft className="w-4 h-4" /> Change sport
+                      </button>
+                      <h1 className="font-heading text-3xl lg:text-4xl font-bold mb-2">Live <span className="text-gradient-turf">Tables</span></h1>
+                      <p className="text-muted-foreground">See real-time availability for <span className="text-primary font-medium">{facilityLabels[facility]}</span></p>
+                    </div>
+                    {tableStatus.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">No {facilityLabels[facility]} tables found.</div>
+                    ) : (
+                      tableStatus.map((fac: any) => (
+                        <div key={fac.id} className="mb-6">
+                          <h3 className="font-heading font-semibold text-foreground mb-3">
+                            {fac.name} <span className="text-sm text-muted-foreground font-normal">({fac.table_count} tables • ₹{fac.hourly_rate}/hr)</span>
+                          </h3>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {fac.tables.map((t: any) => (
+                              <div key={t.number} className={`rounded-xl border p-4 transition-all duration-200 ${
+                                t.status === 'occupied'
+                                  ? 'border-red-500/40 bg-red-500/5 opacity-70 cursor-not-allowed'
+                                  : 'border-border bg-card hover:border-primary/40 hover:shadow-turf cursor-pointer'
+                              }`}
+                                onClick={() => t.status === 'available' && handleTableSelect(fac.id, t.name, fac.hourly_rate)}
+                              >
+                                <h4 className="font-heading font-bold text-foreground text-sm mb-1">Table #{t.number}</h4>
+                                {t.status === 'occupied' ? (
+                                  <>
+                                    <div className="flex items-center gap-1.5 mb-2">
+                                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                                      <span className="text-red-500 text-[10px] uppercase tracking-wider font-bold">Occupied</span>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground">Currently in use</p>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="flex items-center gap-1.5 mb-2">
+                                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                      <span className="text-emerald-500 text-[10px] uppercase tracking-wider font-bold">Available</span>
+                                    </div>
+                                    <p className="text-xs font-bold text-primary">₹{fac.hourly_rate}/hr</p>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </>
+                ) : (
+                  /* ------- SLOT-BASED VIEW (Cricket) ------- */
+                  <>
+                    <div className="text-center mb-8">
+                      <h1 className="font-heading text-3xl lg:text-4xl font-bold mb-2">Choose a <span className="text-gradient-turf">Slot</span></h1>
+                      <p className="text-muted-foreground">
+                        <span className="text-primary font-medium">{facilityLabels[facility]}</span> · {selectedDate && format(selectedDate, "EEEE, MMMM d, yyyy")}
+                        <button onClick={() => setStep("date")} className="ml-2 text-primary hover:underline text-sm">Change</button>
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {groupedSlots.map((group) => (
+                        <button key={group.time} onClick={() => group.isAvailable && handleGroupSelect(group)}
+                          disabled={!group.isAvailable}
+                          className={`p-4 rounded-xl border text-left transition-all duration-200 ${
+                            !group.isAvailable ? "bg-muted/30 border-border/50 opacity-50 cursor-not-allowed"
+                              : selectedSlotGroup?.time === group.time ? "bg-primary/10 border-primary shadow-turf"
+                              : "bg-card border-border hover:border-primary/40 hover:shadow-turf cursor-pointer"
+                          }`}>
+                          <div className="flex items-center gap-1 mb-1">
+                            <Clock className={`w-3.5 h-3.5 ${group.isAvailable ? "text-primary" : "text-muted-foreground"}`} />
+                            <span className={`text-sm font-semibold ${group.isAvailable ? "text-foreground" : "text-muted-foreground"}`}>{group.time.split(' – ')[0]}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{group.time}</p>
+                          <p className={`text-sm font-bold mt-1 ${group.isAvailable ? "text-primary" : "text-muted-foreground"}`}>₹{group.price}</p>
+                          {group.isAvailable ? (
+                            <p className="text-[10px] text-primary/80 mt-1 font-medium">{group.availableSlots.length} table(s) available</p>
+                          ) : (
+                            <p className="text-[10px] text-destructive mt-1 font-semibold">Booked Full</p>
+                          )}
+                        </button>
+                      ))}
+                      {groupedSlots.length === 0 && (
+                        <div className="col-span-full py-12 text-center text-muted-foreground">
+                          No slots available on this date for {facilityLabels[facility]}. Try another day!
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </motion.div>
             )}
 
@@ -218,14 +376,20 @@ export default function BookingPage() {
                   <h1 className="font-heading text-3xl font-bold mb-2">Confirm <span className="text-gradient-turf">Booking</span></h1>
                 </div>
                 <div className="rounded-2xl bg-card border border-border p-6 space-y-4 mb-6">
-                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Facility</span><span className="text-foreground font-medium">{facilityLabels[facility]}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Date</span><span className="text-foreground font-medium">{format(selectedDate, "PPP")}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Time</span><span className="text-foreground font-medium">{selectedSlot.startTime} – {selectedSlot.endTime}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Event</span><span className="text-foreground font-medium">{facilityLabels[facility]}</span></div>
+                  {selectedTableSlot ? (
+                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Table</span><span className="text-foreground font-medium">{selectedTableSlot.name}</span></div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between text-sm"><span className="text-muted-foreground">Date</span><span className="text-foreground font-medium">{format(selectedDate, "PPP")}</span></div>
+                      <div className="flex justify-between text-sm"><span className="text-muted-foreground">Time</span><span className="text-foreground font-medium">{selectedSlotGroup?.time}</span></div>
+                    </>
+                  )}
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Name</span><span className="text-foreground font-medium">{name}</span></div>
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Phone</span><span className="text-foreground font-medium">{phone}</span></div>
                   <div className="border-t border-border pt-4 flex justify-between">
-                    <span className="font-semibold text-foreground">Total</span>
-                    <span className="font-heading text-2xl font-bold text-primary">₹{selectedSlot.price}</span>
+                    <span className="font-semibold text-foreground">{selectedTableSlot ? "Rate" : "Total"}</span>
+                    <span className="font-heading text-2xl font-bold text-primary">₹{selectedSlotGroup?.price}{selectedTableSlot ? "/hr" : ""}</span>
                   </div>
                 </div>
                 <div className="flex gap-3">

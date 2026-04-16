@@ -1,0 +1,201 @@
+const express = require('express');
+const router = express.Router();
+const pool = require('../config/db');
+const authMiddleware = require('../middleware/auth');
+
+// Public: Get all facilities
+router.get('/', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM turfs ORDER BY created_at ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Public: Get live table status for snooker/pool (user booking page)
+router.get('/tables-status/:facility_type', async (req, res) => {
+  try {
+    const { facility_type } = req.params;
+    // Get all facilities of this type
+    const { rows: facilities } = await pool.query(
+      'SELECT id, name, facility_type, weekday_day_price, table_count FROM turfs WHERE facility_type = $1',
+      [facility_type]
+    );
+    // Get all running sessions for these facilities
+    const facilityIds = facilities.map(f => f.id);
+    let runningSessions = [];
+    if (facilityIds.length > 0) {
+      const { rows } = await pool.query(
+        `SELECT turf_id, name FROM table_sessions WHERE status = 'running' AND turf_id = ANY($1)`,
+        [facilityIds]
+      );
+      runningSessions = rows;
+    }
+    // Build table status for each facility
+    const result = facilities.map(f => {
+      const count = f.table_count || 1;
+      const tables = [];
+      for (let i = 1; i <= count; i++) {
+        const tableName = `${f.name} #${i}`;
+        const isOccupied = runningSessions.some(s => s.name === tableName && s.turf_id === f.id);
+        tables.push({
+          number: i,
+          name: tableName,
+          status: isOccupied ? 'occupied' : 'available',
+        });
+      }
+      return {
+        id: f.id,
+        name: f.name,
+        facility_type: f.facility_type,
+        hourly_rate: f.weekday_day_price,
+        table_count: count,
+        tables,
+      };
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+});
+
+// Admin: Add a new facility
+router.post('/', authMiddleware, async (req, res) => {
+  try {
+    const { facility_type, description, location, weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, table_count, opening_hour, closing_hour } = req.body;
+    if (!facility_type) return res.status(400).json({ error: 'facility_type required' });
+
+    const generatedName = facility_type.charAt(0).toUpperCase() + facility_type.slice(1) + (facility_type === 'cricket' ? ' Turf' : ' Table');
+
+    const result = await pool.query(
+      `INSERT INTO turfs (name, facility_type, description, location, weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, table_count, opening_hour, closing_hour) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+      [generatedName, facility_type, description, location || 'Dynamic Arena', weekday_day_price || 800, weekday_night_price || 1200, weekend_day_price || 1200, weekend_night_price || 1500, table_count || 1, opening_hour || 6, closing_hour || 23]
+    );
+    req.app.get('io').emit('facility_updated');
+    req.app.get('io').emit('template_updated');
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+});
+
+// Admin: Update table count
+router.patch('/:id/tables', authMiddleware, async (req, res) => {
+  try {
+    const { table_count } = req.body;
+    if (!table_count || table_count < 1) return res.status(400).json({ error: 'table_count must be at least 1' });
+    const result = await pool.query('UPDATE turfs SET table_count = $1 WHERE id = $2 RETURNING *', [table_count, req.params.id]);
+    req.app.get('io').emit('facility_updated');
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+});
+
+// Admin: Update opening/closing hours
+router.patch('/:id/hours', authMiddleware, async (req, res) => {
+  try {
+    const { opening_hour, closing_hour } = req.body;
+    if (opening_hour == null || closing_hour == null) return res.status(400).json({ error: 'opening_hour and closing_hour required' });
+    if (opening_hour < 0 || closing_hour > 24 || opening_hour >= closing_hour) return res.status(400).json({ error: 'Invalid hours range' });
+
+    await pool.query('UPDATE turfs SET opening_hour = $1, closing_hour = $2 WHERE id = $3', [opening_hour, closing_hour, req.params.id]);
+
+    // Delete unbooked slots that now fall outside the new range
+    await pool.query(`
+      DELETE FROM slots 
+      WHERE turf_id = $1 
+      AND id NOT IN (SELECT slot_id FROM bookings WHERE status != 'cancelled')
+      AND (EXTRACT(HOUR FROM start_time) < $2 OR EXTRACT(HOUR FROM start_time) >= $3)
+    `, [req.params.id, opening_hour, closing_hour]);
+
+    req.app.get('io').emit('facility_updated');
+    req.app.get('io').emit('slot_updated');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+});
+
+// Update specific facility pricing and retroactively sweep slots
+router.patch('/:id/pricing', authMiddleware, async (req, res) => {
+  try {
+    const { weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price } = req.body;
+    
+    await pool.query(
+      'UPDATE turfs SET weekday_day_price=$1, weekday_night_price=$2, weekend_day_price=$3, weekend_night_price=$4 WHERE id=$5',
+      [weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, req.params.id]
+    );
+
+    // Retroactively update all slots belonging to this turf that ARE NOT yet booked!
+    await pool.query(`
+      UPDATE slots 
+      SET price = CASE 
+        WHEN EXTRACT(DOW FROM date) IN (0, 6) THEN 
+          CASE WHEN EXTRACT(HOUR FROM start_time) >= 18 THEN $4 ELSE $3 END
+        ELSE 
+          CASE WHEN EXTRACT(HOUR FROM start_time) >= 18 THEN $2 ELSE $1 END
+      END
+      WHERE turf_id = $5 
+      AND id NOT IN (SELECT slot_id FROM bookings)
+    `, [weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, req.params.id]);
+
+    // Apply to templates
+    await pool.query(`
+      UPDATE slot_templates 
+      SET price = CASE 
+        WHEN day_of_week IN (0, 6) THEN 
+          CASE WHEN EXTRACT(HOUR FROM start_time) >= 18 THEN $4 ELSE $3 END
+        ELSE 
+          CASE WHEN EXTRACT(HOUR FROM start_time) >= 18 THEN $2 ELSE $1 END
+      END
+      WHERE turf_id = $5
+    `, [weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, req.params.id]);
+
+    req.app.get('io').emit('facility_updated');
+    req.app.get('io').emit('slot_updated');
+    req.app.get('io').emit('template_updated');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+});
+
+// Admin: Edit facility details (name, description, location)
+router.patch('/:id', authMiddleware, async (req, res) => {
+  try {
+    const { name, description, location } = req.body;
+    const fields = [];
+    const values = [];
+    let idx = 1;
+    if (name !== undefined) { fields.push(`name = $${idx++}`); values.push(name); }
+    if (description !== undefined) { fields.push(`description = $${idx++}`); values.push(description); }
+    if (location !== undefined) { fields.push(`location = $${idx++}`); values.push(location); }
+    if (fields.length === 0) return res.status(400).json({ error: 'No fields to update' });
+    values.push(req.params.id);
+    const result = await pool.query(
+      `UPDATE turfs SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
+      values
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Facility not found' });
+    req.app.get('io').emit('facility_updated');
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+});
+
+// Admin: Delete a facility
+router.delete('/:id', authMiddleware, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM turfs WHERE id = $1', [req.params.id]);
+    req.app.get('io').emit('facility_updated');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+module.exports = router;

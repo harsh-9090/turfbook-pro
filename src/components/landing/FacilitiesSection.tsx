@@ -44,7 +44,7 @@ export default function FacilitiesSection() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <p className="text-primary font-semibold mb-2 uppercase tracking-wider text-sm">Our Facilities</p>
+          <p className="text-primary font-semibold mb-2 uppercase tracking-wider text-sm">Our Sports Events</p>
           <h2 className="font-heading text-3xl lg:text-5xl font-bold mb-4">
             Three Sports, <span className="text-gradient-turf">One Arena</span>
           </h2>

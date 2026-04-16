@@ -1,12 +1,18 @@
 import { useState } from "react";
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, Calendar, Settings, LogOut, BarChart3, Menu, X } from "lucide-react";
+import { LayoutDashboard, Calendar, Settings, LogOut, BarChart3, Menu, X, Layers, Clock, Timer, DollarSign, Image as LucideImage, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const sidebarLinks = [
   { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { name: "Bookings", path: "/admin/bookings", icon: Calendar },
-  { name: "Slot Management", path: "/admin/slots", icon: Settings },
+  { name: "Daily Overrides", path: "/admin/slots", icon: Settings },
+  { name: "Weekly Schedule", path: "/admin/schedules", icon: Clock },
+  { name: "Sports Events", path: "/admin/facilities", icon: Layers },
+  { name: "Live Tables", path: "/admin/tables", icon: Timer },
+  { name: "Pricing Plans", path: "/admin/pricing", icon: DollarSign },
+  { name: "Gallery", path: "/admin/gallery", icon: LucideImage },
+  { name: "Testimonials", path: "/admin/testimonials", icon: MessageSquare },
   { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
 ];
 

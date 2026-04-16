@@ -21,9 +21,12 @@ CREATE TABLE users (
 CREATE TABLE turfs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
+  facility_type VARCHAR(50) DEFAULT 'cricket',
   location TEXT,
   description TEXT,
   image_url TEXT,
+  weekday_price DECIMAL(10,2) DEFAULT 800.00,
+  weekend_price DECIMAL(10,2) DEFAULT 1200.00,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -36,7 +39,8 @@ CREATE TABLE slots (
   end_time TIME NOT NULL,
   is_available BOOLEAN DEFAULT true,
   price DECIMAL(10, 2) NOT NULL DEFAULT 800.00,
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (turf_id, date, start_time)
 );
 
 -- Bookings table
@@ -69,30 +73,27 @@ CREATE INDEX idx_bookings_status ON bookings(status);
 CREATE INDEX idx_payments_booking ON payments(booking_id);
 
 -- Seed: Default turf
-INSERT INTO turfs (name, location, description) VALUES
-('TurfZone Arena', '123 Sports Complex, Green Park, Mumbai 400001', 'Premium 5-a-side synthetic turf with LED floodlights');
+INSERT INTO turfs (name, facility_type, location, description) VALUES
+('TurfZone Arena', 'cricket', '123 Sports Complex, Green Park, Mumbai 400001', 'Premium 5-a-side synthetic turf with LED floodlights');
 
 -- Seed: Admin user (password: admin123)
 INSERT INTO users (name, email, phone, password_hash, role) VALUES
-('Admin', 'admin@turfzone.com', '+919876543210', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+('System Admin', 'admin@akolasportsarena.com', '9999999999', '$2a$10$XQZ/v4Kj/m/9EbxXfJb9O.B4i/7F5fN3gP/tZ/Jm7d5T6lGv2y7yO', 'admin');
 
 -- Function to auto-generate slots for a date
 CREATE OR REPLACE FUNCTION generate_daily_slots(target_date DATE, target_turf_id UUID)
 RETURNS void AS $$
 DECLARE
   hour_val INT;
-  slot_price DECIMAL;
+  p_weekday DECIMAL;
+  p_weekend DECIMAL;
   is_weekend BOOLEAN;
 BEGIN
+  SELECT weekday_price, weekend_price INTO p_weekday, p_weekend FROM turfs WHERE id = target_turf_id;
   is_weekend := EXTRACT(DOW FROM target_date) IN (0, 6);
   FOR hour_val IN 6..22 LOOP
-    IF hour_val >= 18 THEN
-      slot_price := CASE WHEN is_weekend THEN 1400 ELSE 1000 END;
-    ELSE
-      slot_price := CASE WHEN is_weekend THEN 1200 ELSE 800 END;
-    END IF;
     INSERT INTO slots (turf_id, date, start_time, end_time, price)
-    VALUES (target_turf_id, target_date, make_time(hour_val, 0, 0), make_time(hour_val + 1, 0, 0), slot_price)
+    VALUES (target_turf_id, target_date, make_time(hour_val, 0, 0), make_time(hour_val + 1, 0, 0), CASE WHEN is_weekend THEN p_weekend ELSE p_weekday END)
     ON CONFLICT DO NOTHING;
   END LOOP;
 END;

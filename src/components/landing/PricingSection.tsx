@@ -1,39 +1,30 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import api from "@/lib/api";
 
-const plans = [
-  {
-    name: "Cricket Turf",
-    subtitle: "Per lane, per hour",
-    price: "₹1,200",
-    unit: "/hour",
-    features: ["Weekday rate (6AM–5PM)", "Weekend: ₹1,800/hr", "Peak hours (5PM+): +₹300", "Bowling machine included", "Stumps & safety gear", "LED floodlights"],
-    popular: true,
-    facility: "cricket",
-  },
-  {
-    name: "Snooker",
-    subtitle: "Per table, per hour",
-    price: "₹400",
-    unit: "/hour",
-    features: ["Weekday rate", "Weekend: ₹500/hr", "Peak hours (6PM+): +₹100", "Championship table", "Premium cues provided", "AC lounge"],
-    popular: false,
-    facility: "snooker",
-  },
-  {
-    name: "Pool",
-    subtitle: "Per table, per hour",
-    price: "₹300",
-    unit: "/hour",
-    features: ["Weekday rate", "Weekend: ₹400/hr", "Peak hours (6PM+): +₹100", "Tournament table", "Quality cues provided", "Music & ambiance"],
-    popular: false,
-    facility: "pool",
-  },
-];
+interface Plan {
+  id: string;
+  name: string;
+  subtitle: string;
+  price: string;
+  unit: string;
+  features: string[];
+  popular: boolean;
+  facility: string;
+}
 
 export default function PricingSection() {
+  const [plans, setPlans] = useState<Plan[]>([]);
+
+  useEffect(() => {
+    api.get("/pricing").then(res => setPlans(res.data)).catch(() => {});
+  }, []);
+
+  if (plans.length === 0) return null;
+
   return (
     <section id="pricing" className="py-20 lg:py-32 relative">
       <div className="container mx-auto px-4 lg:px-8">
@@ -50,10 +41,12 @@ export default function PricingSection() {
           <p className="text-muted-foreground max-w-2xl mx-auto">No hidden fees. Pick your sport, book a slot, and play.</p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
+        <div className={`grid gap-6 lg:gap-8 max-w-5xl mx-auto ${
+          plans.length === 1 ? "md:grid-cols-1 max-w-md" : plans.length === 2 ? "md:grid-cols-2 max-w-3xl" : "md:grid-cols-3"
+        }`}>
           {plans.map((plan, i) => (
             <motion.div
-              key={plan.name}
+              key={plan.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -85,15 +78,21 @@ export default function PricingSection() {
                   </li>
                 ))}
               </ul>
-              <Link to={`/book?facility=${plan.facility}`}>
-                <Button className={`w-full font-semibold ${
-                  plan.popular
-                    ? "bg-gradient-turf text-primary-foreground shadow-turf hover:opacity-90"
-                    : "bg-secondary text-secondary-foreground hover:bg-surface-hover"
-                }`}>
-                  Book Now
+              {plan.facility ? (
+                <Link to={`/book?facility=${plan.facility}`}>
+                  <Button className={`w-full font-semibold ${
+                    plan.popular
+                      ? "bg-gradient-turf text-primary-foreground shadow-turf hover:opacity-90"
+                      : "bg-secondary text-secondary-foreground hover:bg-surface-hover"
+                  }`}>
+                    Book Now
+                  </Button>
+                </Link>
+              ) : (
+                <Button disabled className="w-full font-semibold bg-secondary text-secondary-foreground">
+                  Coming Soon
                 </Button>
-              </Link>
+              )}
             </motion.div>
           ))}
         </div>

@@ -1,16 +1,67 @@
 import { motion } from "framer-motion";
 import { Calendar, DollarSign, TrendingUp, Clock, ArrowUpRight } from "lucide-react";
-import { stats, mockBookings, facilityLabels } from "@/lib/mock-data";
+import { facilityLabels } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
-
-const statCards = [
-  { label: "Total Bookings", value: stats.totalBookings, icon: Calendar, change: "+12%" },
-  { label: "Today's Revenue", value: `₹${stats.dailyRevenue.toLocaleString()}`, icon: DollarSign, change: "+8%" },
-  { label: "Monthly Revenue", value: `₹${stats.monthlyRevenue.toLocaleString()}`, icon: TrendingUp, change: "+15%" },
-  { label: "Upcoming", value: stats.upcomingBookings, icon: Clock, change: "" },
-];
+import { useState, useEffect } from "react";
+import api from "@/lib/api";
+import { format } from "date-fns";
+import { useSocket } from "@/hooks/useSocket";
 
 export default function AdminDashboard() {
+  const [statsData, setStatsData] = useState({
+    totalBookings: 0,
+    dailyRevenue: 0,
+    monthlyRevenue: 0,
+    upcomingBookings: 0,
+  });
+  const [recentBookings, setRecentBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDashboardData = async () => {
+    try {
+      const statsRes = await api.get('/admin/stats');
+      setStatsData({
+        totalBookings: statsRes.data.totalBookings,
+        dailyRevenue: statsRes.data.totalRevenue || 0,
+        monthlyRevenue: statsRes.data.totalRevenue || 0,
+        upcomingBookings: statsRes.data.upcomingBookings,
+      });
+
+      const bookingsRes = await api.get('/bookings');
+      const mapped = bookingsRes.data.slice(0, 5).map((b: any) => ({
+        id: b.id,
+        customerName: b.customer_name,
+        phone: b.phone,
+        facility: "cricket",
+        date: format(new Date(b.date), 'yyyy-MM-dd'),
+        startTime: b.start_time?.substring(0, 5) || "",
+        endTime: b.end_time?.substring(0, 5) || "",
+        status: b.status,
+        amount: Number(b.amount)
+      }));
+      setRecentBookings(mapped);
+    } catch (err) {
+      console.error("Dashboard error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  useSocket('booking_updated', fetchDashboardData);
+
+  const statCards = [
+    { label: "Total Bookings", value: statsData.totalBookings, icon: Calendar, change: "" },
+    { label: "Today's Revenue", value: `₹${statsData.dailyRevenue.toLocaleString()}`, icon: DollarSign, change: "" },
+    { label: "Total Revenue", value: `₹${statsData.monthlyRevenue.toLocaleString()}`, icon: TrendingUp, change: "" },
+    { label: "Upcoming", value: statsData.upcomingBookings, icon: Clock, change: "" },
+  ];
+
+  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
+
   return (
     <div className="space-y-6">
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -43,7 +94,7 @@ export default function AdminDashboard() {
               <tr className="border-b border-border">
                 <th className="text-left px-5 py-3 text-muted-foreground font-medium">ID</th>
                 <th className="text-left px-5 py-3 text-muted-foreground font-medium">Customer</th>
-                <th className="text-left px-5 py-3 text-muted-foreground font-medium">Facility</th>
+                <th className="text-left px-5 py-3 text-muted-foreground font-medium">Sports Event</th>
                 <th className="text-left px-5 py-3 text-muted-foreground font-medium">Date</th>
                 <th className="text-left px-5 py-3 text-muted-foreground font-medium">Time</th>
                 <th className="text-left px-5 py-3 text-muted-foreground font-medium">Status</th>
@@ -51,7 +102,7 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {mockBookings.map((b) => (
+              {recentBookings.map((b) => (
                 <tr key={b.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                   <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{b.id}</td>
                   <td className="px-5 py-3">

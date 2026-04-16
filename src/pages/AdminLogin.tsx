@@ -5,20 +5,22 @@ import { Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import api from "@/lib/api";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === "admin@akolasportsarena.com" && password === "admin123") {
-      localStorage.setItem("adminToken", "demo-jwt-token");
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      localStorage.setItem("adminToken", response.data.token);
       toast.success("Welcome back, Admin!");
       navigate("/admin");
-    } else {
-      toast.error("Invalid credentials. Try admin@akolasportsarena.com / admin123");
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Invalid credentials.");
     }
   };
 
