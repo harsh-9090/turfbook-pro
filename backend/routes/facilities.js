@@ -2,11 +2,17 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 const authMiddleware = require('../middleware/auth');
+const cache = require('../config/cache');
 
 // Public: Get all facilities
 router.get('/', async (req, res) => {
   try {
+    if (!cache.shouldBypass(req)) {
+      const cached = await cache.get('facilities:all');
+      if (cached) return res.json(cached);
+    }
     const result = await pool.query('SELECT * FROM turfs ORDER BY created_at ASC');
+    await cache.set('facilities:all', result.rows, 300); // 5 min
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
@@ -17,12 +23,17 @@ router.get('/', async (req, res) => {
 router.get('/tables-status/:facility_type', async (req, res) => {
   try {
     const { facility_type } = req.params;
-    // Get all facilities of this type
+    const cacheKey = `facilities:tables:${facility_type}`;
+
+    if (!cache.shouldBypass(req)) {
+      const cached = await cache.get(cacheKey);
+      if (cached) return res.json(cached);
+    }
+
     const { rows: facilities } = await pool.query(
       'SELECT id, name, facility_type, weekday_day_price, table_count FROM turfs WHERE facility_type = $1',
       [facility_type]
     );
-    // Get all running sessions for these facilities
     const facilityIds = facilities.map(f => f.id);
     let runningSessions = [];
     if (facilityIds.length > 0) {
@@ -32,7 +43,6 @@ router.get('/tables-status/:facility_type', async (req, res) => {
       );
       runningSessions = rows;
     }
-    // Build table status for each facility
     const result = facilities.map(f => {
       const count = f.table_count || 1;
       const tables = [];
@@ -54,6 +64,7 @@ router.get('/tables-status/:facility_type', async (req, res) => {
         tables,
       };
     });
+    await cache.set(cacheKey, result, 30); // 30 sec — real-time data
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: 'Server error: ' + err.message });
@@ -73,6 +84,11 @@ router.post('/', authMiddleware, async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
       [generatedName, facility_type, description, location || 'Dynamic Arena', weekday_day_price || 800, weekday_night_price || 1200, weekend_day_price || 1200, weekend_night_price || 1500, table_count || 1, opening_hour || 6, closing_hour || 23]
     );
+
+    // Invalidate caches
+    await cache.del('facilities:all');
+    await cache.delPattern('facilities:tables:*');
+
     req.app.get('io').emit('facility_updated');
     req.app.get('io').emit('template_updated');
     res.status(201).json(result.rows[0]);
@@ -87,6 +103,10 @@ router.patch('/:id/tables', authMiddleware, async (req, res) => {
     const { table_count } = req.body;
     if (!table_count || table_count < 1) return res.status(400).json({ error: 'table_count must be at least 1' });
     const result = await pool.query('UPDATE turfs SET table_count = $1 WHERE id = $2 RETURNING *', [table_count, req.params.id]);
+
+    await cache.del('facilities:all');
+    await cache.delPattern('facilities:tables:*');
+
     req.app.get('io').emit('facility_updated');
     res.json(result.rows[0]);
   } catch (err) {
@@ -110,6 +130,10 @@ router.patch('/:id/hours', authMiddleware, async (req, res) => {
       AND id NOT IN (SELECT slot_id FROM bookings WHERE status != 'cancelled')
       AND (EXTRACT(HOUR FROM start_time) < $2 OR EXTRACT(HOUR FROM start_time) >= $3)
     `, [req.params.id, opening_hour, closing_hour]);
+
+    await cache.del('facilities:all');
+    await cache.delPattern('facilities:tables:*');
+    await cache.delPattern('slots:*');
 
     req.app.get('io').emit('facility_updated');
     req.app.get('io').emit('slot_updated');
@@ -154,6 +178,11 @@ router.patch('/:id/pricing', authMiddleware, async (req, res) => {
       WHERE turf_id = $5
     `, [weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, req.params.id]);
 
+    await cache.del('facilities:all');
+    await cache.delPattern('facilities:tables:*');
+    await cache.delPattern('slots:*');
+    await cache.delPattern('templates:*');
+
     req.app.get('io').emit('facility_updated');
     req.app.get('io').emit('slot_updated');
     req.app.get('io').emit('template_updated');
@@ -180,6 +209,10 @@ router.patch('/:id', authMiddleware, async (req, res) => {
       values
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Facility not found' });
+
+    await cache.del('facilities:all');
+    await cache.delPattern('facilities:tables:*');
+
     req.app.get('io').emit('facility_updated');
     res.json(result.rows[0]);
   } catch (err) {
@@ -191,6 +224,12 @@ router.patch('/:id', authMiddleware, async (req, res) => {
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     await pool.query('DELETE FROM turfs WHERE id = $1', [req.params.id]);
+
+    await cache.del('facilities:all');
+    await cache.delPattern('facilities:tables:*');
+    await cache.delPattern('slots:*');
+    await cache.delPattern('templates:*');
+
     req.app.get('io').emit('facility_updated');
     res.json({ success: true });
   } catch (err) {

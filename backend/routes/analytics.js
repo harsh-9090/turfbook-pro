@@ -2,10 +2,16 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 const authMiddleware = require('../middleware/auth');
+const cache = require('../config/cache');
 
 // Comprehensive analytics endpoint
 router.get('/', authMiddleware, async (req, res) => {
   try {
+    if (!cache.shouldBypass(req)) {
+      const cached = await cache.get('analytics:dashboard');
+      if (cached) return res.json(cached);
+    }
+
     const today = new Date().toISOString().split('T')[0];
     
     // Get the start of current week (Monday) and month
@@ -18,7 +24,6 @@ router.get('/', authMiddleware, async (req, res) => {
     const monthStartStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
 
     // ===== REVENUE QUERIES =====
-    // Online booking revenue
     const bookingRevenueToday = await pool.query(
       `SELECT COALESCE(SUM(s.price), 0) as total FROM bookings b 
        JOIN slots s ON s.id = b.slot_id 
@@ -128,7 +133,7 @@ router.get('/', authMiddleware, async (req, res) => {
        LIMIT 10`
     );
 
-    res.json({
+    const data = {
       revenue: {
         today: parseFloat(bookingRevenueToday.rows[0].total) + parseFloat(sessionRevenueToday.rows[0].total),
         week: parseFloat(bookingRevenueWeek.rows[0].total) + parseFloat(sessionRevenueWeek.rows[0].total),
@@ -174,7 +179,10 @@ router.get('/', authMiddleware, async (req, res) => {
         amount: parseFloat(r.total_amount || 0),
         hourlyRate: parseFloat(r.hourly_rate)
       }))
-    });
+    };
+
+    await cache.set('analytics:dashboard', data, 180); // 3 min — highest impact cache
+    res.json(data);
   } catch (err) {
     console.error('Analytics error:', err);
     res.status(500).json({ error: 'Server error: ' + err.message });

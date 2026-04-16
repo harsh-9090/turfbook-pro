@@ -2,11 +2,19 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 const authMiddleware = require('../middleware/auth');
+const cache = require('../config/cache');
 
 router.get('/', async (req, res) => {
   try {
     const { date, facility_type, turf_id } = req.query;
     if (!date) return res.status(400).json({ error: 'Date is required' });
+
+    const cacheKey = `slots:${date}:${facility_type || 'all'}:${turf_id || 'all'}`;
+
+    if (!cache.shouldBypass(req)) {
+      const cached = await cache.get(cacheKey);
+      if (cached) return res.json(cached);
+    }
 
     // JIT: Auto-generate missing slots for ALL active turfs before fetching!
     await pool.query('SELECT generate_daily_slots($1, id) FROM turfs', [date]);
@@ -37,6 +45,7 @@ router.get('/', async (req, res) => {
     query += ` ORDER BY s.start_time`;
 
     const result = await pool.query(query, params);
+    await cache.set(cacheKey, result.rows, 60); // 60 sec
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching slots:', err);
@@ -51,6 +60,9 @@ router.patch('/:id/toggle', authMiddleware, async (req, res) => {
       [req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Slot not found' });
+
+    await cache.delPattern('slots:*');
+
     req.app.get('io').emit('slot_updated');
     res.json(result.rows[0]);
   } catch (err) {
@@ -67,6 +79,9 @@ router.post('/', authMiddleware, async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [turf_id, date, start_time, end_time, price, is_available ?? true]
     );
+
+    await cache.delPattern('slots:*');
+
     req.app.get('io').emit('slot_updated');
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -83,6 +98,9 @@ router.patch('/:id', authMiddleware, async (req, res) => {
       [start_time, end_time, price, req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Slot not found' });
+
+    await cache.delPattern('slots:*');
+
     req.app.get('io').emit('slot_updated');
     res.json(result.rows[0]);
   } catch (err) {
@@ -95,6 +113,9 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query('DELETE FROM slots WHERE id = $1 RETURNING *', [req.params.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Slot not found' });
+
+    await cache.delPattern('slots:*');
+
     req.app.get('io').emit('slot_updated');
     res.json({ success: true });
   } catch (err) {

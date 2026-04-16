@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, CheckCircle, XCircle, Star, MessageSquare, Image as LucideImage, ExternalLink } from "lucide-react";
+import { Trash2, CheckCircle, XCircle, Star, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -11,7 +11,6 @@ interface Testimonial {
   role: string;
   text: string;
   rating: number;
-  image_urls: string[];
   status: 'pending' | 'approved';
   is_featured: boolean;
   created_at: string;
@@ -47,7 +46,7 @@ export default function AdminTestimonials() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this review and all associated images from Cloudinary?")) return;
+    if (!window.confirm("Delete this review permanently?")) return;
     try {
       await api.delete(`/testimonials/${id}`);
       toast.success("Review deleted");
@@ -59,17 +58,17 @@ export default function AdminTestimonials() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="font-heading text-xl font-bold text-foreground">Testimonials Management</h2>
           <p className="text-sm text-muted-foreground">Approve or feature player reviews for the landing page</p>
         </div>
-        <div className="flex bg-secondary rounded-lg p-1">
+        <div className="flex bg-secondary/50 p-1 rounded-lg w-full sm:w-auto overflow-x-auto scrollbar-none">
           {(['all', 'pending', 'approved'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+              className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
                 filter === f ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -88,7 +87,7 @@ export default function AdminTestimonials() {
               </div>
             </div>
 
-            <div className="flex-1 space-y-3">
+            <div className="flex-1 space-y-2">
               <div className="flex justify-between items-start">
                 <div>
                   <h4 className="font-semibold text-foreground flex items-center gap-2">
@@ -110,37 +109,23 @@ export default function AdminTestimonials() {
 
               <p className="text-sm text-muted-foreground italic">"{t.text}"</p>
 
-              {t.image_urls && t.image_urls.length > 0 && (
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {t.image_urls.map((url, i) => (
-                    <div key={i} className="relative group">
-                      <img src={url} className="w-20 h-20 rounded-lg object-cover border border-border" alt={`Arena ${i + 1}`} />
-                      <a href={url} target="_blank" rel="noreferrer" className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
-                        <ExternalLink className="w-4 h-4 text-white" />
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 pt-2">
+              <div className="flex flex-wrap items-center gap-2 pt-2">
                 {t.status === 'pending' ? (
-                  <Button size="sm" onClick={() => handleStatus(t.id, 'approved')} className="h-8 bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20">
-                    <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Approve
+                  <Button size="sm" onClick={() => handleStatus(t.id, 'approved')} className="h-8 bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20 px-3">
+                    <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> <span className="text-xs">Approve</span>
                   </Button>
                 ) : (
-                  <Button size="sm" variant="ghost" onClick={() => handleStatus(t.id, 'pending')} className="h-8 text-muted-foreground">
-                    <XCircle className="w-3.5 h-3.5 mr-1.5" /> Move to Pending
+                  <Button size="sm" variant="ghost" onClick={() => handleStatus(t.id, 'pending')} className="h-8 text-muted-foreground px-3">
+                    <XCircle className="w-3.5 h-3.5 mr-1.5" /> <span className="text-xs">Pending</span>
                   </Button>
                 )}
                 
-                <Button size="sm" variant="ghost" onClick={() => handleToggleFeature(t.id)} className={`h-8 ${t.is_featured ? 'text-yellow-500' : 'text-muted-foreground'}`}>
+                <Button size="sm" variant="ghost" onClick={() => handleToggleFeature(t.id)} className={`h-8 px-3 ${t.is_featured ? 'text-yellow-500' : 'text-muted-foreground'}`}>
                   <Star className={`w-3.5 h-3.5 mr-1.5 ${t.is_featured ? 'fill-yellow-500' : ''}`} /> 
-                  {t.is_featured ? 'Unfeature' : 'Feature'}
+                  <span className="text-xs">{t.is_featured ? 'Unfeature' : 'Feature'}</span>
                 </Button>
-
-                <Button size="sm" variant="ghost" onClick={() => handleDelete(t.id)} className="h-8 text-destructive hover:bg-destructive/10 ml-auto">
-                  <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Delete
+                <Button size="sm" variant="ghost" onClick={() => handleDelete(t.id)} className="h-8 text-destructive hover:bg-destructive/10 px-3 ml-auto sm:ml-0">
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" /> <span className="text-xs">Delete</span>
                 </Button>
               </div>
             </div>

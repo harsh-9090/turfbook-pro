@@ -29,7 +29,7 @@ export default function FeaturesSection() {
           <p className="text-muted-foreground max-w-2xl mx-auto">Everything you need for the perfect game, all under one roof.</p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
           {features.map((feature, i) => (
             <motion.div
               key={feature.title}
@@ -37,13 +37,13 @@ export default function FeaturesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.05 }}
-              className="group p-5 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-turf"
+              className="group p-3 lg:p-5 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-turf"
             >
-              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-gradient-turf transition-colors duration-300">
-                <feature.icon className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors duration-300" />
+              <div className="w-9 h-9 lg:w-11 lg:h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-2 lg:mb-3 group-hover:bg-gradient-turf transition-colors duration-300">
+                <feature.icon className="w-4 h-4 lg:w-5 lg:h-5 text-primary group-hover:text-primary-foreground transition-colors duration-300" />
               </div>
-              <h3 className="font-heading font-semibold text-foreground mb-1">{feature.title}</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">{feature.desc}</p>
+              <h3 className="font-heading font-semibold text-foreground text-sm lg:text-base mb-0.5 lg:mb-1">{feature.title}</h3>
+              <p className="text-muted-foreground text-xs lg:text-sm leading-relaxed">{feature.desc}</p>
             </motion.div>
           ))}
         </div>

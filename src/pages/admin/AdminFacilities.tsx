@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Layers, Minus, Clock } from "lucide-react";
+import { Plus, Trash2, Layers, Minus, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,7 @@ export default function AdminFacilities() {
   const [tableCount, setTableCount] = useState("1");
   const [openingHour, setOpeningHour] = useState("6");
   const [closingHour, setClosingHour] = useState("23");
+  const [isFormExpanded, setIsFormExpanded] = useState(false);
 
   const isHourlySettings = type === "snooker" || type === "pool";
 
@@ -112,94 +113,105 @@ export default function AdminFacilities() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-card border border-border p-5">
-        <h3 className="font-heading font-semibold text-foreground mb-4">Add New Sports Event</h3>
-        <form onSubmit={handleAdd} className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 space-y-1.5">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Classification / Sport</Label>
-              <Select value={type} onValueChange={setType}>
-                <SelectTrigger className="w-full bg-card border-border">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cricket">Cricket Turf</SelectItem>
-                  <SelectItem value="snooker">Snooker Table</SelectItem>
-                  <SelectItem value="pool">Pool Table</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex-[2] space-y-1.5">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Short Description</Label>
-              <Input placeholder="Optional visual context for users..." value={desc} onChange={e => setDesc(e.target.value)} />
-            </div>
+      <div className="rounded-xl bg-card border border-border overflow-hidden">
+        <button 
+          onClick={() => setIsFormExpanded(!isFormExpanded)}
+          className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-muted/30 transition-colors"
+        >
+          <h3 className="font-heading font-semibold text-foreground">Add New Sports Event</h3>
+          <div className="p-1 rounded-md bg-secondary text-muted-foreground sm:hidden">
+            {isFormExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
-          
-          {isHourlySettings ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        </button>
+
+        <div className={`${isFormExpanded ? "block" : "hidden sm:block"} p-4 sm:p-5 pt-0 sm:pt-0 border-t border-border/50 sm:border-t-0`}>
+          <form onSubmit={handleAdd} className="flex flex-col gap-4 mt-4 sm:mt-0">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Flat Hourly Rate (₹)</Label>
-                <Input type="number" placeholder="250" value={hourlyPrice} onChange={e => setHourlyPrice(e.target.value)} />
-                <p className="text-[10px] text-muted-foreground mt-1">Single global rate automatically applied across all active slots.</p>
+                <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Sport</Label>
+                <Select value={type} onValueChange={setType}>
+                  <SelectTrigger className="w-full bg-card border-border h-10">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cricket">Cricket Turf</SelectItem>
+                    <SelectItem value="snooker">Snooker Table</SelectItem>
+                    <SelectItem value="pool">Pool Table</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Number of Tables</Label>
-                <Input type="number" min="1" placeholder="1" value={tableCount} onChange={e => setTableCount(e.target.value)} />
-                <p className="text-[10px] text-muted-foreground mt-1">How many physical tables do you have?</p>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Wkday Day (₹)</Label>
-                <Input type="number" placeholder="800" value={weekdayDayPrice} onChange={e => setWeekdayDayPrice(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Wkday Night (₹)</Label>
-                <Input type="number" placeholder="1200" value={weekdayNightPrice} onChange={e => setWeekdayNightPrice(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Wkend Day (₹)</Label>
-                <Input type="number" placeholder="1200" value={weekendDayPrice} onChange={e => setWeekendDayPrice(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Wkend Night (₹)</Label>
-                <Input type="number" placeholder="1500" value={weekendNightPrice} onChange={e => setWeekendNightPrice(e.target.value)} />
+              <div className="sm:col-span-2 space-y-1.5">
+                <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Short Description</Label>
+                <Input placeholder="Visual context for players..." value={desc} onChange={e => setDesc(e.target.value)} className="h-10" />
               </div>
             </div>
-          )}
-          {/* Opening / Closing Hours */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Opening Hour</Label>
-              <Select value={openingHour} onValueChange={setOpeningHour}>
-                <SelectTrigger className="w-full bg-card border-border"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Array.from({length: 24}, (_, i) => (
-                    <SelectItem key={i} value={String(i)}>{i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i-12} PM`}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            
+            {isHourlySettings ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Hourly Rate (₹)</Label>
+                  <Input type="number" placeholder="250" value={hourlyPrice} onChange={e => setHourlyPrice(e.target.value)} className="h-10" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Table Count</Label>
+                  <Input type="number" min="1" placeholder="1" value={tableCount} onChange={e => setTableCount(e.target.value)} className="h-10" />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Wkday Day</Label>
+                  <Input type="number" placeholder="800" value={weekdayDayPrice} onChange={e => setWeekdayDayPrice(e.target.value)} className="h-10 px-2" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Wkday Night</Label>
+                  <Input type="number" placeholder="1200" value={weekdayNightPrice} onChange={e => setWeekdayNightPrice(e.target.value)} className="h-10 px-2" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Wkend Day</Label>
+                  <Input type="number" placeholder="1200" value={weekendDayPrice} onChange={e => setWeekendDayPrice(e.target.value)} className="h-10 px-2" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Wkend Night</Label>
+                  <Input type="number" placeholder="1500" value={weekendNightPrice} onChange={e => setWeekdayNightPrice(e.target.value)} className="h-10 px-2" />
+                </div>
+              </div>
+            )}
+            {/* Opening / Closing Hours */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Opening</Label>
+                <Select value={openingHour} onValueChange={setOpeningHour}>
+                  <SelectTrigger className="w-full bg-card border-border h-10"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Array.from({length: 24}, (_, i) => (
+                      <SelectItem key={i} value={String(i)}>{i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i-12} PM`}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Closing</Label>
+                <Select value={closingHour} onValueChange={setClosingHour}>
+                  <SelectTrigger className="w-full bg-card border-border h-10"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Array.from({length: 24}, (_, i) => i + 1).filter(h => h > Number(openingHour)).map(h => (
+                      <SelectItem key={h} value={String(h)}>{h === 24 ? '12 AM (midnight)' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h-12} PM`}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Closing Hour</Label>
-              <Select value={closingHour} onValueChange={setClosingHour}>
-                <SelectTrigger className="w-full bg-card border-border"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Array.from({length: 24}, (_, i) => i + 1).filter(h => h > Number(openingHour)).map(h => (
-                    <SelectItem key={h} value={String(h)}>{h === 24 ? '12 AM (midnight)' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h-12} PM`}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex justify-end pt-2">
+              <Button type="submit" className="w-full sm:w-auto bg-gradient-turf text-primary-foreground font-bold shadow-turf h-11 px-8">
+                <Plus className="w-5 h-5 mr-2" /> Add Selection
+              </Button>
             </div>
-          </div>
-          <div className="flex justify-end pt-2">
-            <Button type="submit" className="bg-gradient-turf text-primary-foreground font-semibold min-w-[140px] h-10"><Plus className="w-4 h-4 mr-2" /> Add Selection</Button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {facilities.map((f) => (
           <div key={f.id} className="rounded-xl bg-card border border-border p-5 flex flex-col hover:border-primary/30 transition-colors">
             <div className="flex justify-between items-start mb-3">

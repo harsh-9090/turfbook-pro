@@ -35,7 +35,7 @@ const facilities = [
 
 export default function FacilitiesSection() {
   return (
-    <section id="facilities" className="py-20 lg:py-32 relative">
+    <section id="facilities" className="py-20 lg:py-32 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[120px]" />
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
         <motion.div

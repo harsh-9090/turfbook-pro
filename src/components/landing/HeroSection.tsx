@@ -16,7 +16,7 @@ const floatingParticles = Array.from({ length: 20 }, (_, i) => ({
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center overflow-x-hidden overflow-y-hidden sm:overflow-y-visible">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img src={heroImage} alt="Akola Sports Arena premium sports facility" className="w-full h-full object-cover" width={1920} height={1080} />
@@ -94,10 +94,10 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-turf/20 border border-primary/30 mb-6 backdrop-blur-sm"
           >
-            <Star className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Cricket • Snooker • Pool — All Under One Roof</span>
+            <Star className="w-4 h-4 text-primary fill-primary" />
+            <span className="text-sm font-semibold text-foreground">Cricket • Snooker • Pool — All Under One Roof</span>
           </motion.div>
 
           <motion.h1
@@ -115,7 +115,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg sm:text-xl text-muted-foreground max-w-xl mb-8 mx-auto"
+            className="text-lg sm:text-xl text-zinc-200 max-w-xl mb-8 mx-auto leading-relaxed"
           >
             Premium cricket turf with professional nets, plus exclusive snooker & pool lounge. Book your session in seconds and just show up to play.
           </motion.p>

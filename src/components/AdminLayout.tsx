@@ -29,12 +29,12 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-background flex">
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 lg:translate-x-0 lg:static ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex items-center gap-2 px-6 h-16 border-b border-border">
-          <div className="w-8 h-8 rounded-lg bg-gradient-turf flex items-center justify-center">
+        <div className="flex items-center gap-2 px-6 h-16 border-b border-border min-w-0 overflow-hidden">
+          <div className="w-8 h-8 rounded-lg bg-gradient-turf flex items-center justify-center shrink-0">
             <span className="font-heading font-bold text-primary-foreground text-sm">S</span>
           </div>
-          <span className="font-heading font-bold text-foreground">Akola Sports Arena <span className="text-primary text-xs">Admin</span></span>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto text-muted-foreground"><X size={20} /></button>
+          <span className="font-heading font-bold text-foreground truncate">Akola Sports Arena <span className="text-primary text-xs">Admin</span></span>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto text-muted-foreground shrink-0"><X size={20} /></button>
         </div>
         <nav className="p-4 space-y-1">
           {sidebarLinks.map((link) => (
@@ -55,7 +55,7 @@ export default function AdminLayout() {
 
       {sidebarOpen && <div className="fixed inset-0 z-40 bg-background/80 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
         <header className="h-16 border-b border-border flex items-center px-4 lg:px-8 gap-4">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-muted-foreground"><Menu size={20} /></button>
           <h2 className="font-heading font-semibold text-foreground">

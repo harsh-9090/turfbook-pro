@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 const authMiddleware = require('../middleware/auth');
+const cache = require('../config/cache');
 
 router.post('/', async (req, res) => {
   try {
@@ -37,6 +38,12 @@ router.post('/', async (req, res) => {
       [booking.rows[0].id, slot.price || 800]
     );
 
+    // Invalidate related caches
+    await cache.delPattern('bookings:*');
+    await cache.delPattern('slots:*');
+    await cache.del('admin:stats');
+    await cache.del('analytics:dashboard');
+
     req.app.get('io').emit('booking_updated');
     res.status(201).json({ booking: booking.rows[0], amount: slot.price || 800 });
   } catch (err) {
@@ -47,6 +54,13 @@ router.post('/', async (req, res) => {
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const { date, status } = req.query;
+    const cacheKey = `bookings:list:${date || 'all'}:${status || 'all'}`;
+
+    if (!cache.shouldBypass(req)) {
+      const cached = await cache.get(cacheKey);
+      if (cached) return res.json(cached);
+    }
+
     let query = `
       SELECT b.*, u.name as customer_name, u.phone,
         s.date, s.start_time, s.end_time,
@@ -65,6 +79,7 @@ router.get('/', authMiddleware, async (req, res) => {
     query += ' ORDER BY b.created_at DESC';
 
     const result = await pool.query(query, params);
+    await cache.set(cacheKey, result.rows, 60); // 60 sec
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
@@ -78,6 +93,12 @@ router.patch('/:id/cancel', authMiddleware, async (req, res) => {
       [req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Booking not found' });
+
+    await cache.delPattern('bookings:*');
+    await cache.delPattern('slots:*');
+    await cache.del('admin:stats');
+    await cache.del('analytics:dashboard');
+
     req.app.get('io').emit('booking_updated');
     res.json(result.rows[0]);
   } catch (err) {

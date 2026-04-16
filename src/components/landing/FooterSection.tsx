@@ -5,8 +5,8 @@ export default function FooterSection() {
   return (
     <footer id="contact" className="py-16 border-t border-border">
       <div className="container mx-auto px-4 lg:px-8">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          <div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          <div className="col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-lg bg-gradient-turf flex items-center justify-center">
                 <span className="font-heading font-bold text-primary-foreground text-lg">S</span>
@@ -20,7 +20,7 @@ export default function FooterSection() {
             </p>
           </div>
 
-          <div>
+          <div className="col-span-1">
             <h4 className="font-heading font-semibold text-foreground mb-4">Quick Links</h4>
             <ul className="space-y-2">
               {[
@@ -36,7 +36,7 @@ export default function FooterSection() {
             </ul>
           </div>
 
-          <div>
+          <div className="col-span-1">
             <h4 className="font-heading font-semibold text-foreground mb-4">Our Sports</h4>
             <ul className="space-y-2">
               {["Cricket Nets", "Snooker Tables", "Pool Tables", "Tournaments"].map((s) => (
@@ -45,7 +45,7 @@ export default function FooterSection() {
             </ul>
           </div>
 
-          <div>
+          <div className="col-span-2 lg:col-span-1">
             <h4 className="font-heading font-semibold text-foreground mb-4">Contact</h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-2 text-sm text-muted-foreground">

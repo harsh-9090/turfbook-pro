@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Play, Square, Clock, User, Phone, History, IndianRupee, Filter } from "lucide-react";
+import { Play, Square, Clock, User, Phone, History, IndianRupee, Filter, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -184,13 +184,13 @@ export default function AdminTables() {
 
                 if (runningSession) {
                   return (
-                    <div key={num} className="rounded-xl border-2 border-green-500/40 bg-green-500/5 p-4 flex flex-col">
+                    <div key={num} className="rounded-xl border-2 border-green-500 bg-green-500/10 p-4 flex flex-col shadow-sm">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="relative">
-                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                          <div className="w-2 h-2 rounded-full bg-green-500 absolute top-0 left-0 animate-ping"></div>
+                          <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                          <div className="w-2 h-2 rounded-full bg-green-400 absolute top-0 left-0 animate-ping"></div>
                         </div>
-                        <span className="text-green-500 text-[10px] uppercase tracking-wider font-bold">Live</span>
+                        <span className="text-green-400 text-[10px] uppercase tracking-wider font-bold">Live Now</span>
                       </div>
                       <h4 className="font-heading font-bold text-foreground text-sm mb-0.5">Table #{num}</h4>
                       <p className="text-[10px] text-muted-foreground mb-2 truncate" title={runningSession.customer_name}>
@@ -239,9 +239,9 @@ export default function AdminTables() {
           <h3 className="font-heading font-semibold text-foreground flex items-center gap-2">
             <History className="w-4 h-4 text-primary" /> Session History
           </h3>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Select value={filterSport} onValueChange={setFilterSport}>
-              <SelectTrigger className="w-[130px] h-8 text-xs bg-card border-border">
+              <SelectTrigger className="w-[120px] h-8 text-xs bg-card border-border">
                 <SelectValue placeholder="All Sports" />
               </SelectTrigger>
               <SelectContent>
@@ -250,7 +250,7 @@ export default function AdminTables() {
                 <SelectItem value="pool">Pool</SelectItem>
               </SelectContent>
             </Select>
-            <Input type="date" className="w-[150px] h-8 text-xs bg-card border-border" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
+            <Input type="date" className="w-[130px] h-8 text-xs bg-card border-border" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
             {(filterSport !== "all" || filterDate) && (
               <Button size="sm" variant="ghost" className="h-8 px-2 text-xs text-muted-foreground" onClick={() => { setFilterSport("all"); setFilterDate(""); }}>Clear</Button>
             )}
@@ -265,21 +265,60 @@ export default function AdminTables() {
             }
             return true;
           });
-          return filtered.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Table</th>
-                  <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Customer</th>
-                  <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Phone</th>
-                  <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Date</th>
-                  <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Time</th>
-                  <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Duration</th>
-                  <th className="text-right py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Bill</th>
-                </tr>
-              </thead>
-              <tbody>
+
+          if (filtered.length === 0) {
+            return (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                {history.length > 0 ? "No sessions match your filters." : "No completed sessions yet. Stop a running session to see it here!"}
+              </div>
+            );
+          }
+
+          return (
+            <>
+              {/* Desktop Table */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Table</th>
+                      <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Customer</th>
+                      <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Phone</th>
+                      <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Date</th>
+                      <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Time</th>
+                      <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Duration</th>
+                      <th className="text-right py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Bill</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((h: any) => {
+                      const start = new Date(h.start_time);
+                      const end = new Date(h.end_time);
+                      const durationMins = Math.round((end.getTime() - start.getTime()) / 60000);
+                      const hrs = Math.floor(durationMins / 60);
+                      const mins = durationMins % 60;
+                      const durationStr = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+
+                      return (
+                        <tr key={h.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                          <td className="py-2.5 px-3 font-medium text-foreground">{h.name || h.facility_name}</td>
+                          <td className="py-2.5 px-3 text-foreground">{h.customer_name || '—'}</td>
+                          <td className="py-2.5 px-3 text-muted-foreground font-mono text-xs">{h.customer_phone || '—'}</td>
+                          <td className="py-2.5 px-3 text-muted-foreground">{start.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</td>
+                          <td className="py-2.5 px-3 text-muted-foreground">
+                            {start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} → {end.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                          </td>
+                          <td className="py-2.5 px-3 text-foreground font-medium">{durationStr}</td>
+                          <td className="py-2.5 px-3 text-right font-bold text-primary">₹{parseFloat(h.total_amount || 0).toLocaleString()}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="lg:hidden divide-y divide-border/50">
                 {filtered.map((h: any) => {
                   const start = new Date(h.start_time);
                   const end = new Date(h.end_time);
@@ -289,27 +328,40 @@ export default function AdminTables() {
                   const durationStr = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
 
                   return (
-                    <tr key={h.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                      <td className="py-2.5 px-3 font-medium text-foreground">{h.name || h.facility_name}</td>
-                      <td className="py-2.5 px-3 text-foreground">{h.customer_name || '—'}</td>
-                      <td className="py-2.5 px-3 text-muted-foreground">{h.customer_phone || '—'}</td>
-                      <td className="py-2.5 px-3 text-muted-foreground">{start.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</td>
-                      <td className="py-2.5 px-3 text-muted-foreground">
-                        {start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} → {end.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                      </td>
-                      <td className="py-2.5 px-3 text-foreground font-medium">{durationStr}</td>
-                      <td className="py-2.5 px-3 text-right font-bold text-primary">₹{parseFloat(h.total_amount || 0).toLocaleString()}</td>
-                    </tr>
+                    <div key={h.id} className="py-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-bold text-foreground text-sm">{h.name || h.facility_name}</h4>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <User className="w-3 h-3" /> {h.customer_name || 'Walk-in'}
+                          </p>
+                        </div>
+                        <div className="text-right font-bold text-primary text-sm">
+                          ₹{parseFloat(h.total_amount || 0).toLocaleString()}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground border-y border-border/40 py-2">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3 h-3 shrink-0" />
+                          {start.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                        </div>
+                        <div className="flex items-center gap-1.5 justify-end">
+                          <Clock className="w-3 h-3 shrink-0" />
+                          {durationStr}
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px]">
+                        <p className="font-mono text-muted-foreground">{h.customer_phone}</p>
+                        <p className="text-muted-foreground">
+                          {start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} – {end.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            {history.length > 0 ? "No sessions match your filters." : "No completed sessions yet. Stop a running session to see it here!"}
-          </div>
-        );
+              </div>
+            </>
+          );
         })()}
       </div>
 

@@ -121,18 +121,18 @@ export default function AdminSchedules() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex-[2] space-y-1.5">
+        <div className="flex-[2] space-y-1.5 min-w-0">
           <Label className="text-muted-foreground text-xs uppercase tracking-wider font-semibold">Day of Week</Label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex overflow-x-auto pb-1 gap-2 scrollbar-none snap-x">
             {DAYS.map((day, idx) => (
               <Button 
                 key={day} 
                 size="sm" 
                 variant={selectedDay === idx ? "default" : "outline"}
                 onClick={() => setSelectedDay(idx)}
-                className={selectedDay === idx ? "bg-gradient-turf text-primary-foreground" : ""}
+                className={`snap-start shrink-0 ${selectedDay === idx ? "bg-gradient-turf text-primary-foreground" : ""}`}
               >
-                {window.innerWidth < 640 ? day.substring(0, 3) : day}
+                {day.substring(0, 3)}
               </Button>
             ))}
           </div>

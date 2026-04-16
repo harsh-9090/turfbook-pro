@@ -109,7 +109,7 @@ export default function AdminBookings() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, ID, date..." className="pl-10 bg-card border-border" />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {["all", "cricket", "snooker", "pool"].map((f) => (
               <Button key={f} size="sm" variant={facilityFilter === f ? "default" : "outline"}
                 onClick={() => setFacilityFilter(f)}
@@ -124,13 +124,13 @@ export default function AdminBookings() {
         </Button>
       </div>
 
-      <div className="rounded-xl bg-card border border-border overflow-x-auto">
+      <div className="hidden lg:block rounded-xl bg-card border border-border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
               <th className="text-left px-5 py-3 text-muted-foreground font-medium">ID</th>
               <th className="text-left px-5 py-3 text-muted-foreground font-medium">Customer</th>
-              <th className="text-left px-5 py-3 text-muted-foreground font-medium">Sports Event</th>
+              <th className="text-left px-5 py-3 text-muted-foreground font-medium text-center">Event</th>
               <th className="text-left px-5 py-3 text-muted-foreground font-medium">Date</th>
               <th className="text-left px-5 py-3 text-muted-foreground font-medium">Time</th>
               <th className="text-left px-5 py-3 text-muted-foreground font-medium">Status</th>
@@ -142,16 +142,16 @@ export default function AdminBookings() {
           <tbody>
             {filtered.map((b) => (
               <tr key={b.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
-                <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{b.id}</td>
+                <td className="px-5 py-3 font-mono text-[10px] text-muted-foreground uppercase">{b.id.substring(0, 8)}</td>
                 <td className="px-5 py-3">
                   <p className="font-medium text-foreground">{b.customerName}</p>
                   <p className="text-xs text-muted-foreground">{b.phone}</p>
                 </td>
-                <td className="px-5 py-3">
-                  <Badge variant="outline" className="text-primary border-primary/20">{facilityLabels[b.facility]}</Badge>
+                <td className="px-5 py-3 text-center">
+                  <Badge variant="outline" className="text-primary border-primary/20">{facilityLabels[b.facility as keyof typeof facilityLabels] || b.facility}</Badge>
                 </td>
                 <td className="px-5 py-3 text-foreground">{b.date}</td>
-                <td className="px-5 py-3 text-foreground">{b.startTime}–{b.endTime}</td>
+                <td className="px-5 py-3 text-foreground font-medium">{b.startTime}–{b.endTime}</td>
                 <td className="px-5 py-3">
                   <Badge variant={b.status === "completed" ? "default" : b.status === "confirmed" ? "default" : b.status === "cancelled" ? "destructive" : "secondary"}
                     className={b.status === "completed" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : b.status === "confirmed" ? "bg-primary/10 text-primary border-primary/20" : ""}>
@@ -159,7 +159,7 @@ export default function AdminBookings() {
                   </Badge>
                 </td>
                 <td className="px-5 py-3">
-                  <Badge variant="outline" className={b.paymentStatus === "paid" ? "text-primary border-primary/20" : b.paymentStatus === "refunded" ? "text-destructive border-destructive/20" : ""}>
+                  <Badge variant="outline" className={b.paymentStatus === "paid" ? "text-primary border-primary/20" : b.paymentStatus === "refunded" ? "text-destructive border-destructive/20" : "text-amber-500 border-amber-500/20"}>
                     {b.paymentStatus}
                   </Badge>
                 </td>
@@ -170,9 +170,9 @@ export default function AdminBookings() {
                       <CheckCircle2 className="w-4 h-4 mr-1" /> Done
                     </span>
                   ) : b.status === "cancelled" ? (
-                    <span className="text-xs text-muted-foreground">—</span>
+                    <span className="text-xs text-muted-foreground text-center block">—</span>
                   ) : (
-                    <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleCancel(b.id)}>
+                    <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 px-2" onClick={() => handleCancel(b.id)}>
                       <XCircle className="w-4 h-4 mr-1" /> Cancel
                     </Button>
                   )}
@@ -181,7 +181,66 @@ export default function AdminBookings() {
             ))}
           </tbody>
         </table>
-        {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">No bookings found</p>}
+        {filtered.length === 0 && <p className="text-center text-muted-foreground py-12">No bookings found</p>}
+      </div>
+
+      {/* Mobile: Card View */}
+      <div className="lg:hidden grid gap-4">
+        {filtered.map((b) => (
+          <div key={b.id} className="bg-card border border-border rounded-xl p-4 shadow-sm space-y-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="font-bold text-foreground">{b.customerName}</p>
+                <p className="text-xs text-muted-foreground">{b.phone}</p>
+              </div>
+              <Badge variant={b.status === "completed" ? "default" : b.status === "confirmed" ? "default" : b.status === "cancelled" ? "destructive" : "secondary"}
+                className={b.status === "completed" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : b.status === "confirmed" ? "bg-primary/10 text-primary border-primary/20" : ""}>
+                {b.status === "completed" ? "✓ Completed" : b.status}
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs border-y border-border/50 py-3">
+              <div className="space-y-1">
+                <p className="text-muted-foreground uppercase text-[10px] font-bold tracking-wider">Schedule</p>
+                <p className="text-foreground flex items-center gap-1.5">
+                  <span className="font-medium">{b.date}</span>
+                </p>
+                <p className="text-foreground font-semibold">
+                  {b.startTime} – {b.endTime}
+                </p>
+              </div>
+              <div className="space-y-1 text-right">
+                <p className="text-muted-foreground uppercase text-[10px] font-bold tracking-wider">Payment</p>
+                <p className="font-bold text-lg text-foreground">₹{b.amount}</p>
+                <Badge variant="outline" className={`text-[10px] ${b.paymentStatus === "paid" ? "text-primary border-primary/20" : "text-amber-500 border-amber-500/20"}`}>
+                  {b.paymentStatus}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Badge variant="outline" className="text-[10px] text-primary border-primary/20">
+                {facilityLabels[b.facility as keyof typeof facilityLabels] || b.facility}
+              </Badge>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] text-muted-foreground uppercase">{b.id.substring(0, 8)}</span>
+                <div className="h-4 w-[1px] bg-border mx-1" />
+                {b.status === "completed" ? (
+                  <span className="inline-flex items-center text-xs text-emerald-500 font-medium">
+                    <CheckCircle2 className="w-4 h-4 mr-1" /> Done
+                  </span>
+                ) : b.status === "cancelled" ? (
+                  <span className="text-xs text-muted-foreground">Cancelled</span>
+                ) : (
+                  <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 h-8 px-2 text-xs" onClick={() => handleCancel(b.id)}>
+                    <XCircle className="w-4 h-4 mr-1" /> Cancel
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && <p className="text-center text-muted-foreground py-12">No bookings found</p>}
       </div>
 
       {showModal && (

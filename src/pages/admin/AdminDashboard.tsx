@@ -64,7 +64,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((card, i) => (
           <motion.div key={card.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             className="rounded-xl bg-card border border-border p-5">
@@ -88,7 +88,7 @@ export default function AdminDashboard() {
         <div className="px-5 py-4 border-b border-border">
           <h3 className="font-heading font-semibold text-foreground">Recent Bookings</h3>
         </div>
-        <div className="overflow-x-auto">
+        <div className="hidden md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
                     <p className="text-xs text-muted-foreground">{b.phone}</p>
                   </td>
                   <td className="px-5 py-3">
-                    <Badge variant="outline" className="text-primary border-primary/20">{facilityLabels[b.facility]}</Badge>
+                    <Badge variant="outline" className="text-primary border-primary/20">{facilityLabels[b.facility as keyof typeof facilityLabels] || b.facility}</Badge>
                   </td>
                   <td className="px-5 py-3 text-foreground">{b.date}</td>
                   <td className="px-5 py-3 text-foreground">{b.startTime}–{b.endTime}</td>
@@ -125,6 +125,42 @@ export default function AdminDashboard() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile: Card View */}
+        <div className="md:hidden divide-y divide-border/50">
+          {recentBookings.map((b) => (
+            <div key={b.id} className="p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-semibold text-foreground">{b.customerName}</p>
+                  <p className="text-xs text-muted-foreground">{b.phone}</p>
+                </div>
+                <Badge variant={b.status === "confirmed" ? "default" : b.status === "cancelled" ? "destructive" : "secondary"}
+                  className={b.status === "confirmed" ? "bg-primary/10 text-primary border-primary/20" : "text-[10px]"}>
+                  {b.status}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <div className="space-y-1">
+                  <p className="text-muted-foreground flex items-center gap-1">
+                    <Calendar className="w-3 h-3" /> {b.date}
+                  </p>
+                  <p className="text-muted-foreground flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> {b.startTime}–{b.endTime}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-foreground">₹{b.amount}</p>
+                  <p className="text-[10px] lowercase text-muted-foreground">{b.id.substring(0, 8)}...</p>
+                </div>
+              </div>
+              <Badge variant="outline" className="text-[10px] text-primary border-primary/20">
+                {facilityLabels[b.facility as keyof typeof facilityLabels] || b.facility}
+              </Badge>
+            </div>
+          ))}
+          {recentBookings.length === 0 && <p className="p-8 text-center text-muted-foreground">No recent bookings</p>}
         </div>
       </div>
     </div>
