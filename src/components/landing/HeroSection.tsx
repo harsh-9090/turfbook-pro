@@ -20,24 +20,24 @@ export default function HeroSection() {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img src={heroImage} alt="Akola Sports Arena premium sports facility" className="w-full h-full object-cover" width={1920} height={1080} />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background/90" />
-        <div className="absolute inset-0 bg-background/40" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background/70" />
+        <div className="absolute inset-0 bg-background/20" />
       </div>
 
       {/* Animated Glowing Orbs */}
       <motion.div
-        className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/20 rounded-full blur-[120px]"
-        animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.15, 1] }}
+        className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/40 rounded-full blur-[80px]"
+        animate={{ x: [0, 60, 0], y: [0, -40, 0], scale: [1, 1.2, 1] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-1/4 right-0 w-80 h-80 bg-accent/15 rounded-full blur-[100px]"
-        animate={{ x: [0, -50, 0], y: [0, 40, 0], scale: [1, 1.2, 1] }}
+        className="absolute bottom-1/4 right-0 w-80 h-80 bg-accent/35 rounded-full blur-[70px]"
+        animate={{ x: [0, -60, 0], y: [0, 50, 0], scale: [1, 1.3, 1] }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
       />
       <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px]"
-        animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/25 rounded-full blur-[100px]"
+        animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0.8, 0.4] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
       />
 
@@ -46,12 +46,12 @@ export default function HeroSection() {
         {floatingParticles.map((p) => (
           <motion.div
             key={p.id}
-            className="absolute rounded-full bg-primary/30"
-            style={{ width: p.size, height: p.size, left: `${p.x}%`, top: `${p.y}%` }}
+            className="absolute rounded-full bg-primary/60"
+            style={{ width: p.size * 1.5, height: p.size * 1.5, left: `${p.x}%`, top: `${p.y}%` }}
             animate={{
-              y: [0, -60, 0],
-              x: [0, Math.random() > 0.5 ? 20 : -20, 0],
-              opacity: [0, 0.8, 0],
+              y: [0, -80, 0],
+              x: [0, Math.random() > 0.5 ? 30 : -30, 0],
+              opacity: [0, 1, 0],
             }}
             transition={{
               duration: p.duration,
@@ -65,7 +65,7 @@ export default function HeroSection() {
 
       {/* Subtle Grid Overlay */}
       <div
-        className="absolute inset-0 z-[1] opacity-[0.03] pointer-events-none"
+        className="absolute inset-0 z-[1] opacity-[0.07] pointer-events-none"
         style={{
           backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`,
           backgroundSize: "60px 60px",
