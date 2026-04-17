@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
           ) THEN false
           ELSE s.is_available 
         END as is_available,
-        t.facility_type, t.name as facility_name,
+        t.facility_type, t.name as facility_name, t.min_booking_amount,
         u.name as user_name, u.phone, b.payment_status,
         CASE 
           WHEN b.id IS NOT NULL THEN true 
