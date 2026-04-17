@@ -35,9 +35,20 @@ router.post('/', authMiddleware, async (req, res) => {
       [turf_id, day_of_week, start_time, end_time, price]
     );
 
+    // Delete future unbooked slots for this day of week so they regenerate
+    await pool.query(`
+      DELETE FROM slots 
+      WHERE turf_id = $1 
+      AND EXTRACT(DOW FROM date) = $2 
+      AND date >= CURRENT_DATE 
+      AND id NOT IN (SELECT slot_id FROM bookings WHERE status != 'cancelled')
+    `, [turf_id, day_of_week]);
+
     await cache.del(`templates:${turf_id}`);
+    await cache.delPattern('slots:*');
 
     req.app.get('io').emit('template_updated');
+    req.app.get('io').emit('slot_updated');
     res.status(201).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Server error: ' + err.message });
@@ -48,15 +59,30 @@ router.post('/', authMiddleware, async (req, res) => {
 router.patch('/:id', authMiddleware, async (req, res) => {
   try {
     const { start_time, end_time, price } = req.body;
+
+    const tmplRes = await pool.query('SELECT turf_id, day_of_week FROM slot_templates WHERE id = $1', [req.params.id]);
+    if (tmplRes.rows.length === 0) return res.status(404).json({ error: 'Template not found' });
+    const { turf_id, day_of_week } = tmplRes.rows[0];
+
     const result = await pool.query(
       `UPDATE slot_templates SET start_time=$1, end_time=$2, price=$3 WHERE id=$4 RETURNING *`,
       [start_time, end_time, price, req.params.id]
     );
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Template not found' });
+
+    // Regenerate slots by deleting future unbooked slots for this day
+    await pool.query(`
+      DELETE FROM slots 
+      WHERE turf_id = $1 
+      AND EXTRACT(DOW FROM date) = $2 
+      AND date >= CURRENT_DATE 
+      AND id NOT IN (SELECT slot_id FROM bookings WHERE status != 'cancelled')
+    `, [turf_id, day_of_week]);
 
     await cache.delPattern('templates:*');
+    await cache.delPattern('slots:*');
 
     req.app.get('io').emit('template_updated');
+    req.app.get('io').emit('slot_updated');
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Server error: ' + err.message });
@@ -69,9 +95,22 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     const result = await pool.query('DELETE FROM slot_templates WHERE id = $1 RETURNING *', [req.params.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Template not found' });
 
+    const { turf_id, day_of_week } = result.rows[0];
+    
+    // Wipe future unbooked slots for this day so the absence of template is respected
+    await pool.query(`
+      DELETE FROM slots 
+      WHERE turf_id = $1 
+      AND EXTRACT(DOW FROM date) = $2 
+      AND date >= CURRENT_DATE 
+      AND id NOT IN (SELECT slot_id FROM bookings WHERE status != 'cancelled')
+    `, [turf_id, day_of_week]);
+
     await cache.delPattern('templates:*');
+    await cache.delPattern('slots:*');
 
     req.app.get('io').emit('template_updated');
+    req.app.get('io').emit('slot_updated');
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Server error: ' + err.message });
