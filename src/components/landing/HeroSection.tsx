@@ -91,13 +91,13 @@ export default function HeroSection() {
       )}
 
       {/* Content */}
-      <div className="container mx-auto px-4 lg:px-8 relative z-10 pt-24 pb-12 md:pt-20 md:pb-0">
+      <div className="container mx-auto px-4 lg:px-8 relative z-10 pt-24 pb-16 md:pt-20 md:pb-0">
         <div className="max-w-3xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
-            className="mb-5 md:mb-6"
+            className="mb-4 md:mb-6"
           >
             <img
               src={logoImage}
@@ -110,10 +110,10 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-primary/15 border border-primary/30 mb-5 md:mb-6"
+            className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-primary/15 border border-primary/30 mb-4 md:mb-6"
           >
             <Star className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary fill-primary" />
-            <span className="text-xs md:text-sm font-semibold text-foreground">
+            <span className="text-xs md:text-sm font-semibold tracking-wide text-foreground">
               Cricket • Snooker • Pool
             </span>
           </motion.div>
@@ -122,27 +122,44 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-heading text-[2.25rem] leading-[1.1] sm:text-5xl lg:text-7xl font-bold mb-5 md:mb-6 hero-text-shadow"
+            className="font-heading text-[2.5rem] leading-[1.05] sm:text-5xl lg:text-7xl font-bold tracking-tight mb-5 md:mb-6 hero-text-shadow"
           >
             Your Ultimate
             <br />
             <span className="text-gradient-turf">Sports Arena</span>
           </motion.h1>
 
-          <motion.p
+          {/* Premium description with accent rules */}
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-base sm:text-xl text-zinc-100 max-w-xl mb-8 mx-auto leading-relaxed px-2"
+            className="flex items-center justify-center gap-3 mb-5 md:mb-6 px-4"
           >
-            Premium cricket turf with pro nets, plus an exclusive snooker & pool lounge. Book in seconds — just show up & play.
+            <span className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-primary/60" />
+            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+              Play · Compete · Celebrate
+            </span>
+            <span className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-primary/60" />
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="text-[15px] sm:text-lg md:text-xl text-zinc-100/95 max-w-xl mb-7 md:mb-10 mx-auto leading-relaxed font-light px-3"
+          >
+            Premium cricket turf, pro nets, and an exclusive{" "}
+            <span className="font-medium text-foreground">snooker &amp; pool lounge</span>.
+            <br className="hidden sm:block" />
+            Book in seconds — just show up and play.
           </motion.p>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-10 md:mb-12 justify-center px-4 sm:px-0"
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 md:mb-12 justify-center px-4 sm:px-0"
           >
             <Link to="/book" className="w-full sm:w-auto">
               <Button
@@ -164,36 +181,37 @@ export default function HeroSection() {
             </a>
           </motion.div>
 
+          {/* Stats with divider rules for premium feel */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="grid grid-cols-3 gap-3 sm:flex sm:flex-wrap sm:gap-8 sm:justify-center max-w-md mx-auto sm:max-w-none"
+            className="grid grid-cols-3 divide-x divide-border/40 max-w-md mx-auto sm:max-w-lg border-y border-border/40 py-4 sm:py-5"
           >
             {[
               { icon: Users, label: "10K+", labelLg: "10,000+", sub: "Sessions" },
-              { icon: Star, label: "4.9", labelLg: "4.9", sub: "Rating" },
-              { icon: Clock, label: "6AM–12AM", labelLg: "6AM–12AM", sub: "Daily" },
+              { icon: Star, label: "4.9★", labelLg: "4.9 ★", sub: "Rating" },
+              { icon: Clock, label: "6AM–12AM", labelLg: "6AM–12AM", sub: "Open Daily" },
             ].map((stat) => (
               <div
                 key={stat.sub}
-                className="flex flex-col sm:flex-row items-center sm:gap-3 gap-1.5 text-center sm:text-left"
+                className="flex flex-col items-center justify-center gap-1 px-2"
               >
-                <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                  <stat.icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="font-heading font-bold text-foreground text-sm md:text-base">
-                    <span className="sm:hidden">{stat.label}</span>
-                    <span className="hidden sm:inline">{stat.labelLg}</span>
-                  </p>
-                  <p className="text-xs md:text-sm text-muted-foreground">{stat.sub}</p>
-                </div>
+                <p className="font-heading font-bold text-foreground text-sm sm:text-lg md:text-xl">
+                  <span className="sm:hidden">{stat.label}</span>
+                  <span className="hidden sm:inline">{stat.labelLg}</span>
+                </p>
+                <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground">
+                  {stat.sub}
+                </p>
               </div>
             ))}
           </motion.div>
         </div>
       </div>
+
+      {/* Smooth transition into next section */}
+      <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-b from-transparent to-background pointer-events-none z-[2]" />
     </section>
   );
 }
