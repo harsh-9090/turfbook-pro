@@ -19,7 +19,7 @@ export default function HeroSection() {
   const isMobile = useIsMobile();
 
   return (
-    <section className="relative min-h-[100svh] md:min-h-screen flex items-center overflow-hidden">
+    <section className="relative flex items-center overflow-hidden md:min-h-screen">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img

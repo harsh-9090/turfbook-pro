@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import logoImage from "@/assets/logo.png";
 
 export default function FooterSection() {
   return (
@@ -8,9 +9,11 @@ export default function FooterSection() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           <div className="col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-gradient-turf flex items-center justify-center">
-                <span className="font-heading font-bold text-primary-foreground text-lg">S</span>
-              </div>
+              <img
+                src={logoImage}
+                alt="Akola Sports Arena logo"
+                className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/40"
+              />
               <span className="font-heading font-bold text-xl text-foreground">
                 Akola Sports <span className="text-gradient-turf">Arena</span>
               </span>
