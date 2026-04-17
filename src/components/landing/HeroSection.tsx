@@ -187,7 +187,7 @@ export default function HeroSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="grid grid-cols-3 divide-x divide-border/40 max-w-md mx-auto sm:max-w-lg border-y border-border/40 py-4 sm:py-5"
+            className="grid grid-cols-3 divide-x divide-white/15 max-w-md mx-auto sm:max-w-lg border-y border-white/15 py-4 sm:py-5"
           >
             {[
               { icon: Users, label: "10K+", labelLg: "10,000+", sub: "Sessions" },
@@ -198,11 +198,11 @@ export default function HeroSection() {
                 key={stat.sub}
                 className="flex flex-col items-center justify-center gap-1 px-2"
               >
-                <p className="font-heading font-bold text-foreground text-sm sm:text-lg md:text-xl">
+                <p className="font-heading font-bold text-white text-sm sm:text-lg md:text-xl [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
                   <span className="sm:hidden">{stat.label}</span>
                   <span className="hidden sm:inline">{stat.labelLg}</span>
                 </p>
-                <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground">
+                <p className="text-[10px] sm:text-xs uppercase tracking-wider text-zinc-300">
                   {stat.sub}
                 </p>
               </div>
@@ -212,7 +212,7 @@ export default function HeroSection() {
       </div>
 
       {/* Smooth transition into next section */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-b from-transparent to-background pointer-events-none z-[2]" />
+      <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-b from-transparent to-background pointer-events-none z-[3]" />
     </section>
   );
 }
