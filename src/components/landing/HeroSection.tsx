@@ -29,7 +29,8 @@ export default function HeroSection() {
           width={1920}
           height={1080}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/45 to-background/80 md:from-background/60 md:via-background/40 md:to-background/70" />
+        {/* Dark gradient overlay — same in both themes since bg image is dark */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-black/80 md:from-black/60 md:via-black/45 md:to-black/75" />
       </div>
 
       {/* Heavy decorative animations — desktop only for performance */}
@@ -110,10 +111,10 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-primary/15 border border-primary/30 mb-4 md:mb-6"
+            className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-primary/20 border border-primary/40 mb-4 md:mb-6"
           >
             <Star className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary fill-primary" />
-            <span className="text-xs md:text-sm font-semibold tracking-wide text-foreground">
+            <span className="text-xs md:text-sm font-semibold tracking-wide text-white">
               Cricket • Snooker • Pool
             </span>
           </motion.div>
@@ -122,11 +123,11 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-heading text-[2.5rem] leading-[1.05] sm:text-5xl lg:text-7xl font-bold tracking-tight mb-5 md:mb-6 hero-text-shadow"
+            className="font-heading text-[2.5rem] leading-[1.05] sm:text-5xl lg:text-7xl font-bold tracking-tight mb-5 md:mb-6 text-white hero-text-shadow"
           >
             Your Ultimate
             <br />
-            <span className="text-gradient-turf">Sports Arena</span>
+            <span className="text-gradient-turf drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">Sports Arena</span>
           </motion.h1>
 
           {/* Premium description with accent rules */}
@@ -136,21 +137,21 @@ export default function HeroSection() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="flex items-center justify-center gap-3 mb-5 md:mb-6 px-4"
           >
-            <span className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-primary/60" />
+            <span className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-primary/70" />
             <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary">
               Play · Compete · Celebrate
             </span>
-            <span className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-primary/60" />
+            <span className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-primary/70" />
           </motion.div>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.25 }}
-            className="text-[15px] sm:text-lg md:text-xl text-zinc-100/95 max-w-xl mb-7 md:mb-10 mx-auto leading-relaxed font-light px-3"
+            className="text-[15px] sm:text-lg md:text-xl text-zinc-100 max-w-xl mb-7 md:mb-10 mx-auto leading-relaxed font-light px-3 [text-shadow:_0_1px_8px_rgba(0,0,0,0.6)]"
           >
             Premium cricket turf, pro nets, and an exclusive{" "}
-            <span className="font-medium text-foreground">snooker &amp; pool lounge</span>.
+            <span className="font-medium text-white">snooker &amp; pool lounge</span>.
             <br className="hidden sm:block" />
             Book in seconds — just show up and play.
           </motion.p>
@@ -186,7 +187,7 @@ export default function HeroSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="grid grid-cols-3 divide-x divide-border/40 max-w-md mx-auto sm:max-w-lg border-y border-border/40 py-4 sm:py-5"
+            className="grid grid-cols-3 divide-x divide-white/15 max-w-md mx-auto sm:max-w-lg border-y border-white/15 py-4 sm:py-5"
           >
             {[
               { icon: Users, label: "10K+", labelLg: "10,000+", sub: "Sessions" },
@@ -197,11 +198,11 @@ export default function HeroSection() {
                 key={stat.sub}
                 className="flex flex-col items-center justify-center gap-1 px-2"
               >
-                <p className="font-heading font-bold text-foreground text-sm sm:text-lg md:text-xl">
+                <p className="font-heading font-bold text-white text-sm sm:text-lg md:text-xl [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
                   <span className="sm:hidden">{stat.label}</span>
                   <span className="hidden sm:inline">{stat.labelLg}</span>
                 </p>
-                <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground">
+                <p className="text-[10px] sm:text-xs uppercase tracking-wider text-zinc-300">
                   {stat.sub}
                 </p>
               </div>
@@ -211,7 +212,7 @@ export default function HeroSection() {
       </div>
 
       {/* Smooth transition into next section */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-b from-transparent to-background pointer-events-none z-[2]" />
+      <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-b from-transparent to-background pointer-events-none z-[3]" />
     </section>
   );
 }
