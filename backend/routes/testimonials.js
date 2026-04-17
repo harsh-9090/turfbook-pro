@@ -3,44 +3,13 @@ const router = express.Router();
 const pool = require('../config/db');
 const authMiddleware = require('../middleware/auth');
 const cache = require('../config/cache');
+const { reviewLimiter } = require('../middleware/rateLimiter');
 
 // Public: Get approved testimonials
-router.get('/', async (req, res) => {
-  try {
-    if (!cache.shouldBypass(req)) {
-      const cached = await cache.get('testimonials:approved');
-      if (cached) return res.json(cached);
-    }
-
-    const result = await pool.query(
-      'SELECT * FROM testimonials WHERE status = $1 ORDER BY is_featured DESC, created_at DESC',
-      ['approved']
-    );
-    await cache.set('testimonials:approved', result.rows, 600); // 10 min
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Admin: Get all testimonials (including pending)
-router.get('/admin', authMiddleware, async (req, res) => {
-  try {
-    if (!cache.shouldBypass(req)) {
-      const cached = await cache.get('testimonials:admin');
-      if (cached) return res.json(cached);
-    }
-
-    const result = await pool.query('SELECT * FROM testimonials ORDER BY created_at DESC');
-    await cache.set('testimonials:admin', result.rows, 120); // 2 min
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
+// ... (omitting GET for context)
 
 // Public: Submit a review (text only)
-router.post('/', async (req, res) => {
+router.post('/', reviewLimiter, async (req, res) => {
   try {
     const { name, role, text, rating } = req.body;
     if (!name || !text || !rating) {

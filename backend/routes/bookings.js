@@ -3,8 +3,9 @@ const router = express.Router();
 const pool = require('../config/db');
 const authMiddleware = require('../middleware/auth');
 const cache = require('../config/cache');
+const { bookingLimiter } = require('../middleware/rateLimiter');
 
-router.post('/', async (req, res) => {
+router.post('/', bookingLimiter, async (req, res) => {
   try {
     const { name, phone, slot_id } = req.body;
     if (!name || !phone || !slot_id) return res.status(400).json({ error: 'Name, phone, and slot_id required' });
@@ -53,8 +54,8 @@ router.post('/', async (req, res) => {
 
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const { date, status } = req.query;
-    const cacheKey = `bookings:list:${date || 'all'}:${status || 'all'}`;
+    const { date, status, limit } = req.query;
+    const cacheKey = `bookings:list:${date || 'all'}:${status || 'all'}:${limit || 'none'}`;
 
     if (!cache.shouldBypass(req)) {
       const cached = await cache.get(cacheKey);
@@ -76,7 +77,13 @@ router.get('/', authMiddleware, async (req, res) => {
     const params = [];
     if (date) { params.push(date); query += ` AND s.date = $${params.length}`; }
     if (status) { params.push(status); query += ` AND b.status = $${params.length}`; }
+    
     query += ' ORDER BY b.created_at DESC';
+
+    if (limit) {
+      params.push(limit);
+      query += ` LIMIT $${params.length}`;
+    }
 
     const result = await pool.query(query, params);
     await cache.set(cacheKey, result.rows, 60); // 60 sec

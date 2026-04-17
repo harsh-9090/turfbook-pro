@@ -24,7 +24,8 @@ try {
       return Math.min(times * 500, 3000);
     },
     lazyConnect: false,
-    // Keep offline queue enabled so commands queue until connection is ready
+    // Enable offline queue so commands queue until connection is ready.
+    // This prevents startup crashes if Redis is briefly unavailable.
     enableOfflineQueue: true,
   });
 

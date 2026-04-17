@@ -27,8 +27,8 @@ export default function AdminDashboard() {
         upcomingBookings: statsRes.data.upcomingBookings,
       });
 
-      const bookingsRes = await api.get('/bookings');
-      const mapped = bookingsRes.data.slice(0, 5).map((b: any) => ({
+      const bookingsRes = await api.get('/bookings?limit=5');
+      const mapped = bookingsRes.data.map((b: any) => ({
         id: b.id,
         customerName: b.customer_name,
         phone: b.phone,

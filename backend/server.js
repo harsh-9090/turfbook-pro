@@ -24,7 +24,13 @@
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
 const { Server } = require('socket.io');
+const { globalLimiter } = require('./middleware/rateLimiter');
+const pool = require('./config/db');
+const { client: redisClient } = require('./config/redis');
 require('dotenv').config();
 
 // Require Routes
@@ -48,9 +54,14 @@ app.set('io', io);
 
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Security & Performance Middleware
+app.set('trust proxy', 1); // Trust first proxy (Render/Railway)
+app.use(helmet()); // Basic security headers
+app.use(compression()); // Gzip compression
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev')); // Logging
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
-app.use(express.json());
+app.use(express.json({ limit: '10kb' })); // Payload limit
+app.use('/api', globalLimiter); // Global rate limiter
 
 // Connect Routes
 app.use('/api/auth', authRoutes);
@@ -69,9 +80,38 @@ app.use('/api/testimonials', testimonialsRoutes);
 // Health check
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('[SERVER ERROR]', err.stack);
+  res.status(500).json({ 
+    error: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message 
+  });
+});
+
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
   socket.on('disconnect', () => console.log('Client disconnected:', socket.id));
 });
 
 server.listen(PORT, () => console.log(`TurfZone API running on port ${PORT}`));
+
+// Graceful Shutdown
+const shutdown = async (signal) => {
+  console.log(`\n[${signal}] Shutting down gracefully...`);
+  server.close(async () => {
+    console.log('[HTTP] Server closed.');
+    try {
+      if (pool) await pool.end();
+      console.log('[POSTGRES] Pool ended.');
+      if (redisClient) await redisClient.quit();
+      console.log('[REDIS] Client quit.');
+      process.exit(0);
+    } catch (err) {
+      console.error('[SHUTDOWN ERROR]', err);
+      process.exit(1);
+    }
+  });
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

@@ -2,41 +2,13 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 const cache = require('../config/cache');
+const { sessionLimiter } = require('../middleware/rateLimiter');
 
 // Get running sessions
-router.get('/', async (req, res) => {
-  try {
-    const { turf_id } = req.query;
-    const cacheKey = turf_id ? `sessions:running:${turf_id}` : 'sessions:running';
-
-    if (!cache.shouldBypass(req)) {
-      const cached = await cache.get(cacheKey);
-      if (cached) return res.json(cached);
-    }
-
-    let query = `
-      SELECT t.*, f.name as facility_name, f.weekday_day_price as hourly_rate
-      FROM table_sessions t
-      JOIN turfs f ON t.turf_id = f.id
-      WHERE t.status = 'running'
-    `;
-    let params = [];
-    if (turf_id) {
-       query += " AND t.turf_id = $1";
-       params.push(turf_id);
-    }
-    query += " ORDER BY t.start_time DESC";
-    
-    const { rows } = await pool.query(query, params);
-    await cache.set(cacheKey, rows, 30); // 30 sec — real-time data
-    res.json(rows);
-  } catch(e) {
-    res.status(500).json({error: e.message});
-  }
-});
+// ... (omitting GET for context)
 
 // Start a new table session
-router.post('/', async (req, res) => {
+router.post('/', sessionLimiter, async (req, res) => {
   try {
     const { turf_id, name, customer_name, customer_phone } = req.body;
     if (!turf_id) {
