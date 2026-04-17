@@ -2,10 +2,11 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Star, Users, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 import heroImage from "@/assets/hero-arena.jpg";
 import logoImage from "@/assets/logo.png";
 
-const floatingParticles = Array.from({ length: 20 }, (_, i) => ({
+const floatingParticles = Array.from({ length: 14 }, (_, i) => ({
   id: i,
   size: Math.random() * 4 + 2,
   x: Math.random() * 100,
@@ -15,96 +16,113 @@ const floatingParticles = Array.from({ length: 20 }, (_, i) => ({
 }));
 
 export default function HeroSection() {
+  const isMobile = useIsMobile();
+
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
-        <img src={heroImage} alt="Akola Sports Arena premium sports facility" className="w-full h-full object-cover" width={1920} height={1080} />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background/70" />
-        <div className="absolute inset-0 bg-background/20" />
+        <img
+          src={heroImage}
+          alt="Akola Sports Arena premium sports facility"
+          className="w-full h-full object-cover"
+          width={1920}
+          height={1080}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/45 to-background/80 md:from-background/60 md:via-background/40 md:to-background/70" />
       </div>
 
-      {/* Animated Glowing Orbs */}
-      <motion.div
-        className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/40 rounded-full blur-[80px]"
-        animate={{ x: [0, 60, 0], y: [0, -40, 0], scale: [1, 1.2, 1] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute bottom-1/4 right-0 w-80 h-80 bg-accent/35 rounded-full blur-[70px]"
-        animate={{ x: [0, -60, 0], y: [0, 50, 0], scale: [1, 1.3, 1] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-      />
-      <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/25 rounded-full blur-[100px]"
-        animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-      />
-
-      {/* Floating Particles */}
-      <div className="absolute inset-0 z-[1] pointer-events-none">
-        {floatingParticles.map((p) => (
+      {/* Heavy decorative animations — desktop only for performance */}
+      {!isMobile && (
+        <>
           <motion.div
-            key={p.id}
-            className="absolute rounded-full bg-primary/60"
-            style={{ width: p.size * 1.5, height: p.size * 1.5, left: `${p.x}%`, top: `${p.y}%` }}
-            animate={{
-              y: [0, -80, 0],
-              x: [0, Math.random() > 0.5 ? 30 : -30, 0],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: p.duration,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: p.delay,
+            className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/40 rounded-full blur-[80px] will-change-transform"
+            animate={{ x: [0, 60, 0], y: [0, -40, 0], scale: [1, 1.2, 1] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute bottom-1/4 right-0 w-80 h-80 bg-accent/35 rounded-full blur-[70px] will-change-transform"
+            animate={{ x: [0, -60, 0], y: [0, 50, 0], scale: [1, 1.3, 1] }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          />
+          <motion.div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/25 rounded-full blur-[100px] will-change-transform"
+            animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          />
+
+          <div className="absolute inset-0 z-[1] pointer-events-none">
+            {floatingParticles.map((p) => (
+              <motion.div
+                key={p.id}
+                className="absolute rounded-full bg-primary/60 will-change-transform"
+                style={{ width: p.size * 1.5, height: p.size * 1.5, left: `${p.x}%`, top: `${p.y}%` }}
+                animate={{
+                  y: [0, -80, 0],
+                  x: [0, Math.random() > 0.5 ? 30 : -30, 0],
+                  opacity: [0, 1, 0],
+                }}
+                transition={{
+                  duration: p.duration,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: p.delay,
+                }}
+              />
+            ))}
+          </div>
+
+          <div
+            className="absolute inset-0 z-[1] opacity-[0.07] pointer-events-none"
+            style={{
+              backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`,
+              backgroundSize: "60px 60px",
             }}
           />
-        ))}
-      </div>
+        </>
+      )}
 
-      {/* Subtle Grid Overlay */}
-      <div
-        className="absolute inset-0 z-[1] opacity-[0.07] pointer-events-none"
-        style={{
-          backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }}
-      />
+      {/* Mobile: lightweight static glow accents */}
+      {isMobile && (
+        <>
+          <div className="absolute top-1/4 -left-20 w-64 h-64 bg-primary/30 rounded-full blur-[60px] pointer-events-none" />
+          <div className="absolute bottom-1/4 -right-16 w-56 h-56 bg-accent/25 rounded-full blur-[60px] pointer-events-none" />
+        </>
+      )}
 
       {/* Content */}
-      <div className="container mx-auto px-4 lg:px-8 relative z-10 pt-20">
+      <div className="container mx-auto px-4 lg:px-8 relative z-10 pt-24 pb-12 md:pt-20 md:pb-0">
         <div className="max-w-3xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7 }}
-            className="mb-6"
+            transition={{ duration: 0.6 }}
+            className="mb-5 md:mb-6"
           >
-            <motion.img
+            <img
               src={logoImage}
               alt="Akola Sports Arena logo"
-              className="w-24 h-24 sm:w-32 sm:h-32 rounded-full shadow-turf-lg object-cover mx-auto"
-              animate={{ boxShadow: ["0 0 20px hsl(var(--primary) / 0.2)", "0 0 40px hsl(var(--primary) / 0.4)", "0 0 20px hsl(var(--primary) / 0.2)"] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full shadow-turf-lg object-cover mx-auto"
             />
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-turf/20 border border-primary/30 mb-6 backdrop-blur-sm"
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-primary/15 border border-primary/30 mb-5 md:mb-6"
           >
-            <Star className="w-4 h-4 text-primary fill-primary" />
-            <span className="text-sm font-semibold text-foreground">Cricket • Snooker • Pool — All Under One Roof</span>
+            <Star className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary fill-primary" />
+            <span className="text-xs md:text-sm font-semibold text-foreground">
+              Cricket • Snooker • Pool
+            </span>
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="font-heading text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight mb-6"
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="font-heading text-[2.25rem] leading-[1.1] sm:text-5xl lg:text-7xl font-bold mb-5 md:mb-6 hero-text-shadow"
           >
             Your Ultimate
             <br />
@@ -114,26 +132,33 @@ export default function HeroSection() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg sm:text-xl text-zinc-200 max-w-xl mb-8 mx-auto leading-relaxed"
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-base sm:text-xl text-zinc-100 max-w-xl mb-8 mx-auto leading-relaxed px-2"
           >
-            Premium cricket turf with professional nets, plus exclusive snooker & pool lounge. Book your session in seconds and just show up to play.
+            Premium cricket turf with pro nets, plus an exclusive snooker & pool lounge. Book in seconds — just show up & play.
           </motion.p>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 mb-12 justify-center"
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-10 md:mb-12 justify-center px-4 sm:px-0"
           >
-            <Link to="/book">
-              <Button size="lg" className="bg-gradient-turf text-primary-foreground font-semibold text-lg px-8 shadow-turf hover:opacity-90 transition-opacity group">
+            <Link to="/book" className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto bg-gradient-turf text-primary-foreground font-semibold text-base md:text-lg px-8 shadow-turf hover:opacity-90 transition-opacity group"
+              >
                 Book a Session
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <a href="#facilities">
-              <Button size="lg" variant="outline" className="text-lg px-8 border-border hover:bg-secondary">
+            <a href="#facilities" className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto text-base md:text-lg px-8 border-border bg-background/40 hover:bg-secondary"
+              >
                 View Facilities
               </Button>
             </a>
@@ -142,21 +167,27 @@ export default function HeroSection() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="flex flex-wrap gap-8 justify-center"
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="grid grid-cols-3 gap-3 sm:flex sm:flex-wrap sm:gap-8 sm:justify-center max-w-md mx-auto sm:max-w-none"
           >
             {[
-              { icon: Users, label: "10,000+", sub: "Sessions Played" },
-              { icon: Star, label: "4.9", sub: "Rating" },
-              { icon: Clock, label: "6AM–12AM", sub: "Open Daily" },
+              { icon: Users, label: "10K+", labelLg: "10,000+", sub: "Sessions" },
+              { icon: Star, label: "4.9", labelLg: "4.9", sub: "Rating" },
+              { icon: Clock, label: "6AM–12AM", labelLg: "6AM–12AM", sub: "Daily" },
             ].map((stat) => (
-              <div key={stat.label} className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <stat.icon className="w-5 h-5 text-primary" />
+              <div
+                key={stat.sub}
+                className="flex flex-col sm:flex-row items-center sm:gap-3 gap-1.5 text-center sm:text-left"
+              >
+                <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                  <stat.icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-heading font-bold text-foreground">{stat.label}</p>
-                  <p className="text-sm text-muted-foreground">{stat.sub}</p>
+                  <p className="font-heading font-bold text-foreground text-sm md:text-base">
+                    <span className="sm:hidden">{stat.label}</span>
+                    <span className="hidden sm:inline">{stat.labelLg}</span>
+                  </p>
+                  <p className="text-xs md:text-sm text-muted-foreground">{stat.sub}</p>
                 </div>
               </div>
             ))}
