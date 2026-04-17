@@ -143,16 +143,77 @@ export default function BookingPage() {
 
   const handleConfirmBooking = async () => {
     if (!selectedSlot) return;
+    
+    // 1. Create a pending booking
+    let bookingId = '';
     try {
-      await api.post('/bookings', {
+      const bookingRes = await api.post('/bookings', {
         name,
         phone,
         slot_id: selectedSlot.id
       });
-      toast.success("Booking confirmed! Confirmation sent to your phone.");
-      setStep("success");
+      bookingId = bookingRes.data.booking.id;
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Booking initialization failed");
+      return;
+    }
+
+    // 2. Create Razorpay order
+    try {
+      const orderRes = await api.post('/payments/create-order', {
+        amount: selectedSlotGroup.price,
+        booking_id: bookingId
+      });
+
+      const { order_id, amount: orderAmount, currency, key_id } = orderRes.data;
+
+      // 3. Open Razorpay Checkout
+      const options = {
+        key: key_id,
+        amount: orderAmount,
+        currency: currency,
+        name: "TurfZone Arena",
+        description: `Booking for ${facilityLabels[facility]}`,
+        order_id: order_id,
+        handler: async function (response: any) {
+          // 4. Verify Signature
+          try {
+            const verifyRes = await api.post('/payments/verify', {
+              booking_id: bookingId,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyRes.data.success) {
+              toast.success("Payment successful! Booking confirmed.");
+              setStep("success");
+            } else {
+              toast.error("Verification failed. Please contact support.");
+            }
+          } catch (err) {
+            toast.error("Signature verification failed.");
+          }
+        },
+        prefill: {
+          name: name,
+          contact: phone,
+        },
+        theme: {
+          color: "#10b981", // turf-primary
+        },
+        modal: {
+          ondismiss: function() {
+            toast.warning("Payment cancelled. Booking remains pending.");
+          }
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Booking failed");
+      console.error("Payment setup error:", error);
+      toast.error("Payment initialization failed");
     }
   };
 

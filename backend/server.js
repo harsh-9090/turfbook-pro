@@ -98,19 +98,36 @@ server.listen(PORT, () => console.log(`TurfZone API running on port ${PORT}`));
 // Graceful Shutdown
 const shutdown = async (signal) => {
   console.log(`\n[${signal}] Shutting down gracefully...`);
-  server.close(async () => {
-    console.log('[HTTP] Server closed.');
-    try {
-      if (pool) await pool.end();
+  
+  // Set a safety timeout for forced exit
+  const forceExit = setTimeout(() => {
+    console.warn('[SHUTDOWN] Forced exit after timeout.');
+    process.exit(1);
+  }, 3000);
+
+  try {
+    // Stop accepting new connections
+    server.close(() => {
+      console.log('[HTTP] Server stopped.');
+    });
+
+    // Close DB & Redis
+    if (pool) {
+      await pool.end();
       console.log('[POSTGRES] Pool ended.');
-      if (redisClient) await redisClient.quit();
-      console.log('[REDIS] Client quit.');
-      process.exit(0);
-    } catch (err) {
-      console.error('[SHUTDOWN ERROR]', err);
-      process.exit(1);
     }
-  });
+    if (redisClient) {
+      await redisClient.quit();
+      console.log('[REDIS] Client quit.');
+    }
+
+    clearTimeout(forceExit);
+    console.log('[SHUTDOWN] Clean exit.');
+    process.exit(0);
+  } catch (err) {
+    console.error('[SHUTDOWN ERROR]', err);
+    process.exit(1);
+  }
 };
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));

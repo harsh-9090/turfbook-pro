@@ -60,7 +60,7 @@ const bookingLimiter = rateLimit({
 // Payment verification limiter: 10 per hour
 const paymentLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10,
+  max: 50,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many payment verification attempts.' },
