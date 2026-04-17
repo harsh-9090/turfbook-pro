@@ -76,13 +76,22 @@ export default function AdminPricing() {
     } catch { toast.error("Failed to save plan"); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this pricing plan?")) return;
-    try {
-      await api.delete(`/pricing/${id}`);
-      toast.success("Plan deleted");
-      fetchPlans();
-    } catch { toast.error("Failed to delete"); }
+  const handleDelete = (id: string) => {
+    toast("Delete this pricing plan?", {
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            await api.delete(`/pricing/${id}`);
+            toast.success("Plan deleted");
+            fetchPlans();
+          } catch {
+            toast.error("Failed to delete");
+          }
+        }
+      },
+      cancel: { label: "Cancel", onClick: () => {} }
+    });
   };
 
   const handlePopular = async (id: string) => {

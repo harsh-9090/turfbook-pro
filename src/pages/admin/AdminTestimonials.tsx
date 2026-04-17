@@ -45,13 +45,22 @@ export default function AdminTestimonials() {
     } catch { toast.error("Failed to toggle feature status"); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this review permanently?")) return;
-    try {
-      await api.delete(`/testimonials/${id}`);
-      toast.success("Review deleted");
-      fetchTestimonials();
-    } catch { toast.error("Failed to delete review"); }
+  const handleDelete = (id: string) => {
+    toast("Delete this review permanently?", {
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            await api.delete(`/testimonials/${id}`);
+            toast.success("Review deleted");
+            fetchTestimonials();
+          } catch {
+            toast.error("Failed to delete review");
+          }
+        }
+      },
+      cancel: { label: "Cancel", onClick: () => {} }
+    });
   };
 
   const filtered = testimonials.filter(t => filter === 'all' || t.status === filter);

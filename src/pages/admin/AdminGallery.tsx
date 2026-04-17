@@ -81,13 +81,22 @@ export default function AdminGallery() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this image from gallery and Cloudinary?")) return;
-    try {
-      await api.delete(`/gallery/${id}`);
-      toast.success("Image deleted");
-      fetchImages();
-    } catch { toast.error("Failed to delete image"); }
+  const handleDelete = (id: string) => {
+    toast("Delete this image from gallery and Cloudinary?", {
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            await api.delete(`/gallery/${id}`);
+            toast.success("Image deleted");
+            fetchImages();
+          } catch {
+            toast.error("Failed to delete image");
+          }
+        }
+      },
+      cancel: { label: "Cancel", onClick: () => {} }
+    });
   };
 
   const updateImageInfo = async (id: string, info: Partial<GalleryImage>) => {

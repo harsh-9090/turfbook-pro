@@ -75,15 +75,22 @@ export default function AdminFacilities() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this event? All related slots will be broken if not handled!")) return;
-    try {
-      await api.delete(`/facilities/${id}`);
-      toast.success('Sports Event deleted');
-      fetchFacilities();
-    } catch (e) {
-      toast.error('Failed to delete event');
-    }
+  const handleDelete = (id: string) => {
+    toast("Are you sure you want to delete this event? All related slots will be broken if not handled!", {
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            await api.delete(`/facilities/${id}`);
+            toast.success('Sports Event deleted');
+            fetchFacilities();
+          } catch (e) {
+            toast.error('Failed to delete event');
+          }
+        }
+      },
+      cancel: { label: "Cancel", onClick: () => {} }
+    });
   };
 
   const openPricingModal = (facility: any) => {

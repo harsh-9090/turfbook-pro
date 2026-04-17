@@ -91,15 +91,22 @@ export default function AdminSchedules() {
     }
   };
 
-  const deleteTemplate = async (id: string) => {
-    if (!confirm("Are you sure you want to permanently delete this slot from the weekly schedule?")) return;
-    try {
-      await api.delete(`/templates/${id}`);
-      setTemplates((prev) => prev.filter((t) => t.id !== id));
-      toast.success("Template deleted");
-    } catch (e) {
-      toast.error("Failed to delete template");
-    }
+  const deleteTemplate = (id: string) => {
+    toast("Are you sure you want to permanently delete this slot from the weekly schedule?", {
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            await api.delete(`/templates/${id}`);
+            setTemplates((prev) => prev.filter((t) => t.id !== id));
+            toast.success("Template deleted");
+          } catch (e) {
+            toast.error("Failed to delete template");
+          }
+        }
+      },
+      cancel: { label: "Cancel", onClick: () => {} }
+    });
   };
 
   const currentDayTemplates = templates.filter(t => t.day_of_week === selectedDay);
