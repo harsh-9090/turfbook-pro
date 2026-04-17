@@ -22,7 +22,7 @@ export default function AdminDashboard() {
       const statsRes = await api.get('/admin/stats');
       setStatsData({
         totalBookings: statsRes.data.totalBookings,
-        dailyRevenue: statsRes.data.totalRevenue || 0,
+        dailyRevenue: statsRes.data.todayRevenue || 0,
         monthlyRevenue: statsRes.data.totalRevenue || 0,
         upcomingBookings: statsRes.data.upcomingBookings,
       });
@@ -32,12 +32,12 @@ export default function AdminDashboard() {
         id: b.id,
         customerName: b.customer_name,
         phone: b.phone,
-        facility: "cricket",
+        facility: b.facility_type || "cricket",
         date: format(new Date(b.date), 'yyyy-MM-dd'),
         startTime: b.start_time?.substring(0, 5) || "",
         endTime: b.end_time?.substring(0, 5) || "",
         status: b.status,
-        amount: Number(b.amount)
+        amount: Number(b.total_amount)
       }));
       setRecentBookings(mapped);
     } catch (err) {
