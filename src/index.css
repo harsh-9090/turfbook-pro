@@ -150,10 +150,25 @@
     animation: pulse-glow 2s ease-in-out infinite;
   }
   .glass {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+    @apply bg-card/90 border border-border/50 md:bg-card/80 md:backdrop-blur-xl;
   }
   .glass-strong {
-    @apply bg-card/90 backdrop-blur-2xl border border-border/60;
+    @apply bg-card/95 border border-border/60 md:bg-card/90 md:backdrop-blur-2xl;
+  }
+  .hero-text-shadow {
+    text-shadow: 0 2px 20px hsl(var(--background) / 0.6), 0 1px 3px hsl(var(--background) / 0.4);
+  }
+}
+
+/* Disable expensive animations & blurs on small screens for smooth UX */
+@media (max-width: 767px) {
+  .mobile-no-anim {
+    animation: none !important;
+    transition: none !important;
+  }
+  .mobile-no-blur {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }
 
