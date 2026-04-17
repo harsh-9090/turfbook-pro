@@ -29,7 +29,8 @@ export default function HeroSection() {
           width={1920}
           height={1080}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/45 to-background/80 md:from-background/60 md:via-background/40 md:to-background/70" />
+        {/* Dark gradient overlay — same in both themes since bg image is dark */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-black/80 md:from-black/60 md:via-black/45 md:to-black/75" />
       </div>
 
       {/* Heavy decorative animations — desktop only for performance */}
