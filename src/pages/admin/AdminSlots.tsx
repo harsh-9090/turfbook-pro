@@ -112,15 +112,22 @@ export default function AdminSlots() {
     }
   };
 
-  const deleteSlot = async (id: string) => {
-    if (!window.confirm("Are you sure you want to permanently delete this slot?")) return;
-    try {
-      await api.delete(`/slots/${id}`);
-      setSlots((prev) => prev.filter((s) => s.id !== id));
-      toast.success("Slot deleted");
-    } catch (e) {
-      toast.error("Failed to delete slot");
-    }
+  const deleteSlot = (id: string) => {
+    toast("Are you sure you want to permanently delete this slot?", {
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            await api.delete(`/slots/${id}`);
+            setSlots((prev) => prev.filter((s) => s.id !== id));
+            toast.success("Slot deleted");
+          } catch (e) {
+            toast.error("Failed to delete slot");
+          }
+        }
+      },
+      cancel: { label: "Cancel", onClick: () => {} }
+    });
   };
 
   const [inspectorOpen, setInspectorOpen] = useState(false);
