@@ -21,10 +21,30 @@ router.get('/', async (req, res) => {
 
     let query = `
       SELECT s.*, 
-        CASE WHEN b.id IS NOT NULL THEN false ELSE s.is_available END as is_available,
+        CASE 
+          WHEN b.id IS NOT NULL THEN false 
+          WHEN EXISTS (
+            SELECT 1 FROM table_sessions ts 
+            WHERE ts.turf_id = s.turf_id 
+            AND ts.status = 'running'
+            AND ts.table_number = s.table_number
+            AND ts.start_time < (s.date + s.end_time)
+          ) THEN false
+          ELSE s.is_available 
+        END as is_available,
         t.facility_type, t.name as facility_name,
         u.name as user_name, u.phone, b.payment_status,
-        CASE WHEN b.id IS NOT NULL THEN true ELSE false END as is_booked
+        CASE 
+          WHEN b.id IS NOT NULL THEN true 
+          WHEN EXISTS (
+            SELECT 1 FROM table_sessions ts 
+            WHERE ts.turf_id = s.turf_id 
+            AND ts.status = 'running'
+            AND ts.table_number = s.table_number
+            AND ts.start_time < (s.date + s.end_time)
+          ) THEN true
+          ELSE false 
+        END as is_booked
        FROM slots s
        JOIN turfs t ON s.turf_id = t.id
        LEFT JOIN bookings b ON b.slot_id = s.id AND b.status != 'cancelled'

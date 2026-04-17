@@ -77,16 +77,45 @@ router.post('/verify', paymentLimiter, async (req, res) => {
       try {
         await client.query('BEGIN');
         
-        // Update booking status
-        await client.query(
-          "UPDATE bookings SET status = 'confirmed', payment_status = 'paid' WHERE id = $1",
+        // Fetch booking and slot price
+        const bookingResult = await client.query(
+          `SELECT b.*, s.price as total_price 
+           FROM bookings b 
+           JOIN slots s ON s.id = b.slot_id 
+           WHERE b.id = $1`, 
           [booking_id]
         );
+        
+        if (bookingResult.rows.length === 0) {
+          throw new Error('Booking not found');
+        }
+        
+        const booking = bookingResult.rows[0];
 
-        // Update existing payment record with Razorpay details
+        // Fetch the amount paid from Razorpay
+        const rzpOrder = await razorpay.orders.fetch(razorpay_order_id);
+        const amountPaid = rzpOrder.amount / 100; // Convert paise to INR
+
+        const newPaidAmount = Number(booking.paid_amount || 0) + amountPaid;
+        const newRemainingAmount = Math.max(0, Number(booking.total_price) - newPaidAmount);
+        const newPaymentStatus = newRemainingAmount <= 0 ? 'paid' : 'pending';
+
+        // Update booking status and financial fields
         await client.query(
-          `UPDATE payments SET razorpay_order_id = $1, razorpay_payment_id = $2 WHERE booking_id = $3`,
-          [razorpay_order_id, razorpay_payment_id, booking_id]
+          `UPDATE bookings 
+           SET status = 'confirmed', 
+               payment_status = $1, 
+               paid_amount = $2, 
+               remaining_amount = $3 
+           WHERE id = $4`,
+          [newPaymentStatus, newPaidAmount, newRemainingAmount, booking_id]
+        );
+
+        // Record the payment in the payments table
+        await client.query(
+          `INSERT INTO payments (booking_id, amount, method, razorpay_order_id, razorpay_payment_id) 
+           VALUES ($1, $2, 'online', $3, $4)`,
+          [booking_id, amountPaid, razorpay_order_id, razorpay_payment_id]
         );
 
         await client.query('COMMIT');

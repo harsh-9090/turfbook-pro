@@ -74,15 +74,27 @@ router.get('/tables-status/:facility_type', async (req, res) => {
 // Admin: Add a new facility
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { facility_type, description, location, weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, table_count, opening_hour, closing_hour } = req.body;
+    const { 
+      facility_type, description, location, 
+      weekday_day_price, weekday_night_price, 
+      weekend_day_price, weekend_night_price, 
+      table_count, opening_hour, closing_hour,
+      min_booking_amount
+    } = req.body;
     if (!facility_type) return res.status(400).json({ error: 'facility_type required' });
 
     const generatedName = facility_type.charAt(0).toUpperCase() + facility_type.slice(1) + (facility_type === 'cricket' ? ' Turf' : ' Table');
 
     const result = await pool.query(
-      `INSERT INTO turfs (name, facility_type, description, location, weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, table_count, opening_hour, closing_hour) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
-      [generatedName, facility_type, description, location || 'Dynamic Arena', weekday_day_price || 800, weekday_night_price || 1200, weekend_day_price || 1200, weekend_night_price || 1500, table_count || 1, opening_hour || 6, closing_hour || 23]
+      `INSERT INTO turfs (name, facility_type, description, location, weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, table_count, opening_hour, closing_hour, min_booking_amount) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
+      [
+        generatedName, facility_type, description, location || 'Dynamic Arena', 
+        weekday_day_price || 800, weekday_night_price || 1200, 
+        weekend_day_price || 1200, weekend_night_price || 1500, 
+        table_count || 1, opening_hour || 6, closing_hour || 23,
+        min_booking_amount || 0
+      ]
     );
 
     // Invalidate caches
@@ -146,11 +158,15 @@ router.patch('/:id/hours', authMiddleware, async (req, res) => {
 // Update specific facility pricing and retroactively sweep slots
 router.patch('/:id/pricing', authMiddleware, async (req, res) => {
   try {
-    const { weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price } = req.body;
+    const { 
+      weekday_day_price, weekday_night_price, 
+      weekend_day_price, weekend_night_price,
+      min_booking_amount
+    } = req.body;
     
     await pool.query(
-      'UPDATE turfs SET weekday_day_price=$1, weekday_night_price=$2, weekend_day_price=$3, weekend_night_price=$4 WHERE id=$5',
-      [weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, req.params.id]
+      'UPDATE turfs SET weekday_day_price=$1, weekday_night_price=$2, weekend_day_price=$3, weekend_night_price=$4, min_booking_amount=$5 WHERE id=$6',
+      [weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, min_booking_amount || 0, req.params.id]
     );
 
     // Retroactively update all slots belonging to this turf that ARE NOT yet booked!
@@ -158,9 +174,9 @@ router.patch('/:id/pricing', authMiddleware, async (req, res) => {
       UPDATE slots 
       SET price = CASE 
         WHEN EXTRACT(DOW FROM date) IN (0, 6) THEN 
-          CASE WHEN EXTRACT(HOUR FROM start_time) >= 18 THEN $4 ELSE $3 END
+          CASE WHEN EXTRACT(HOUR FROM start_time) >= 18 THEN $4::numeric ELSE $3::numeric END
         ELSE 
-          CASE WHEN EXTRACT(HOUR FROM start_time) >= 18 THEN $2 ELSE $1 END
+          CASE WHEN EXTRACT(HOUR FROM start_time) >= 18 THEN $2::numeric ELSE $1::numeric END
       END
       WHERE turf_id = $5 
       AND id NOT IN (SELECT slot_id FROM bookings)
@@ -171,9 +187,9 @@ router.patch('/:id/pricing', authMiddleware, async (req, res) => {
       UPDATE slot_templates 
       SET price = CASE 
         WHEN day_of_week IN (0, 6) THEN 
-          CASE WHEN EXTRACT(HOUR FROM start_time) >= 18 THEN $4 ELSE $3 END
+          CASE WHEN EXTRACT(HOUR FROM start_time) >= 18 THEN $4::numeric ELSE $3::numeric END
         ELSE 
-          CASE WHEN EXTRACT(HOUR FROM start_time) >= 18 THEN $2 ELSE $1 END
+          CASE WHEN EXTRACT(HOUR FROM start_time) >= 18 THEN $2::numeric ELSE $1::numeric END
       END
       WHERE turf_id = $5
     `, [weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, req.params.id]);

@@ -82,6 +82,19 @@ const cache = {
   },
 
   /**
+   * Completely clear the entire Redis cache.
+   */
+  async flush() {
+    if (!isConnected() || !client) return;
+    try {
+      await client.flushall();
+      console.log(`[CACHE FLUSH] Entire cache invalidated.`);
+    } catch (err) {
+      console.warn(`[CACHE ERROR] flush():`, err.message);
+    }
+  },
+
+  /**
    * Check if cache should be bypassed (via ?nocache=1 query param).
    */
   shouldBypass(req) {

@@ -1,22 +1,31 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Lock, Mail } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Lock, Mail, KeyRound, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import api from "@/lib/api";
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("admin@akolasportsarena.com");
   const [password, setPassword] = useState("");
+  const [pin, setPin] = useState("");
+  const [loginMode, setLoginMode] = useState<"password" | "pin">("password");
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await api.post('/auth/login', { email, password });
-      localStorage.setItem("adminToken", response.data.token);
+      if (loginMode === "password") {
+        const response = await api.post('/auth/login', { email, password });
+        localStorage.setItem("adminToken", response.data.token);
+      } else {
+        if (pin.length !== 4) return toast.error("Please enter 4-digit PIN");
+        const response = await api.post('/auth/login-pin', { email, pin });
+        localStorage.setItem("adminToken", response.data.token);
+      }
+      
       toast.success("Welcome back, Admin!");
       navigate("/admin");
     } catch (error: any) {
@@ -35,26 +44,86 @@ export default function AdminLogin() {
           <p className="text-sm text-muted-foreground mt-1">Akola Sports Arena Management Panel</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4 rounded-2xl bg-card border border-border p-6">
-          <div>
-            <label className="text-sm text-muted-foreground mb-1.5 block">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@akolasportsarena.com" type="email" className="pl-10 bg-background border-border" />
-            </div>
+        <div className="rounded-2xl bg-card border border-border p-6 shadow-xl">
+          <div className="flex justify-between items-center mb-6 p-1 bg-muted rounded-xl">
+            <button
+              onClick={() => setLoginMode("password")}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                loginMode === "password" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Password
+            </button>
+            <button
+              onClick={() => setLoginMode("pin")}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                loginMode === "pin" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              4-Digit PIN
+            </button>
           </div>
-          <div>
-            <label className="text-sm text-muted-foreground mb-1.5 block">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" type="password" className="pl-10 bg-background border-border" />
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1.5 block uppercase tracking-wider">Admin Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@akolasportsarena.com" type="email" className="pl-10 bg-background border-border" />
+              </div>
             </div>
-          </div>
-          <Button type="submit" className="w-full bg-gradient-turf text-primary-foreground font-semibold shadow-turf hover:opacity-90">
-            Sign In
-          </Button>
-          <p className="text-xs text-muted-foreground text-center">Demo: admin@akolasportsarena.com / admin123</p>
-        </form>
+
+            <AnimatePresence mode="wait">
+              {loginMode === "password" ? (
+                <motion.div
+                  key="password"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground mb-1.5 block uppercase tracking-wider">Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" type="password" className="pl-10 bg-background border-border" />
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="pin"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground mb-1.5 block uppercase tracking-wider">4-Digit PIN</label>
+                    <div className="relative">
+                      <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        value={pin}
+                        onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, "").substring(0, 4))}
+                        type="password"
+                        placeholder="• • • •"
+                        className="pl-10 text-center tracking-[1em] font-bold bg-background border-border"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <Button type="submit" className="w-full bg-gradient-turf text-primary-foreground font-bold shadow-turf hover:opacity-95 h-11">
+              {loginMode === "password" ? "Sign In with Password" : "Login with PIN"}
+            </Button>
+            
+            <p className="text-[10px] text-muted-foreground text-center pt-2">
+              Default: {loginMode === "password" ? "admin123" : "PIN 1234"}
+            </p>
+          </form>
+        </div>
       </motion.div>
     </div>
   );

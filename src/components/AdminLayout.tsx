@@ -14,6 +14,7 @@ const sidebarLinks = [
   { name: "Gallery", path: "/admin/gallery", icon: LucideImage },
   { name: "Testimonials", path: "/admin/testimonials", icon: MessageSquare },
   { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
+  { name: "Settings Hub", path: "/admin/settings", icon: Settings },
 ];
 
 export default function AdminLayout() {

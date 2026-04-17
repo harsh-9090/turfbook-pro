@@ -16,7 +16,7 @@ const floatingParticles = Array.from({ length: 20 }, (_, i) => ({
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center overflow-x-hidden overflow-y-hidden sm:overflow-y-visible">
+    <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img src={heroImage} alt="Akola Sports Arena premium sports facility" className="w-full h-full object-cover" width={1920} height={1080} />

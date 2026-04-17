@@ -6,7 +6,9 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, XCircle, Plus, CheckCircle2 } from "lucide-react";
+import { Search, XCircle, Plus, CheckCircle2, IndianRupee, Smartphone, Wallet, Banknote } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { parse, isAfter } from "date-fns";
 
@@ -22,6 +24,12 @@ export default function AdminBookings() {
   const [bDate, setBDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [bSlots, setBSlots] = useState<any[]>([]);
   const [selectedSlot, setSelectedSlot] = useState("");
+  const [bPaidAmount, setBPaidAmount] = useState<number>(0);
+
+  // Mark as Paid Dialog
+  const [payOpen, setPayOpen] = useState(false);
+  const [payTarget, setPayTarget] = useState<any>(null);
+  const [payMode, setPayMode] = useState<"upi" | "cash">("cash");
 
   useEffect(() => {
     if(!showModal) return;
@@ -41,9 +49,16 @@ export default function AdminBookings() {
     e.preventDefault();
     if(!selectedSlot || !bName || !bPhone) return toast.error("Fill all fields");
     try {
-      await api.post('/bookings', { name: bName, phone: bPhone, slot_id: selectedSlot });
+      await api.post('/bookings', { 
+        name: bName, 
+        phone: bPhone, 
+        slot_id: selectedSlot,
+        paid_amount: Number(bPaidAmount) || 0
+      });
       toast.success("Booking created!");
       setShowModal(false);
+      setBPaidAmount(0); // Reset
+      setBName(""); setBPhone(""); setSelectedSlot(""); // Full reset
       fetchBookings();
     } catch(e: any) {
       toast.error(e.response?.data?.error || "Failed to create booking");
@@ -62,8 +77,11 @@ export default function AdminBookings() {
         startTime: b.start_time?.substring(0, 5) || "",
         endTime: b.end_time?.substring(0, 5) || "",
         rawStatus: b.status,
-        paymentStatus: b.payment_method === 'online' ? b.payment_status : 'pending',
-        amount: Number(b.amount),
+        paymentStatus: b.payment_status,
+        amount: Number(b.total_amount),
+        paidAmount: Number(b.paid_amount || 0),
+        remainingAmount: Number(b.remaining_amount || 0),
+        paymentMode: b.payment_mode,
         get status() {
           if (this.rawStatus === 'cancelled') return 'cancelled';
           try {
@@ -94,10 +112,24 @@ export default function AdminBookings() {
   const handleCancel = async (id: string) => {
     try {
       await api.patch(`/bookings/${id}/cancel`);
-      toast.success(`Booking ${id} cancelled`);
+      toast.success(`Booking ${id.substring(0,8)} cancelled`);
       fetchBookings();
     } catch (e) {
       toast.error('Failed to cancel booking');
+    }
+  };
+
+  const handleCompletePayment = async () => {
+    if (!payTarget) return;
+    try {
+      await api.patch(`/bookings/${payTarget.id}/pay`, { 
+        payment_mode: payMode 
+      });
+      toast.success(`Booking ${payTarget.id.substring(0,8)} marked as paid via ${payMode.toUpperCase()}`);
+      setPayOpen(false);
+      fetchBookings();
+    } catch {
+      toast.error('Failed to complete payment');
     }
   };
 
@@ -134,9 +166,8 @@ export default function AdminBookings() {
               <th className="text-left px-5 py-3 text-muted-foreground font-medium">Date</th>
               <th className="text-left px-5 py-3 text-muted-foreground font-medium">Time</th>
               <th className="text-left px-5 py-3 text-muted-foreground font-medium">Status</th>
-              <th className="text-left px-5 py-3 text-muted-foreground font-medium">Payment</th>
-              <th className="text-left px-5 py-3 text-muted-foreground font-medium">Amount</th>
-              <th className="text-left px-5 py-3 text-muted-foreground font-medium">Actions</th>
+              <th className="text-left px-5 py-3 text-muted-foreground font-medium">Payment Details</th>
+              <th className="text-left px-5 py-3 text-muted-foreground font-medium text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -159,23 +190,44 @@ export default function AdminBookings() {
                   </Badge>
                 </td>
                 <td className="px-5 py-3">
-                  <Badge variant="outline" className={b.paymentStatus === "paid" ? "text-primary border-primary/20" : b.paymentStatus === "refunded" ? "text-destructive border-destructive/20" : "text-amber-500 border-amber-500/20"}>
-                    {b.paymentStatus}
-                  </Badge>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                       <Badge variant="outline" className={b.paymentStatus === "paid" ? "text-primary border-primary/20 bg-primary/5" : "text-amber-500 border-amber-500/20 bg-amber-500/5 text-[10px]"}>
+                        {b.paymentStatus === 'paid' ? 'Full Payment' : 'Partial / Pending'}
+                      </Badge>
+                      {b.paymentMode && (
+                         <Badge variant="outline" className="text-[9px] uppercase font-bold text-muted-foreground">{b.paymentMode}</Badge>
+                      )}
+                    </div>
+                    <div className="flex flex-col text-[11px]">
+                      <span className="text-foreground">Total: ₹{b.amount}</span>
+                      <span className="text-emerald-500 font-medium">Paid: ₹{b.paidAmount}</span>
+                      {b.remainingAmount > 0 && (
+                        <span className="text-amber-500 font-bold">Balance: ₹{b.remainingAmount}</span>
+                      )}
+                    </div>
+                  </div>
                 </td>
-                <td className="px-5 py-3 font-semibold text-foreground">₹{b.amount}</td>
-                <td className="px-5 py-3">
-                  {b.status === "completed" ? (
-                    <span className="inline-flex items-center text-xs text-emerald-500 font-medium">
-                      <CheckCircle2 className="w-4 h-4 mr-1" /> Done
-                    </span>
-                  ) : b.status === "cancelled" ? (
-                    <span className="text-xs text-muted-foreground text-center block">—</span>
-                  ) : (
-                    <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 px-2" onClick={() => handleCancel(b.id)}>
-                      <XCircle className="w-4 h-4 mr-1" /> Cancel
-                    </Button>
-                  )}
+                <td className="px-5 py-3 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    {b.paymentStatus === 'pending' && b.status !== 'cancelled' && (
+                       <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary/20 h-8 px-3 text-xs font-semibold border border-primary/20" 
+                        onClick={() => { setPayTarget(b); setPayOpen(true); }}>
+                        Mark Paid
+                      </Button>
+                    )}
+                    {b.status === "completed" ? (
+                      <span className="inline-flex items-center text-xs text-emerald-500 font-medium">
+                        <CheckCircle2 className="w-4 h-4 mr-1" /> Done
+                      </span>
+                    ) : b.status === "cancelled" ? (
+                      <span className="text-xs text-muted-foreground block">—</span>
+                    ) : (
+                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 px-2" onClick={() => handleCancel(b.id)}>
+                        <XCircle className="w-4 h-4 mr-1" /> Cancel
+                      </Button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -210,11 +262,16 @@ export default function AdminBookings() {
                 </p>
               </div>
               <div className="space-y-1 text-right">
-                <p className="text-muted-foreground uppercase text-[10px] font-bold tracking-wider">Payment</p>
+                <p className="text-muted-foreground uppercase text-[10px] font-bold tracking-wider">Financials</p>
                 <p className="font-bold text-lg text-foreground">₹{b.amount}</p>
-                <Badge variant="outline" className={`text-[10px] ${b.paymentStatus === "paid" ? "text-primary border-primary/20" : "text-amber-500 border-amber-500/20"}`}>
-                  {b.paymentStatus}
-                </Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge variant="outline" className={`text-[10px] ${b.paymentStatus === "paid" ? "text-primary border-primary/20" : "text-amber-500 border-amber-500/20"}`}>
+                    {b.paymentStatus === 'paid' ? 'PAID' : `DUE: ₹${b.remainingAmount}`}
+                  </Badge>
+                  {b.paymentMode && (
+                     <Badge variant="outline" className="text-[9px] uppercase font-bold text-muted-foreground">{b.paymentMode}</Badge>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -223,7 +280,12 @@ export default function AdminBookings() {
                 {facilityLabels[b.facility as keyof typeof facilityLabels] || b.facility}
               </Badge>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] text-muted-foreground uppercase">{b.id.substring(0, 8)}</span>
+                {b.paymentStatus === 'pending' && b.status !== 'cancelled' && (
+                   <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary/20 h-7 px-3 text-[10px] font-bold" 
+                    onClick={() => { setPayTarget(b); setPayOpen(true); }}>
+                    Mark Paid
+                  </Button>
+                )}
                 <div className="h-4 w-[1px] bg-border mx-1" />
                 {b.status === "completed" ? (
                   <span className="inline-flex items-center text-xs text-emerald-500 font-medium">
@@ -282,6 +344,15 @@ export default function AdminBookings() {
                 </select>
                 {bSlots.length === 0 && <p className="text-[10px] text-destructive mt-1">No slots available for this date/facility.</p>}
               </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground block mb-1">Advance Amount Paid (₹)</label>
+                <div className="relative">
+                  <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input type="number" value={bPaidAmount} onChange={e => setBPaidAmount(Number(e.target.value))} className="w-full h-10 pl-10 bg-background border border-border rounded-md text-sm" placeholder="0.00" />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1 italic">Balance will be calculated automatically.</p>
+              </div>
               <div className="flex gap-3 pt-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setShowModal(false)}>Cancel</Button>
                 <Button type="submit" className="flex-1 bg-gradient-turf text-primary-foreground font-semibold">Confirm Booking</Button>
@@ -290,6 +361,62 @@ export default function AdminBookings() {
           </div>
         </div>
       )}
+
+      {/* Complete Payment Dialog */}
+      <Dialog open={payOpen} onOpenChange={setPayOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Settle Remaining Balance</DialogTitle>
+          </DialogHeader>
+          {payTarget && (
+            <div className="space-y-4 py-4">
+              <div className="rounded-lg bg-muted/40 border border-border p-4 space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Booking ID</span>
+                  <span className="text-foreground font-mono uppercase text-xs">{payTarget.id.substring(0,8)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-amber-500 font-bold">
+                  <span>Balance Due</span>
+                  <span>₹{payTarget.remainingAmount}</span>
+                </div>
+
+                <div className="border-t border-border pt-4 space-y-3">
+                  <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Payment Mode</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={() => setPayMode("cash")}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                        payMode === "cash" 
+                          ? "border-primary bg-primary/10 text-primary" 
+                          : "border-border bg-transparent text-muted-foreground hover:border-border/80"
+                      }`}>
+                      <Banknote className="w-4 h-4" />
+                      <span className="font-semibold text-sm">Cash</span>
+                    </button>
+                    <button onClick={() => setPayMode("upi")}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                        payMode === "upi" 
+                          ? "border-primary bg-primary/10 text-primary" 
+                          : "border-border bg-transparent text-muted-foreground hover:border-border/80"
+                      }`}>
+                      <Smartphone className="w-4 h-4" />
+                      <span className="font-semibold text-sm">UPI</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground text-center italic">
+                Marking this as paid will confirm the full payment of ₹{payTarget.remainingAmount} via {payMode.toUpperCase()}
+              </p>
+            </div>
+          )}
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setPayOpen(false)} className="flex-1">Cancel</Button>
+            <Button onClick={handleCompletePayment} className="flex-1 bg-gradient-turf text-primary-foreground shadow-turf">
+              Settle & Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

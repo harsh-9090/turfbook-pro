@@ -7,7 +7,7 @@ const { bookingLimiter } = require('../middleware/rateLimiter');
 
 router.post('/', bookingLimiter, async (req, res) => {
   try {
-    const { name, phone, slot_id } = req.body;
+    const { name, phone, slot_id, paid_amount = 0 } = req.body;
     if (!name || !phone || !slot_id) return res.status(400).json({ error: 'Name, phone, and slot_id required' });
 
     // Check availability
@@ -26,18 +26,25 @@ router.post('/', bookingLimiter, async (req, res) => {
       userId = userResult.rows[0].id;
     }
 
+    const totalAmount = slot.price || 800;
+    const remainingAmount = Math.max(0, totalAmount - paid_amount);
+    const paymentStatus = (paid_amount > 0 && remainingAmount === 0) ? 'paid' : 'pending';
+    const bookingStatus = paid_amount > 0 ? 'confirmed' : 'pending'; // Manual bookings are confirmed immediately
+
     // Create booking
     const booking = await pool.query(
-      `INSERT INTO bookings (user_id, slot_id, status, payment_status) 
-       VALUES ($1, $2, 'pending', 'pending') RETURNING *`,
-      [userId, slot_id]
+      `INSERT INTO bookings (user_id, slot_id, status, payment_status, paid_amount, remaining_amount) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [userId, slot_id, bookingStatus, paymentStatus, paid_amount, remainingAmount]
     );
 
-    // Create payment record
-    await pool.query(
-      `INSERT INTO payments (booking_id, amount, method) VALUES ($1, $2, 'online')`,
-      [booking.rows[0].id, slot.price || 800]
-    );
+    // Create payment record ONLY if paid_amount > 0 (Manual/Admin flow)
+    if (paid_amount > 0) {
+      await pool.query(
+        `INSERT INTO payments (booking_id, amount, method) VALUES ($1, $2, $3)`,
+        [booking.rows[0].id, paid_amount, 'cash'] // Default to cash for manual admin bookings
+      );
+    }
 
     // Invalidate related caches
     await cache.delPattern('bookings:*');
@@ -64,14 +71,14 @@ router.get('/', authMiddleware, async (req, res) => {
 
     let query = `
       SELECT b.*, u.name as customer_name, u.phone,
-        s.date, s.start_time, s.end_time,
-        p.amount, p.method as payment_method,
+        s.date, s.start_time, s.end_time, s.price as total_amount,
+        p.amount as last_payment_amount, p.method as payment_method,
         t.facility_type, t.name as facility_name
       FROM bookings b
       JOIN users u ON u.id = b.user_id
       JOIN slots s ON s.id = b.slot_id
       JOIN turfs t ON t.id = s.turf_id
-      LEFT JOIN payments p ON p.booking_id = b.id
+      LEFT JOIN payments p ON p.booking_id = b.id AND p.id = (SELECT id FROM payments WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1)
       WHERE 1=1
     `;
     const params = [];
@@ -90,6 +97,53 @@ router.get('/', authMiddleware, async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.patch('/:id/pay', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { id } = req.params;
+    const { payment_mode, amount } = req.body; // amount is optional, defaults to entire remaining
+
+    const bookingResult = await client.query('SELECT b.*, s.price FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.id = $1', [id]);
+    if (bookingResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    const booking = bookingResult.rows[0];
+    const payAmount = Number(amount) || Number(booking.remaining_amount);
+    const newPaidAmount = Number(booking.paid_amount) + payAmount;
+    const newRemainingAmount = Math.max(0, Number(booking.price) - newPaidAmount);
+    const newPaymentStatus = newRemainingAmount === 0 ? 'paid' : 'pending';
+
+    const updated = await client.query(
+      `UPDATE bookings 
+       SET payment_status = $1, paid_amount = $2, remaining_amount = $3, payment_mode = $4, status = 'confirmed'
+       WHERE id = $5 RETURNING *`,
+      [newPaymentStatus, newPaidAmount, newRemainingAmount, payment_mode || 'cash', id]
+    );
+
+    // Record the payment
+    await client.query(
+      `INSERT INTO payments (booking_id, amount, method) VALUES ($1, $2, $3)`,
+      [id, payAmount, payment_mode || 'cash']
+    );
+
+    await client.query('COMMIT');
+
+    await cache.delPattern('bookings:*');
+    await cache.del('admin:stats');
+    req.app.get('io').emit('booking_updated');
+
+    res.json(updated.rows[0]);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release();
   }
 });
 

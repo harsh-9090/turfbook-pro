@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Play, Square, Clock, User, Phone, History, IndianRupee, Filter, Calendar } from "lucide-react";
+import { Play, Square, Clock, User, Phone, History, IndianRupee, Filter, Calendar, Smartphone, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -25,6 +26,10 @@ interface Session {
   name: string;
   customer_name: string;
   customer_phone: string;
+  weekday_day_price: string;
+  weekday_night_price: string;
+  weekend_day_price: string;
+  weekend_night_price: string;
 }
 
 export default function AdminTables() {
@@ -48,6 +53,7 @@ export default function AdminTables() {
   const [billTarget, setBillTarget] = useState<Session | null>(null);
   const [billElapsed, setBillElapsed] = useState(0);
   const [billAmount, setBillAmount] = useState(0);
+  const [paymentMode, setPaymentMode] = useState<"upi" | "cash">("cash");
 
   // Live clock - ticks every second
   useEffect(() => {
@@ -100,7 +106,8 @@ export default function AdminTables() {
         turf_id: startTarget.facility.id,
         name: `${startTarget.facility.name} #${startTarget.tableNumber}`,
         customer_name: customerName.trim(),
-        customer_phone: customerPhone.trim()
+        customer_phone: customerPhone.trim(),
+        table_number: startTarget.tableNumber
       });
       toast.success(`${startTarget.facility.name} #${startTarget.tableNumber} session started!`);
       setStartOpen(false);
@@ -111,11 +118,34 @@ export default function AdminTables() {
     }
   };
 
+  const getSessionRate = (session: Session) => {
+    const start = new Date(session.start_time);
+    const day = start.getDay();
+    const hour = start.getHours();
+    const isWeekend = day === 0 || day === 6;
+    const isNight = hour >= 18;
+
+    if (isWeekend) {
+      return isNight ? Number(session.weekend_night_price) : Number(session.weekend_day_price);
+    }
+    return isNight ? Number(session.weekday_night_price) : Number(session.weekday_day_price);
+  };
+
+  const calcRunningCost = (session: Session) => {
+    const rate = getSessionRate(session);
+    const start = new Date(session.start_time);
+    const elapsedSecs = Math.max(0, Math.floor((now.getTime() - start.getTime()) / 1000));
+    // Minimum 1 hour billing
+    const billableSecs = Math.max(elapsedSecs, 3600);
+    const billableMinutes = billableSecs / 60;
+    return Math.ceil((billableMinutes / 60) * rate);
+  };
+
   const openBillDialog = (session: Session) => {
     const startMs = new Date(session.start_time).getTime();
     const nowMs = Date.now();
     const elapsedSecs = Math.floor((nowMs - startMs) / 1000);
-    const rate = Number(session.hourly_rate);
+    const rate = getSessionRate(session);
     // Minimum 1 hour billing: if under 3600 secs, charge full hour
     const billableSecs = Math.max(elapsedSecs, 3600);
     const billableMinutes = billableSecs / 60;
@@ -124,14 +154,18 @@ export default function AdminTables() {
     setBillTarget(session);
     setBillElapsed(elapsedSecs);
     setBillAmount(amount);
+    setPaymentMode("cash"); // Default to cash for every new bill
     setBillOpen(true);
   };
 
   const confirmStopSession = async () => {
     if (!billTarget) return;
     try {
-      await api.patch(`/sessions/${billTarget.id}/stop`, { total_amount: billAmount });
-      toast.success(`Session stopped! Final bill: ₹${billAmount}`);
+      await api.patch(`/sessions/${billTarget.id}/stop`, { 
+        total_amount: billAmount,
+        payment_mode: paymentMode 
+      });
+      toast.success(`Session stopped! Final bill: ₹${billAmount} (${paymentMode.toUpperCase()})`);
       setBillOpen(false);
       setBillTarget(null);
       fetchSessions();
@@ -147,14 +181,6 @@ export default function AdminTables() {
     const m = Math.floor((elapsedSecs % 3600) / 60);
     const s = elapsedSecs % 60;
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  };
-
-  const calcRunningCost = (session: Session) => {
-    const elapsedSecs = Math.max(0, Math.floor((now.getTime() - new Date(session.start_time).getTime()) / 1000));
-    // Minimum 1 hour billing
-    const billableSecs = Math.max(elapsedSecs, 3600);
-    const billableMinutes = billableSecs / 60;
-    return Math.ceil((billableMinutes / 60) * Number(session.hourly_rate));
   };
 
   const formatBillTime = (secs: number) => {
@@ -286,6 +312,7 @@ export default function AdminTables() {
                       <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Phone</th>
                       <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Date</th>
                       <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Time</th>
+                      <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Mode</th>
                       <th className="text-left py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Duration</th>
                       <th className="text-right py-2 px-3 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Bill</th>
                     </tr>
@@ -307,6 +334,11 @@ export default function AdminTables() {
                           <td className="py-2.5 px-3 text-muted-foreground">{start.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</td>
                           <td className="py-2.5 px-3 text-muted-foreground">
                             {start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} → {end.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <Badge variant="outline" className={`text-[10px] uppercase px-1.5 h-5 ${h.payment_mode === 'upi' ? 'text-blue-400 border-blue-400/30' : 'text-amber-400 border-amber-400/30'}`}>
+                              {h.payment_mode || 'cash'}
+                            </Badge>
                           </td>
                           <td className="py-2.5 px-3 text-foreground font-medium">{durationStr}</td>
                           <td className="py-2.5 px-3 text-right font-bold text-primary">₹{parseFloat(h.total_amount || 0).toLocaleString()}</td>
@@ -388,7 +420,7 @@ export default function AdminTables() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Hourly Rate</span>
-                  <span className="text-foreground font-medium">₹{billTarget.hourly_rate}/hr</span>
+                  <span className="text-foreground font-medium">₹{getSessionRate(billTarget)}/hr</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Duration</span>
@@ -397,9 +429,36 @@ export default function AdminTables() {
                 {billElapsed < 3600 && (
                   <p className="text-[10px] text-amber-500 font-semibold">⚠ Minimum 1 hour charge applied</p>
                 )}
-                <div className="border-t border-border pt-3 flex justify-between">
+                <div className="border-t border-border pt-4 space-y-3">
+                  <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Payment Mode</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={() => setPaymentMode("cash")}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                        paymentMode === "cash" 
+                          ? "border-primary bg-primary/10 text-primary" 
+                          : "border-border bg-transparent text-muted-foreground hover:border-border/80"
+                      }`}>
+                      <Wallet className="w-4 h-4" />
+                      <span className="font-semibold text-sm">Cash</span>
+                    </button>
+                    <button onClick={() => setPaymentMode("upi")}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                        paymentMode === "upi" 
+                          ? "border-primary bg-primary/10 text-primary" 
+                          : "border-border bg-transparent text-muted-foreground hover:border-border/80"
+                      }`}>
+                      <Smartphone className="w-4 h-4" />
+                      <span className="font-semibold text-sm">UPI</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="border-t border-border pt-3 flex justify-between items-center">
                   <span className="font-semibold text-foreground">Total Bill</span>
-                  <span className="font-heading text-2xl font-bold text-primary">₹{billAmount}</span>
+                  <div className="text-right">
+                    <span className="font-heading text-2xl font-bold text-primary">₹{billAmount}</span>
+                    <p className="text-[10px] text-muted-foreground italic">via {paymentMode.toUpperCase()}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -407,7 +466,7 @@ export default function AdminTables() {
           <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={() => setBillOpen(false)} className="flex-1">Cancel</Button>
             <Button onClick={confirmStopSession} className="flex-1 bg-gradient-turf text-primary-foreground shadow-turf">
-              Confirm & Close Session
+              Confirm Payment
             </Button>
           </DialogFooter>
         </DialogContent>

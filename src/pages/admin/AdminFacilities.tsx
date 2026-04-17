@@ -20,13 +20,14 @@ export default function AdminFacilities() {
   const [tableCount, setTableCount] = useState("1");
   const [openingHour, setOpeningHour] = useState("6");
   const [closingHour, setClosingHour] = useState("23");
+  const [minBookingAmount, setMinBookingAmount] = useState("0");
   const [isFormExpanded, setIsFormExpanded] = useState(false);
 
   const isHourlySettings = type === "snooker" || type === "pool";
 
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [pricingTarget, setPricingTarget] = useState<any>(null);
-  const [editPrices, setEditPrices] = useState({ wd_day: "", wd_night: "", we_day: "", we_night: "" });
+  const [editPrices, setEditPrices] = useState({ wd_day: "", wd_night: "", we_day: "", we_night: "", min_booking_amount: "" });
 
   const fetchFacilities = async () => {
     try {
@@ -54,7 +55,8 @@ export default function AdminFacilities() {
         weekend_night_price: Number(isHourlySettings ? hourlyPrice : weekendNightPrice),
         table_count: isHourlySettings ? Number(tableCount) : 1,
         opening_hour: Number(openingHour),
-        closing_hour: Number(closingHour)
+        closing_hour: Number(closingHour),
+        min_booking_amount: Number(minBookingAmount)
       });
       toast.success('Sports Event added & Slots autonomously synced!');
       setDesc('');
@@ -66,6 +68,7 @@ export default function AdminFacilities() {
       setTableCount('1');
       setOpeningHour('6');
       setClosingHour('23');
+      setMinBookingAmount('0');
       fetchFacilities();
     } catch (e: any) {
       toast.error(e.response?.data?.error || 'Failed to add sports event');
@@ -90,6 +93,7 @@ export default function AdminFacilities() {
       wd_night: facility.weekday_night_price || "1200",
       we_day: facility.weekend_day_price || "1200",
       we_night: facility.weekend_night_price || "1500",
+      min_booking_amount: facility.min_booking_amount || "0",
     });
     setIsPricingModalOpen(true);
   };
@@ -101,7 +105,8 @@ export default function AdminFacilities() {
         weekday_day_price: Number(isHourlyPatch ? editPrices.wd_day : editPrices.wd_day), // Using wd_day as the absolute hourly rate if snooker
         weekday_night_price: Number(isHourlyPatch ? editPrices.wd_day : editPrices.wd_night),
         weekend_day_price: Number(isHourlyPatch ? editPrices.wd_day : editPrices.we_day),
-        weekend_night_price: Number(isHourlyPatch ? editPrices.wd_day : editPrices.we_night)
+        weekend_night_price: Number(isHourlyPatch ? editPrices.wd_day : editPrices.we_night),
+        min_booking_amount: Number(editPrices.min_booking_amount)
       });
       toast.success("Pricing meticulously updated and retroactively applied!");
       setIsPricingModalOpen(false);
@@ -156,6 +161,10 @@ export default function AdminFacilities() {
                   <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Table Count</Label>
                   <Input type="number" min="1" placeholder="1" value={tableCount} onChange={e => setTableCount(e.target.value)} className="h-10" />
                 </div>
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Min Booking Deposit (₹)</Label>
+                  <Input type="number" placeholder="0" value={minBookingAmount} onChange={e => setMinBookingAmount(e.target.value)} className="h-10" />
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -174,6 +183,10 @@ export default function AdminFacilities() {
                 <div className="space-y-1.5">
                   <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Wkend Night</Label>
                   <Input type="number" placeholder="1500" value={weekendNightPrice} onChange={e => setWeekdayNightPrice(e.target.value)} className="h-10 px-2" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Deposit (₹)</Label>
+                  <Input type="number" placeholder="0" value={minBookingAmount} onChange={e => setMinBookingAmount(e.target.value)} className="h-10 px-2" />
                 </div>
               </div>
             )}
@@ -310,6 +323,10 @@ export default function AdminFacilities() {
                   </div>
                 </div>
               )}
+              <div className="bg-primary/5 border border-primary/10 px-3 py-1.5 rounded-lg mb-2 flex justify-between items-center">
+                 <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Min Online Deposit</span>
+                 <span className="text-sm font-bold text-primary">₹{f.min_booking_amount || 0}</span>
+              </div>
               <Button size="sm" variant="outline" className="w-full text-xs h-8" onClick={() => openPricingModal(f)}>Update Global Pricing</Button>
             </div>
           </div>
@@ -331,6 +348,10 @@ export default function AdminFacilities() {
                   <Label>Flat Hourly Engine Rate (₹)</Label>
                   <Input type="number" value={editPrices.wd_day} onChange={(e) => setEditPrices({...editPrices, wd_day: e.target.value})} />
                 </div>
+                <div className="space-y-2 mb-4">
+                  <Label>Booking Deposit Amount (₹)</Label>
+                  <Input type="number" value={editPrices.min_booking_amount} onChange={(e) => setEditPrices({...editPrices, min_booking_amount: e.target.value})} />
+                </div>
               </>
             ) : (
               <>
@@ -351,6 +372,10 @@ export default function AdminFacilities() {
                   <div className="space-y-2">
                     <Label>Weekend Night (₹)</Label>
                     <Input type="number" value={editPrices.we_night} onChange={(e) => setEditPrices({...editPrices, we_night: e.target.value})} />
+                  </div>
+                  <div className="col-span-2 space-y-2">
+                    <Label>Default Online Booking Deposit (₹)</Label>
+                    <Input type="number" value={editPrices.min_booking_amount} onChange={(e) => setEditPrices({...editPrices, min_booking_amount: e.target.value})} />
                   </div>
                 </div>
               </>

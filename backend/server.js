@@ -46,6 +46,7 @@ const analyticsRoutes = require('./routes/analytics');
 const pricingRoutes = require('./routes/pricing');
 const galleryRoutes = require('./routes/gallery');
 const testimonialsRoutes = require('./routes/testimonials');
+const settingsRoutes = require('./routes/settings');
 
 const app = express();
 const server = http.createServer(app);
@@ -76,6 +77,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/testimonials', testimonialsRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
@@ -93,7 +95,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => console.log('Client disconnected:', socket.id));
 });
 
-server.listen(PORT, () => console.log(`TurfZone API running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Akola Sports Arena API running on port ${PORT}`));
 
 // Graceful Shutdown
 const shutdown = async (signal) => {
