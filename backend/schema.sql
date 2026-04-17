@@ -64,6 +64,17 @@ CREATE TABLE payments (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Slot Templates table (Weekly Schedule)
+CREATE TABLE slot_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  turf_id UUID REFERENCES turfs(id) ON DELETE CASCADE,
+  day_of_week INT NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  price DECIMAL(10, 2) NOT NULL,
+  UNIQUE(turf_id, day_of_week, start_time)
+);
+
 -- Indexes for performance
 CREATE INDEX idx_slots_date ON slots(date);
 CREATE INDEX idx_slots_turf_date ON slots(turf_id, date);
@@ -80,46 +91,31 @@ INSERT INTO turfs (name, facility_type, location, description) VALUES
 INSERT INTO users (name, email, phone, password_hash, role) VALUES
 ('System Admin', 'admin@akolasportsarena.com', '9999999999', '$2a$10$XQZ/v4Kj/m/9EbxXfJb9O.B4i/7F5fN3gP/tZ/Jm7d5T6lGv2y7yO', 'admin');
 
--- Function to auto-generate slots for a date
+-- Function to auto-generate slots for a date based ENTIRELY on slot_templates
 CREATE OR REPLACE FUNCTION generate_daily_slots(target_date DATE, target_turf_id UUID)
 RETURNS void AS $$
 DECLARE
-  hour_val INT;
-  p_wend_d DECIMAL;
-  p_wend_n DECIMAL;
-  is_weekend BOOLEAN;
-  o_hour INT;
-  c_hour INT;
-  p_wday_d DECIMAL;
-  p_wday_n DECIMAL;
+  tmpl RECORD;
   t_count INT;
   table_idx INT;
+  target_dow INT;
 BEGIN
-  -- Get turf config with tiered pricing AND hours
-  SELECT 
-    weekday_day_price, weekday_night_price, 
-    weekend_day_price, weekend_night_price, 
-    COALESCE(table_count, 1),
-    COALESCE(opening_hour, 6),
-    COALESCE(closing_hour, 23)
-  INTO 
-    p_wday_d, p_wday_n, 
-    p_wend_d, p_wend_n, 
-    t_count,
-    o_hour,
-    c_hour
+  -- Get active table count
+  SELECT COALESCE(table_count, 1) INTO t_count 
   FROM turfs WHERE id = target_turf_id;
 
-  is_weekend := EXTRACT(DOW FROM target_date) IN (0, 6);
+  target_dow := EXTRACT(DOW FROM target_date);
 
-  -- Loop through hours dynamically
-  FOR hour_val IN o_hour..(c_hour - 1) LOOP
+  -- Loop through every slot template defined for this day of the week
+  FOR tmpl IN 
+    SELECT start_time, end_time, price 
+    FROM slot_templates 
+    WHERE turf_id = target_turf_id AND day_of_week = target_dow
+  LOOP
     -- Loop through tables (if any)
     FOR table_idx IN 1..t_count LOOP
-      INSERT INTO slots (turf_id, date, start_time, end_time, price)
-      VALUES (target_turf_id, target_date, make_time(hour_val, 0, 0), make_time(hour_val + 1, 0, 0), 
-              CASE WHEN is_weekend THEN (CASE WHEN hour_val < 18 THEN p_wend_d ELSE p_wend_n END) 
-                   ELSE (CASE WHEN hour_val < 18 THEN p_wday_d ELSE p_wday_n END) END)
+      INSERT INTO slots (turf_id, date, start_time, end_time, price, table_number)
+      VALUES (target_turf_id, target_date, tmpl.start_time, tmpl.end_time, tmpl.price, table_idx)
       ON CONFLICT DO NOTHING;
     END LOOP;
   END LOOP;

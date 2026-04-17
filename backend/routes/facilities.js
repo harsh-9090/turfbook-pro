@@ -133,7 +133,8 @@ router.patch('/:id/hours', authMiddleware, async (req, res) => {
     if (opening_hour == null || closing_hour == null) return res.status(400).json({ error: 'opening_hour and closing_hour required' });
     if (opening_hour < 0 || closing_hour > 24 || opening_hour >= closing_hour) return res.status(400).json({ error: 'Invalid hours range' });
 
-    await pool.query('UPDATE turfs SET opening_hour = $1, closing_hour = $2 WHERE id = $3', [opening_hour, closing_hour, req.params.id]);
+    const turfRes = await pool.query('UPDATE turfs SET opening_hour = $1, closing_hour = $2 WHERE id = $3 RETURNING *', [opening_hour, closing_hour, req.params.id]);
+    const t = turfRes.rows[0];
 
     // Delete unbooked slots that now fall outside the new range
     await pool.query(`
@@ -143,9 +144,32 @@ router.patch('/:id/hours', authMiddleware, async (req, res) => {
       AND (EXTRACT(HOUR FROM start_time) < $2 OR EXTRACT(HOUR FROM start_time) >= $3)
     `, [req.params.id, opening_hour, closing_hour]);
 
+    // Also delete out-of-bounds weekly templates
+    await pool.query(`
+      DELETE FROM slot_templates 
+      WHERE turf_id = $1 
+      AND (EXTRACT(HOUR FROM start_time) < $2 OR EXTRACT(HOUR FROM start_time) >= $3)
+    `, [req.params.id, opening_hour, closing_hour]);
+
+    // Backfill any newly expanded hours into the slot_templates (respecting existing customizations)
+    const insertValues = [];
+    for (let day = 0; day <= 6; day++) {
+      const isWeekend = day === 0 || day === 6;
+      for (let hour = Number(opening_hour); hour < Number(closing_hour); hour++) {
+        let price = isWeekend ? t.weekend_day_price : t.weekday_day_price;
+        if (hour >= 18) price = isWeekend ? t.weekend_night_price : t.weekday_night_price;
+        insertValues.push(`('${req.params.id}', ${day}, '${String(hour).padStart(2, '0')}:00:00', '${String(hour+1).padStart(2, '0')}:00:00', ${price})`);
+      }
+    }
+    
+    if (insertValues.length > 0) {
+      await pool.query(`INSERT INTO slot_templates (turf_id, day_of_week, start_time, end_time, price) VALUES ${insertValues.join(',')} ON CONFLICT DO NOTHING`);
+    }
+
     await cache.del('facilities:all');
     await cache.delPattern('facilities:tables:*');
     await cache.delPattern('slots:*');
+    await cache.delPattern('templates:*');
 
     req.app.get('io').emit('facility_updated');
     req.app.get('io').emit('slot_updated');
