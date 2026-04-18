@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Mail, KeyRound, ArrowRightLeft } from "lucide-react";
+import { Lock, Mail, KeyRound, ArrowRightLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -12,10 +12,12 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [pin, setPin] = useState("");
   const [loginMode, setLoginMode] = useState<"password" | "pin">("password");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       if (loginMode === "password") {
         const response = await api.post('/auth/login', { email, password });
@@ -30,6 +32,8 @@ export default function AdminLogin() {
       navigate("/admin");
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Invalid credentials.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -115,8 +119,10 @@ export default function AdminLogin() {
               )}
             </AnimatePresence>
 
-            <Button type="submit" className="w-full bg-gradient-turf text-primary-foreground font-bold shadow-turf hover:opacity-95 h-11">
-              {loginMode === "password" ? "Sign In with Password" : "Login with PIN"}
+            <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-turf text-primary-foreground font-bold shadow-turf hover:opacity-95 h-11 disabled:opacity-70">
+              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : (
+                loginMode === "password" ? "Sign In with Password" : "Login with PIN"
+              )}
             </Button>
             
             <p className="text-[10px] text-muted-foreground text-center pt-2">

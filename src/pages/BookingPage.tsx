@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format, addDays, startOfDay, parse, isAfter } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { CalendarDays, Clock, User, Phone, ArrowRight, CheckCircle2, ArrowLeft } from "lucide-react";
+import { CalendarDays, Clock, User, Phone, ArrowRight, CheckCircle2, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -44,6 +44,7 @@ export default function BookingPage() {
   const [selectedSlot, setSelectedSlot] = useState<any | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Table-based state for snooker/pool
   const [facilityData, setFacilityData] = useState<any>(null);
@@ -154,6 +155,7 @@ export default function BookingPage() {
 
   const handleConfirmBooking = async () => {
     if (!selectedSlot) return;
+    setIsSubmitting(true);
 
     // 1. Create a pending booking
     let bookingId = '';
@@ -167,6 +169,7 @@ export default function BookingPage() {
       bookingId = bookingRes.data.booking.id;
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Booking initialization failed");
+      setIsSubmitting(false);
       return;
     }
 
@@ -225,9 +228,11 @@ export default function BookingPage() {
 
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
+      setIsSubmitting(false); // Reset loading once Razorpay modal opens
     } catch (error: any) {
       console.error("Payment setup error:", error);
       toast.error("Payment initialization failed");
+      setIsSubmitting(false);
     }
   };
 
@@ -451,8 +456,8 @@ export default function BookingPage() {
                 </div>
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setStep("details")} className="flex-1">Back</Button>
-                  <Button onClick={handleConfirmBooking} className="flex-1 bg-gradient-turf text-primary-foreground font-semibold shadow-turf hover:opacity-90">
-                    Pay & Confirm
+                  <Button disabled={isSubmitting} onClick={handleConfirmBooking} className="flex-1 bg-gradient-turf text-primary-foreground font-semibold shadow-turf hover:opacity-90 disabled:opacity-70">
+                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Pay & Confirm"}
                   </Button>
                 </div>
               </motion.div>
