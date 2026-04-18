@@ -51,7 +51,11 @@ const STATUS_COLORS: Record<string, { bg: string; border: string; text: string; 
 
 function getComputedStatus(booking: CalendarBooking) {
   if (booking.status !== "confirmed") return booking.status;
-  const endDateTime = parseISO(`${booking.date}T${booking.end_time.substring(0, 5)}:00`);
+  
+  // Safely extract just the 'YYYY-MM-DD' and strip out 'T00:00:00.000Z'
+  const dateStr = booking.date.split("T")[0];
+  const endDateTime = parseISO(`${dateStr}T${booking.end_time.substring(0, 5)}:00`);
+  
   return isBefore(endDateTime, new Date()) ? "completed" : "confirmed";
 }
 
