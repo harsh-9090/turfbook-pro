@@ -56,17 +56,14 @@ export default function AdminTournamentForm({ initialData, onSuccess }: Props) {
 
     setUploadingImage(true);
     const body = new FormData();
-    body.append("file", file);
-    body.append("upload_preset", "turfbook");
+    body.append("image", file);
 
     try {
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.CLOUDINARY_CLOUD_NAME}/image/upload`, {
-        method: "POST",
-        body,
+      const res = await api.post("/tournaments/upload", body, {
+        headers: { "Content-Type": "multipart/form-data" }
       });
-      const data = await res.json();
-      if (data.secure_url) {
-        setFormData(prev => ({ ...prev, banner_image: data.secure_url }));
+      if (res.data?.secure_url) {
+        setFormData(prev => ({ ...prev, banner_image: res.data.secure_url }));
         toast.success("Image uploaded!");
       }
     } catch {

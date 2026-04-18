@@ -4,6 +4,29 @@ const pool = require('../config/db');
 const authMiddleware = require('../middleware/auth');
 const cache = require('../config/cache');
 
+const cloudinary = require('../config/cloudinary');
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'akola-sports-arena/tournaments',
+    allowed_formats: ['jpg', 'png', 'webp', 'jpeg'],
+  },
+});
+const upload = multer({ storage: storage });
+
+// Admin: Upload Banner Image
+router.post('/upload', authMiddleware, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
+    res.json({ secure_url: req.file.path });
+  } catch (err) {
+    res.status(500).json({ error: 'Image upload failed' });
+  }
+});
+
 // Admin: Create Tournament
 router.post('/', authMiddleware, async (req, res) => {
   const { name, sport_type, description, rules, entry_fee, prize, start_date, end_date, max_teams, banner_image, is_featured, show_on_homepage, display_priority, display_start_date, display_end_date, is_active } = req.body;
