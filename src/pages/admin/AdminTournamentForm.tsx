@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import { format } from "date-fns";
 import { Tournament } from "./AdminTournaments";
 
 interface Props {
@@ -20,7 +21,11 @@ export default function AdminTournamentForm({ initialData, onSuccess }: Props) {
 
   const formatDateForInput = (isoDate?: string | null) => {
     if (!isoDate) return "";
-    return new Date(isoDate).toISOString().slice(0, 16);
+    try {
+      return format(new Date(isoDate), "yyyy-MM-dd'T'HH:mm");
+    } catch {
+      return "";
+    }
   };
 
   const [formData, setFormData] = useState({
