@@ -202,8 +202,9 @@ export default function AdminCalendar() {
 
     return (
       <div className="overflow-auto rounded-xl border border-border bg-card" style={{ maxHeight: "calc(100vh - 260px)" }}>
-        {/* Column Headers */}
-        <div className="flex sticky top-0 z-10 bg-card border-b border-border">
+        <div className="min-w-[800px] lg:min-w-full">
+          {/* Column Headers */}
+          <div className="flex sticky top-0 z-10 bg-card border-b border-border">
           <div className="w-20 shrink-0 border-r border-border/50" />
           {days.map((day) => (
             <div
@@ -243,6 +244,7 @@ export default function AdminCalendar() {
             })}
           </div>
         ))}
+        </div>
       </div>
     );
   };
@@ -266,9 +268,10 @@ export default function AdminCalendar() {
     }
 
     return (
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        {/* Day Headers */}
-        <div className="grid grid-cols-7 border-b border-border">
+      <div className="rounded-xl border border-border bg-card overflow-auto">
+        <div className="min-w-[800px] lg:min-w-full">
+          {/* Day Headers */}
+          <div className="grid grid-cols-7 border-b border-border">
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
             <div key={d} className="py-2.5 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground border-r border-border/30 last:border-r-0">
               {d}
@@ -335,6 +338,7 @@ export default function AdminCalendar() {
             })}
           </div>
         ))}
+        </div>
       </div>
     );
   };
