@@ -99,77 +99,127 @@ export default function AdminTournaments() {
       </div>
 
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs uppercase bg-muted/50 text-muted-foreground font-bold">
-              <tr>
-                <th className="px-6 py-4">Promo</th>
-                <th className="px-6 py-4">Name & Sport</th>
-                <th className="px-6 py-4">Dates</th>
-                <th className="px-6 py-4">Fee / Max Teams</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">Loading tournaments...</td></tr>
-              ) : tournaments.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">No tournaments created yet.</td></tr>
-              ) : (
-                tournaments.map((t) => (
-                  <tr key={t.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                    <td className="px-6 py-4">
-                      {t.banner_image ? (
-                        <div className="w-20 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border">
-                          <img src={t.banner_image} className="w-full h-full object-cover" alt="Banner" />
-                        </div>
-                      ) : (
-                        <div className="w-20 h-12 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground border border-border/50 border-dashed">
-                          <ImageIcon className="w-4 h-4" />
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-base">{t.name}</div>
-                      <div className="text-xs text-muted-foreground uppercase">{t.sport_type}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-foreground">{format(new Date(t.start_date), "MMM d, yyyy")}</div>
-                      <div className="text-muted-foreground text-xs">to {format(new Date(t.end_date), "MMM d, yyyy")}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-emerald-500">₹{t.entry_fee}</div>
-                      <div className="text-xs text-muted-foreground">{t.max_teams} Teams limit</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1 items-start">
-                        {t.is_active ? 
-                           <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-emerald-500/10 text-emerald-500">Active</span> 
-                         : <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-destructive/10 text-destructive">Inactive</span>}
-                        {t.show_on_homepage && <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-primary/10 text-primary">On Homepage</span>}
-                        {t.is_featured && <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-amber-500/10 text-amber-500 flex gap-1 items-center">Featured</span>}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flexItems-center justify-end gap-2">
-                        <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => setViewRegistrations(t)}>
-                          <Users className="w-3.5 h-3.5" /> Teams
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => openEdit(t)}>
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setDeleteConfirm(t.id)}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </td>
+        {loading ? (
+          <div className="text-center py-12 text-muted-foreground">Loading tournaments...</div>
+        ) : tournaments.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">No tournaments created yet.</div>
+        ) : (
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs uppercase bg-muted/50 text-muted-foreground font-bold">
+                  <tr>
+                    <th className="px-6 py-4">Promo</th>
+                    <th className="px-6 py-4">Name & Sport</th>
+                    <th className="px-6 py-4">Dates</th>
+                    <th className="px-6 py-4">Fee / Max Teams</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {tournaments.map((t) => (
+                    <tr key={t.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                      <td className="px-6 py-4">
+                        {t.banner_image ? (
+                          <div className="w-20 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border">
+                            <img src={t.banner_image} className="w-full h-full object-cover" alt="Banner" />
+                          </div>
+                        ) : (
+                          <div className="w-20 h-12 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground border border-border/50 border-dashed">
+                            <ImageIcon className="w-4 h-4" />
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-base">{t.name}</div>
+                        <div className="text-xs text-muted-foreground uppercase">{t.sport_type}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-foreground">{format(new Date(t.start_date), "MMM d, yyyy")}</div>
+                        <div className="text-muted-foreground text-xs">to {format(new Date(t.end_date), "MMM d, yyyy")}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-emerald-500">₹{t.entry_fee}</div>
+                        <div className="text-xs text-muted-foreground">{t.max_teams} Teams limit</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1 items-start">
+                          {t.is_active ? 
+                             <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-emerald-500/10 text-emerald-500">Active</span> 
+                           : <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-destructive/10 text-destructive">Inactive</span>}
+                          {t.show_on_homepage && <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-primary/10 text-primary">On Homepage</span>}
+                          {t.is_featured && <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-amber-500/10 text-amber-500 flex gap-1 items-center">Featured</span>}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => setViewRegistrations(t)}>
+                            <Users className="w-3.5 h-3.5" /> Teams
+                          </Button>
+                          <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => openEdit(t)}>
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setDeleteConfirm(t.id)}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="flex flex-col gap-4 p-4 md:hidden">
+              {tournaments.map((t) => (
+                <div key={t.id} className="border border-border rounded-xl p-4 space-y-4 bg-muted/20">
+                  <div className="flex gap-4">
+                    {t.banner_image ? (
+                      <div className="w-20 h-20 shrink-0 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border">
+                        <img src={t.banner_image} className="w-full h-full object-cover" alt="Banner" />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 shrink-0 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground border border-border/50 border-dashed">
+                        <ImageIcon className="w-6 h-6" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-base line-clamp-1">{t.name}</div>
+                      <div className="text-xs text-muted-foreground uppercase mb-1">{t.sport_type}</div>
+                      <div className="text-xs font-medium text-emerald-500">₹{t.entry_fee} <span className="text-muted-foreground font-normal">• {t.max_teams} Teams Max</span></div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {format(new Date(t.start_date), "MMM d")} - {format(new Date(t.end_date), "MMM d")}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {t.is_active ? 
+                       <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-emerald-500/10 text-emerald-500">Active</span> 
+                     : <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-destructive/10 text-destructive">Inactive</span>}
+                    {t.show_on_homepage && <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-primary/10 text-primary">On Homepage</span>}
+                    {t.is_featured && <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-amber-500/10 text-amber-500">Featured</span>}
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+                    <Button variant="outline" size="sm" className="flex-1 h-8 gap-1.5" onClick={() => setViewRegistrations(t)}>
+                      <Users className="w-3.5 h-3.5" /> Teams
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-8 flex-1 gap-1.5" onClick={() => openEdit(t)}>
+                      <Edit2 className="w-3.5 h-3.5" /> Edit
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-8 w-10 p-0 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setDeleteConfirm(t.id)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>

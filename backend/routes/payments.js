@@ -193,7 +193,7 @@ router.post('/tournament/verify', paymentLimiter, async (req, res) => {
          [razorpay_payment_id, registration_id]
        );
        
-       await cache.deletePattern('tournaments:*');
+       await cache.delPattern('tournaments:*');
        req.app.get('io').emit('tournament_registration_success', { registration_id });
        
        res.json({ success: true, message: 'Tournament registration complete' });

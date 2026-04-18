@@ -13,7 +13,7 @@ router.post('/', authMiddleware, async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *`,
       [name, sport_type, description, rules, entry_fee, prize, start_date, end_date, max_teams, banner_image, is_featured, show_on_homepage, display_priority, display_start_date, display_end_date, is_active]
     );
-    await cache.deletePattern('tournaments:*');
+    await cache.delPattern('tournaments:*');
     
     if (is_active) {
       const io = req.app.get('io');
@@ -50,7 +50,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
     
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     
-    await cache.deletePattern('tournaments:*');
+    await cache.delPattern('tournaments:*');
     const io = req.app.get('io');
     if (io) io.emit('tournament_update', { action: 'updated', data: result.rows[0] });
     
@@ -64,7 +64,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     await pool.query('DELETE FROM tournaments WHERE id=$1', [req.params.id]);
-    await cache.deletePattern('tournaments:*');
+    await cache.delPattern('tournaments:*');
     const io = req.app.get('io');
     if (io) io.emit('tournament_update', { action: 'deleted', id: req.params.id });
     res.json({ success: true });
