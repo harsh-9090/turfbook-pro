@@ -20,9 +20,13 @@ const Index = () => {
         if (element) {
           element.scrollIntoView({ behavior: "smooth" });
         }
-      }, 100);
+      }, 150);
     } else {
+      // Force scroll to top multiple times to beat async API content rendering
       window.scrollTo(0, 0);
+      const t1 = setTimeout(() => window.scrollTo(0, 0), 100);
+      const t2 = setTimeout(() => window.scrollTo(0, 0), 300);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
     }
   }, [location.hash]);
 
