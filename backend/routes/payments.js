@@ -143,4 +143,67 @@ router.post('/verify', paymentLimiter, async (req, res) => {
   }
 });
 
+// Tournament Registration: Create Order
+router.post('/tournament/create-order', paymentLimiter, async (req, res) => {
+  try {
+    const { amount, registration_id } = req.body;
+    
+    if (!amount || !registration_id) {
+      return res.status(400).json({ error: 'Amount and registration_id are required' });
+    }
+
+    const options = {
+      amount: Math.round(amount * 100), 
+      currency: "INR",
+      receipt: registration_id,
+    };
+
+    const order = await razorpay.orders.create(options);
+    
+    await pool.query(
+      'UPDATE tournament_registrations SET razorpay_order_id = $1 WHERE id = $2',
+      [order.id, registration_id]
+    );
+
+    res.json({
+      order_id: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      key_id: process.env.RAZORPAY_KEY_ID
+    });
+  } catch (err) {
+    console.error('Razorpay Tournament Order Error:', err);
+    res.status(500).json({ error: 'Failed to create payment order' });
+  }
+});
+
+// Tournament Registration: Verify
+router.post('/tournament/verify', paymentLimiter, async (req, res) => {
+  try {
+    const { registration_id, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body).digest('hex');
+
+    if (expectedSignature === razorpay_signature) {
+       await pool.query(
+         `UPDATE tournament_registrations 
+          SET payment_status = 'paid', razorpay_payment_id = $1 
+          WHERE id = $2`,
+         [razorpay_payment_id, registration_id]
+       );
+       
+       await cache.deletePattern('tournaments:*');
+       req.app.get('io').emit('tournament_registration_success', { registration_id });
+       
+       res.json({ success: true, message: 'Tournament registration complete' });
+    } else {
+       res.status(400).json({ success: false, error: 'Invalid signature' });
+    }
+  } catch (err) {
+    console.error('Tournament Payment Verification Error:', err);
+    res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
 module.exports = router;

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
+import UpcomingTournaments from "@/components/landing/UpcomingTournaments";
 import FacilitiesSection from "@/components/landing/FacilitiesSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import PricingSection from "@/components/landing/PricingSection";
@@ -34,6 +35,7 @@ const Index = () => {
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Navbar />
       <HeroSection />
+      <UpcomingTournaments />
       <FacilitiesSection />
       <FeaturesSection />
       <PricingSection />

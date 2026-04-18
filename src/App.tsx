@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
 import BookingPage from "./pages/BookingPage";
+import TournamentDetails from "./pages/TournamentDetails";
 import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./components/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -20,6 +21,7 @@ import AdminPricing from "./pages/admin/AdminPricing";
 import AdminGallery from "./pages/admin/AdminGallery";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminTournaments from "./pages/admin/AdminTournaments";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -42,6 +44,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/book" element={<BookingPage />} />
+            <Route path="/tournaments/:id" element={<TournamentDetails />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
               path="/admin"
@@ -54,6 +57,7 @@ const App = () => (
               <Route index element={<AdminDashboard />} />
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="calendar" element={<AdminCalendar />} />
+              <Route path="tournaments" element={<AdminTournaments />} />
               <Route path="slots" element={<AdminSlots />} />
               <Route path="facilities" element={<AdminFacilities />} />
               <Route path="schedules" element={<AdminSchedules />} />

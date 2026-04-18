@@ -47,6 +47,7 @@ const pricingRoutes = require('./routes/pricing');
 const galleryRoutes = require('./routes/gallery');
 const testimonialsRoutes = require('./routes/testimonials');
 const settingsRoutes = require('./routes/settings');
+const tournamentsRoutes = require('./routes/tournaments');
 
 const app = express();
 const server = http.createServer(app);
@@ -78,6 +79,7 @@ app.use('/api/pricing', pricingRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/testimonials', testimonialsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/tournaments', tournamentsRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
