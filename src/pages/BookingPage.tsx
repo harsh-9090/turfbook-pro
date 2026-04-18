@@ -20,11 +20,17 @@ import poolImg from "@/assets/pool-room.jpg";
 
 type Step = "facility" | "date" | "slot" | "details" | "confirm" | "success";
 
-const facilityCards: { id: FacilityType; name: string; desc: string; image: string; hours: string }[] = [
-  { id: "cricket", name: "Cricket Turf", desc: "Professional batting lanes with nets & bowling machine", image: cricketImg, hours: "6AM – 11PM" },
-  { id: "snooker", name: "Snooker Table", desc: "Full-size championship tables in AC lounge", image: snookerImg, hours: "10AM – 12AM" },
-  { id: "pool", name: "Pool Table", desc: "Tournament-quality pool tables with great ambiance", image: poolImg, hours: "10AM – 12AM" },
+const facilityCards: { id: FacilityType; name: string; desc: string; image: string }[] = [
+  { id: "cricket", name: "Cricket Turf", desc: "Professional batting lanes with nets & bowling machine", image: cricketImg },
+  { id: "snooker", name: "Snooker Table", desc: "Full-size championship tables in AC lounge", image: snookerImg },
+  { id: "pool", name: "Pool Table", desc: "Tournament-quality pool tables with great ambiance", image: poolImg },
 ];
+
+function formatHour(h: number): string {
+  if (h === 0 || h === 24) return "12AM";
+  if (h === 12) return "12PM";
+  return h > 12 ? `${h - 12}PM` : `${h}AM`;
+}
 
 export default function BookingPage() {
   const [searchParams] = useSearchParams();
@@ -41,9 +47,15 @@ export default function BookingPage() {
 
   // Table-based state for snooker/pool
   const [facilityData, setFacilityData] = useState<any>(null);
+  const [allFacilities, setAllFacilities] = useState<any[]>([]);
   const [isPartialPayment, setIsPartialPayment] = useState(false);
   const [tableStatus, setTableStatus] = useState<any[]>([]);
   const [selectedTableSlot, setSelectedTableSlot] = useState<any | null>(null);
+
+  // Fetch all facilities on mount to get dynamic hours
+  useEffect(() => {
+    api.get('/facilities').then(res => setAllFacilities(res.data)).catch(() => {});
+  }, []);
 
   const isTableSport = facility === "snooker" || facility === "pool";
 
@@ -273,7 +285,12 @@ export default function BookingPage() {
                       <div className="p-4">
                         <h3 className="font-heading font-semibold text-foreground mb-1">{f.name}</h3>
                         <p className="text-xs text-muted-foreground mb-2">{f.desc}</p>
-                        <span className="text-xs text-primary font-medium">{f.hours}</span>
+                        <span className="text-xs text-primary font-medium">
+                          {(() => {
+                            const match = allFacilities.find((fac: any) => fac.facility_type === f.id);
+                            return match ? `${formatHour(match.opening_hour)} – ${formatHour(match.closing_hour)}` : "";
+                          })()}
+                        </span>
                       </div>
                     </button>
                   ))}
