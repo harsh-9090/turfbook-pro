@@ -16,6 +16,7 @@ import {
   isToday,
   parseISO,
   getDay,
+  isBefore,
 } from "date-fns";
 import { ChevronLeft, ChevronRight, CalendarDays, Clock, User, Phone, CreditCard, X, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,14 @@ const STATUS_COLORS: Record<string, { bg: string; border: string; text: string; 
   confirmed: { bg: "bg-emerald-500/15", border: "border-emerald-500/40", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
   pending: { bg: "bg-amber-500/15", border: "border-amber-500/40", text: "text-amber-700 dark:text-amber-400", dot: "bg-amber-500" },
   cancelled: { bg: "bg-red-500/10", border: "border-red-500/30", text: "text-red-600 dark:text-red-400/60", dot: "bg-red-500/60" },
+  completed: { bg: "bg-slate-500/15", border: "border-slate-500/30", text: "text-slate-600 dark:text-slate-400", dot: "bg-slate-500" },
 };
+
+function getComputedStatus(booking: CalendarBooking) {
+  if (booking.status !== "confirmed") return booking.status;
+  const endDateTime = parseISO(`${booking.date}T${booking.end_time.substring(0, 5)}:00`);
+  return isBefore(endDateTime, new Date()) ? "completed" : "confirmed";
+}
 
 const HOURS = Array.from({ length: 18 }, (_, i) => i + 6); // 6 AM to 11 PM
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -145,7 +153,8 @@ export default function AdminCalendar() {
 
   // ===== BOOKING EVENT BLOCK (shared by Day & Week) =====
   const BookingBlock = ({ booking, compact = false }: { booking: CalendarBooking; compact?: boolean }) => {
-    const colors = STATUS_COLORS[booking.status] || STATUS_COLORS.pending;
+    const computedStatus = getComputedStatus(booking);
+    const colors = STATUS_COLORS[computedStatus] || STATUS_COLORS.pending;
     return (
       <button
         onClick={(e) => { e.stopPropagation(); setSelectedBooking(booking); }}
@@ -285,8 +294,9 @@ export default function AdminCalendar() {
             {week.map((day) => {
               const dayBookings = bookings.filter((b) => isSameDay(parseISO(b.date), day));
               const inMonth = isSameMonth(day, currentDate);
-              const confirmedCount = dayBookings.filter(b => b.status === "confirmed").length;
-              const pendingCount = dayBookings.filter(b => b.status === "pending").length;
+              const confirmedCount = dayBookings.filter(b => getComputedStatus(b) === "confirmed").length;
+              const pendingCount = dayBookings.filter(b => getComputedStatus(b) === "pending").length;
+              const completedCount = dayBookings.filter(b => getComputedStatus(b) === "completed").length;
 
               return (
                 <div
@@ -301,7 +311,8 @@ export default function AdminCalendar() {
                   </p>
                   <div className="space-y-0.5">
                     {dayBookings.slice(0, 3).map((b) => {
-                      const colors = STATUS_COLORS[b.status] || STATUS_COLORS.pending;
+                      const currentStatus = getComputedStatus(b);
+                      const colors = STATUS_COLORS[currentStatus] || STATUS_COLORS.pending;
                       return (
                         <button
                           key={b.id}
@@ -329,6 +340,12 @@ export default function AdminCalendar() {
                         <span className="flex items-center gap-0.5 text-[9px] text-amber-700 dark:text-amber-400">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                           {pendingCount}
+                        </span>
+                      )}
+                      {completedCount > 0 && (
+                        <span className="flex items-center gap-0.5 text-[9px] text-slate-600 dark:text-slate-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                          {completedCount}
                         </span>
                       )}
                     </div>
@@ -401,13 +418,14 @@ export default function AdminCalendar() {
             </DialogTitle>
           </DialogHeader>
           {selectedBooking && (() => {
-            const colors = STATUS_COLORS[selectedBooking.status] || STATUS_COLORS.pending;
+            const computedStats = getComputedStatus(selectedBooking);
+            const colors = STATUS_COLORS[computedStats] || STATUS_COLORS.pending;
             return (
               <div className="space-y-4 py-2">
                 {/* Status Badge */}
                 <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider ${colors.bg} ${colors.text} border ${colors.border}`}>
                   <span className={`w-2 h-2 rounded-full ${colors.dot}`} />
-                  {selectedBooking.status}
+                  {computedStats}
                 </div>
 
                 {/* Time & Date */}
@@ -473,7 +491,7 @@ export default function AdminCalendar() {
                 </div>
 
                 {/* Actions */}
-                {selectedBooking.status !== "cancelled" && (
+                {selectedBooking.status !== "cancelled" && computedStats !== "completed" && (
                   <div className="pt-2 border-t border-border">
                     <Button
                       variant="ghost"
