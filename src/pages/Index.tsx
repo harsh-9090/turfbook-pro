@@ -20,11 +20,11 @@ const Index = () => {
         if (element) {
           element.scrollIntoView({ behavior: "smooth" });
         }
-      }, 0);
+      }, 100);
     } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo(0, 0);
     }
-  }, [location]);
+  }, [location.hash]);
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
