@@ -47,8 +47,8 @@ export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Table-based state for snooker/pool
-  const [facilityData, setFacilityData] = useState<any>(null);
   const [allFacilities, setAllFacilities] = useState<any[]>([]);
+  const facilityData = allFacilities.find((f: any) => f.facility_type === facility);
   const [isPartialPayment, setIsPartialPayment] = useState(false);
   const [tableStatus, setTableStatus] = useState<any[]>([]);
   const [selectedTableSlot, setSelectedTableSlot] = useState<any | null>(null);
@@ -62,11 +62,6 @@ export default function BookingPage() {
 
   const handleFacilitySelect = async (f: FacilityType) => {
     setFacility(f);
-    try {
-      const res = await api.get('/facilities');
-      const data = res.data.find((item: any) => item.facility_type === f);
-      setFacilityData(data);
-    } catch { }
     setStep("date");
   };
 
