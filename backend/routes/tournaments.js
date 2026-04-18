@@ -121,6 +121,11 @@ router.get('/featured', async (req, res) => {
       ORDER BY display_priority DESC, created_at DESC
     `);
     
+    for (let t of result.rows) {
+      const regObj = await pool.query("SELECT COUNT(*) FROM tournament_registrations WHERE tournament_id=$1 AND payment_status IN ('paid', 'completed')", [t.id]);
+      t.registered_teams = parseInt(regObj.rows[0].count);
+    }
+
     await cache.set('tournaments:featured', result.rows, 300); // 5 mins
     res.json(result.rows);
   } catch (err) {

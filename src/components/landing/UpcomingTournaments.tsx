@@ -16,6 +16,7 @@ interface FeaturedTournament {
   entry_fee: number;
   prize: string;
   max_teams: number;
+  registered_teams: number;
 }
 
 export default function UpcomingTournaments() {
@@ -44,6 +45,7 @@ export default function UpcomingTournaments() {
   if (tournaments.length === 0) return null;
 
   const current = tournaments[currentIndex];
+  const isFull = current.registered_teams >= current.max_teams;
 
   return (
     <section className="py-12 bg-card/30 border-y border-border">
@@ -85,9 +87,16 @@ export default function UpcomingTournaments() {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
                 >
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-500 text-xs font-bold uppercase tracking-wider mb-4">
-                    <Trophy className="w-3.5 h-3.5" /> Featured Event
-                  </span>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-500 text-xs font-bold uppercase tracking-wider">
+                      <Trophy className="w-3.5 h-3.5" /> Featured Event
+                    </span>
+                    {isFull && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/20 border border-destructive/30 text-destructive text-xs font-bold uppercase tracking-wider">
+                        🚨 Sold Out
+                      </span>
+                    )}
+                  </div>
                   
                   <h3 className="text-3xl md:text-5xl font-heading font-black text-white mb-4 leading-tight">
                     {current.name}
@@ -109,7 +118,7 @@ export default function UpcomingTournaments() {
 
                   <Link to={`/tournaments/${current.id}`}>
                     <Button className="h-12 px-8 rounded-full font-bold text-base gap-2 bg-gradient-turf text-white shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5">
-                      View Details & Register <ArrowRight className="w-4 h-4" />
+                      {isFull ? "View Details" : "View Details & Register"} <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
                 </motion.div>
