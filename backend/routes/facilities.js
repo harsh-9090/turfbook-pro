@@ -64,7 +64,7 @@ router.get('/tables-status/:facility_type', async (req, res) => {
         tables,
       };
     });
-    await cache.set(cacheKey, result, 30); // 30 sec — real-time data
+    await cache.set(cacheKey, result, 30); // 30 sec - real-time data
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: 'Server error: ' + err.message });

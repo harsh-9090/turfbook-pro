@@ -32,7 +32,7 @@ export default function AdminBookings() {
   const [payMode, setPayMode] = useState<"upi" | "cash">("cash");
 
   useEffect(() => {
-    if(!showModal) return;
+    if (!showModal) return;
     const loadSlots = async () => {
       try {
         const res = await api.get(`/slots?date=${bDate}&facility_type=${bFacility}`);
@@ -47,11 +47,11 @@ export default function AdminBookings() {
 
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if(!selectedSlot || !bName || !bPhone) return toast.error("Fill all fields");
+    if (!selectedSlot || !bName || !bPhone) return toast.error("Fill all fields");
     try {
-      await api.post('/bookings', { 
-        name: bName, 
-        phone: bPhone, 
+      await api.post('/bookings', {
+        name: bName,
+        phone: bPhone,
         slot_id: selectedSlot,
         paid_amount: Number(bPaidAmount) || 0
       });
@@ -60,7 +60,7 @@ export default function AdminBookings() {
       setBPaidAmount(0); // Reset
       setBName(""); setBPhone(""); setSelectedSlot(""); // Full reset
       fetchBookings();
-    } catch(e: any) {
+    } catch (e: any) {
       toast.error(e.response?.data?.error || "Failed to create booking");
     }
   };
@@ -87,7 +87,7 @@ export default function AdminBookings() {
           try {
             const slotEnd = parse(`${this.date} ${this.endTime}`, 'yyyy-MM-dd HH:mm', new Date());
             if (isAfter(new Date(), slotEnd)) return 'completed';
-          } catch {}
+          } catch { }
           return this.rawStatus;
         }
       }));
@@ -112,7 +112,7 @@ export default function AdminBookings() {
   const handleCancel = async (id: string) => {
     try {
       await api.patch(`/bookings/${id}/cancel`);
-      toast.success(`Booking ${id.substring(0,8)} cancelled`);
+      toast.success(`Booking ${id.substring(0, 8)} cancelled`);
       fetchBookings();
     } catch (e) {
       toast.error('Failed to cancel booking');
@@ -122,10 +122,10 @@ export default function AdminBookings() {
   const handleCompletePayment = async () => {
     if (!payTarget) return;
     try {
-      await api.patch(`/bookings/${payTarget.id}/pay`, { 
-        payment_mode: payMode 
+      await api.patch(`/bookings/${payTarget.id}/pay`, {
+        payment_mode: payMode
       });
-      toast.success(`Booking ${payTarget.id.substring(0,8)} marked as paid via ${payMode.toUpperCase()}`);
+      toast.success(`Booking ${payTarget.id.substring(0, 8)} marked as paid via ${payMode.toUpperCase()}`);
       setPayOpen(false);
       fetchBookings();
     } catch {
@@ -192,11 +192,11 @@ export default function AdminBookings() {
                 <td className="px-5 py-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                       <Badge variant="outline" className={b.paymentStatus === "paid" ? "text-primary border-primary/20 bg-primary/5" : "text-amber-500 border-amber-500/20 bg-amber-500/5 text-[10px]"}>
+                      <Badge variant="outline" className={b.paymentStatus === "paid" ? "text-primary border-primary/20 bg-primary/5" : "text-amber-500 border-amber-500/20 bg-amber-500/5 text-[10px]"}>
                         {b.paymentStatus === 'paid' ? 'Full Payment' : 'Partial / Pending'}
                       </Badge>
                       {b.paymentMode && (
-                         <Badge variant="outline" className="text-[9px] uppercase font-bold text-muted-foreground">{b.paymentMode}</Badge>
+                        <Badge variant="outline" className="text-[9px] uppercase font-bold text-muted-foreground">{b.paymentMode}</Badge>
                       )}
                     </div>
                     <div className="flex flex-col text-[11px]">
@@ -211,7 +211,7 @@ export default function AdminBookings() {
                 <td className="px-5 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">
                     {b.paymentStatus === 'pending' && b.status !== 'cancelled' && (
-                       <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary/20 h-8 px-3 text-xs font-semibold border border-primary/20" 
+                      <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary/20 h-8 px-3 text-xs font-semibold border border-primary/20"
                         onClick={() => { setPayTarget(b); setPayOpen(true); }}>
                         Mark Paid
                       </Button>
@@ -221,7 +221,7 @@ export default function AdminBookings() {
                         <CheckCircle2 className="w-4 h-4 mr-1" /> Done
                       </span>
                     ) : b.status === "cancelled" ? (
-                      <span className="text-xs text-muted-foreground block">—</span>
+                      <span className="text-xs text-muted-foreground block">-</span>
                     ) : (
                       <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 px-2" onClick={() => handleCancel(b.id)}>
                         <XCircle className="w-4 h-4 mr-1" /> Cancel
@@ -269,7 +269,7 @@ export default function AdminBookings() {
                     {b.paymentStatus === 'paid' ? 'PAID' : `DUE: ₹${b.remainingAmount}`}
                   </Badge>
                   {b.paymentMode && (
-                     <Badge variant="outline" className="text-[9px] uppercase font-bold text-muted-foreground">{b.paymentMode}</Badge>
+                    <Badge variant="outline" className="text-[9px] uppercase font-bold text-muted-foreground">{b.paymentMode}</Badge>
                   )}
                 </div>
               </div>
@@ -281,7 +281,7 @@ export default function AdminBookings() {
               </Badge>
               <div className="flex items-center gap-2">
                 {b.paymentStatus === 'pending' && b.status !== 'cancelled' && (
-                   <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary/20 h-7 px-3 text-[10px] font-bold" 
+                  <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary/20 h-7 px-3 text-[10px] font-bold"
                     onClick={() => { setPayTarget(b); setPayOpen(true); }}>
                     Mark Paid
                   </Button>
@@ -338,7 +338,7 @@ export default function AdminBookings() {
                   <option value="">Select a slot...</option>
                   {bSlots.map(s => (
                     <option key={s.id} value={s.id}>
-                      {s.start_time.substring(0,5)} - {s.end_time.substring(0,5)} {s.facility_name ? `(${s.facility_name})` : ''}
+                      {s.start_time.substring(0, 5)} - {s.end_time.substring(0, 5)} {s.facility_name ? `(${s.facility_name})` : ''}
                     </option>
                   ))}
                 </select>
@@ -373,7 +373,7 @@ export default function AdminBookings() {
               <div className="rounded-lg bg-muted/40 border border-border p-4 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Booking ID</span>
-                  <span className="text-foreground font-mono uppercase text-xs">{payTarget.id.substring(0,8)}</span>
+                  <span className="text-foreground font-mono uppercase text-xs">{payTarget.id.substring(0, 8)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-amber-500 font-bold">
                   <span>Balance Due</span>
@@ -384,20 +384,18 @@ export default function AdminBookings() {
                   <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Payment Mode</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <button onClick={() => setPayMode("cash")}
-                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
-                        payMode === "cash" 
-                          ? "border-primary bg-primary/10 text-primary" 
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${payMode === "cash"
+                          ? "border-primary bg-primary/10 text-primary"
                           : "border-border bg-transparent text-muted-foreground hover:border-border/80"
-                      }`}>
+                        }`}>
                       <Banknote className="w-4 h-4" />
                       <span className="font-semibold text-sm">Cash</span>
                     </button>
                     <button onClick={() => setPayMode("upi")}
-                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
-                        payMode === "upi" 
-                          ? "border-primary bg-primary/10 text-primary" 
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${payMode === "upi"
+                          ? "border-primary bg-primary/10 text-primary"
                           : "border-border bg-transparent text-muted-foreground hover:border-border/80"
-                      }`}>
+                        }`}>
                       <Smartphone className="w-4 h-4" />
                       <span className="font-semibold text-sm">UPI</span>
                     </button>

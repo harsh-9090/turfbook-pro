@@ -1,5 +1,5 @@
 // ============================================
-// REDIS CLIENT — Graceful Connection with Fallback
+// REDIS CLIENT - Graceful Connection with Fallback
 // ============================================
 // Uses REDIS_URL from .env (default: redis://localhost:6379)
 // If Redis is unavailable, the app continues using DB directly.

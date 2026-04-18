@@ -1,5 +1,5 @@
 // ============================================
-// CACHE UTILITY — Cache-Aside Pattern
+// CACHE UTILITY - Cache-Aside Pattern
 // ============================================
 // Reusable get/set/del/delPattern methods with:
 // - Graceful fallback (returns null on Redis failure)

@@ -113,7 +113,7 @@ router.get('/', authMiddleware, async (req, res) => {
       }))
     };
 
-    await cache.set('analytics:dashboard', data, 180); // 3 min — highest impact cache
+    await cache.set('analytics:dashboard', data, 180); // 3 min - highest impact cache
     res.json(data);
   } catch (err) {
     console.error('Analytics error:', err);

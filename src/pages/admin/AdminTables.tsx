@@ -161,9 +161,9 @@ export default function AdminTables() {
   const confirmStopSession = async () => {
     if (!billTarget) return;
     try {
-      await api.patch(`/sessions/${billTarget.id}/stop`, { 
+      await api.patch(`/sessions/${billTarget.id}/stop`, {
         total_amount: billAmount,
-        payment_mode: paymentMode 
+        payment_mode: paymentMode
       });
       toast.success(`Session stopped! Final bill: ₹${billAmount} (${paymentMode.toUpperCase()})`);
       setBillOpen(false);
@@ -329,8 +329,8 @@ export default function AdminTables() {
                       return (
                         <tr key={h.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                           <td className="py-2.5 px-3 font-medium text-foreground">{h.name || h.facility_name}</td>
-                          <td className="py-2.5 px-3 text-foreground">{h.customer_name || '—'}</td>
-                          <td className="py-2.5 px-3 text-muted-foreground font-mono text-xs">{h.customer_phone || '—'}</td>
+                          <td className="py-2.5 px-3 text-foreground">{h.customer_name || '-'}</td>
+                          <td className="py-2.5 px-3 text-muted-foreground font-mono text-xs">{h.customer_phone || '-'}</td>
                           <td className="py-2.5 px-3 text-muted-foreground">{start.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</td>
                           <td className="py-2.5 px-3 text-muted-foreground">
                             {start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} → {end.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
@@ -433,20 +433,18 @@ export default function AdminTables() {
                   <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Payment Mode</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <button onClick={() => setPaymentMode("cash")}
-                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
-                        paymentMode === "cash" 
-                          ? "border-primary bg-primary/10 text-primary" 
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${paymentMode === "cash"
+                          ? "border-primary bg-primary/10 text-primary"
                           : "border-border bg-transparent text-muted-foreground hover:border-border/80"
-                      }`}>
+                        }`}>
                       <Wallet className="w-4 h-4" />
                       <span className="font-semibold text-sm">Cash</span>
                     </button>
                     <button onClick={() => setPaymentMode("upi")}
-                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
-                        paymentMode === "upi" 
-                          ? "border-primary bg-primary/10 text-primary" 
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${paymentMode === "upi"
+                          ? "border-primary bg-primary/10 text-primary"
                           : "border-border bg-transparent text-muted-foreground hover:border-border/80"
-                      }`}>
+                        }`}>
                       <Smartphone className="w-4 h-4" />
                       <span className="font-semibold text-sm">UPI</span>
                     </button>
@@ -476,7 +474,7 @@ export default function AdminTables() {
       <Dialog open={startOpen} onOpenChange={setStartOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Start Session — {startTarget?.facility.name} #{startTarget?.tableNumber}</DialogTitle>
+            <DialogTitle>Start Session - {startTarget?.facility.name} #{startTarget?.tableNumber}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">Enter customer details before starting the timer. <span className="text-amber-500 font-semibold">Minimum billing: 1 hour.</span></p>

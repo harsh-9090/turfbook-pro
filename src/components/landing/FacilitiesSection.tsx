@@ -49,7 +49,7 @@ export default function FacilitiesSection() {
             Three Sports, <span className="text-gradient-turf">One Arena</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            From cricket nets to the snooker lounge — everything you need for the perfect sports experience.
+            From cricket nets to the snooker lounge - everything you need for the perfect sports experience.
           </p>
         </motion.div>
 
