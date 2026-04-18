@@ -210,4 +210,18 @@ router.post('/:id/register', async (req, res) => {
   }
 });
 
+// Admin: Delete/Cancel Registration
+router.delete('/registrations/:id', authMiddleware, async (req, res) => {
+  try {
+    // Optionally fetch tournament_id to emit specific events if needed, but delPattern catches it
+    await pool.query('DELETE FROM tournament_registrations WHERE id=$1', [req.params.id]);
+    await cache.delPattern('tournaments:*');
+    const io = req.app.get('io');
+    if (io) io.emit('tournament_registration_success'); // re-using this event to trigger UI refresh
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete registration' });
+  }
+});
+
 module.exports = router;
