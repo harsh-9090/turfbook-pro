@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, Calendar, Settings, LogOut, BarChart3, Menu, X, Layers, Clock, Timer, DollarSign, Image as LucideImage, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Calendar, Settings, LogOut, BarChart3, Menu, X, Layers, Clock, Timer, DollarSign, Image as LucideImage, MessageSquare, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/ThemeProvider";
 
 const sidebarLinks = [
   { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
@@ -21,6 +22,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
@@ -62,6 +64,13 @@ export default function AdminLayout() {
           <h2 className="font-heading font-semibold text-foreground">
             {sidebarLinks.find((l) => l.path === location.pathname)?.name || "Dashboard"}
           </h2>
+          <button
+            onClick={toggleTheme}
+            className="ml-auto w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
         </header>
         <main className="flex-1 p-4 lg:p-8 overflow-auto">
           <Outlet />
