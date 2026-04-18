@@ -59,6 +59,38 @@ router.post('/', bookingLimiter, async (req, res) => {
   }
 });
 
+// Calendar: fetch bookings within a date range
+router.get('/calendar', authMiddleware, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) return res.status(400).json({ error: 'startDate and endDate are required' });
+
+    const cacheKey = `bookings:calendar:${startDate}:${endDate}`;
+    if (!cache.shouldBypass(req)) {
+      const cached = await cache.get(cacheKey);
+      if (cached) return res.json(cached);
+    }
+
+    const result = await pool.query(`
+      SELECT b.id, b.status, b.payment_status, b.paid_amount, b.remaining_amount,
+        u.name as customer_name, u.phone,
+        s.date, s.start_time, s.end_time, s.price as total_amount,
+        t.facility_type, t.name as facility_name
+      FROM bookings b
+      JOIN users u ON u.id = b.user_id
+      JOIN slots s ON s.id = b.slot_id
+      JOIN turfs t ON t.id = s.turf_id
+      WHERE s.date BETWEEN $1 AND $2
+      ORDER BY s.date ASC, s.start_time ASC
+    `, [startDate, endDate]);
+
+    await cache.set(cacheKey, result.rows, 30);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+});
+
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const { date, status, limit } = req.query;
