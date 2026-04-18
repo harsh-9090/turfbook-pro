@@ -150,6 +150,10 @@ export default function BookingPage() {
       toast.error("Please fill in all fields");
       return;
     }
+    if (phone.length !== 10) {
+      toast.error("Please enter a valid 10-digit mobile number");
+      return;
+    }
     setStep("confirm");
   };
 
@@ -384,7 +388,16 @@ export default function BookingPage() {
                     <label className="text-sm text-muted-foreground mb-1.5 block">Phone Number</label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" className="pl-10 bg-card border-border" />
+                      <Input 
+                        value={phone} 
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').substring(0, 10);
+                          setPhone(val);
+                        }} 
+                        placeholder="+91 98765 43210" 
+                        className="pl-10 bg-card border-border" 
+                        type="tel"
+                      />
                     </div>
                   </div>
                   <div className="flex gap-3">
