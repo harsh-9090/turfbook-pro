@@ -35,8 +35,8 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-background flex">
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 lg:translate-x-0 lg:static ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex items-center gap-2 px-6 h-16 border-b border-border min-w-0 overflow-hidden">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
-            <img src={logoImage} alt="Logo" className="w-full h-full object-contain" />
+          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-primary/10 border border-primary/20">
+            <img src={logoImage} alt="Logo" className="w-5 h-5 object-contain" />
           </div>
           <span className="font-heading font-bold text-foreground truncate">Akola Sports Arena <span className="text-primary text-xs">Admin</span></span>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto text-muted-foreground shrink-0"><X size={20} /></button>
