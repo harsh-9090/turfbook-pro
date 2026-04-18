@@ -27,7 +27,7 @@ export default function AdminLogin() {
         const response = await api.post('/auth/login-pin', { email, pin });
         localStorage.setItem("adminToken", response.data.token);
       }
-      
+
       toast.success("Welcome back, Admin!");
       navigate("/admin");
     } catch (error: any) {
@@ -52,17 +52,15 @@ export default function AdminLogin() {
           <div className="flex justify-between items-center mb-6 p-1 bg-muted rounded-xl">
             <button
               onClick={() => setLoginMode("password")}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                loginMode === "password" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${loginMode === "password" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               Password
             </button>
             <button
               onClick={() => setLoginMode("pin")}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                loginMode === "pin" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${loginMode === "pin" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               4-Digit PIN
             </button>
@@ -124,10 +122,10 @@ export default function AdminLogin() {
                 loginMode === "password" ? "Sign In with Password" : "Login with PIN"
               )}
             </Button>
-            
-            <p className="text-[10px] text-muted-foreground text-center pt-2">
+
+            {/* <p className="text-[10px] text-muted-foreground text-center pt-2">
               Default: {loginMode === "password" ? "admin123" : "PIN 1234"}
-            </p>
+            </p> */}
           </form>
         </div>
       </motion.div>
