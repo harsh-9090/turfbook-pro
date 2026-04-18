@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Lock, ShieldAlert, Download, RefreshCcw, LogOut, ShieldCheck, Trash2, AlertTriangle, KeyRound } from "lucide-react";
+import { User, Mail, Lock, ShieldAlert, Download, RefreshCcw, LogOut, ShieldCheck, Trash2, AlertTriangle, KeyRound, MapPin, Phone, Clock, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -28,6 +28,16 @@ export default function AdminSettings() {
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Contact Settings
+  const [contactAddress, setContactAddress] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactHours, setContactHours] = useState("");
+  const [contactFacebook, setContactFacebook] = useState("");
+  const [contactInstagram, setContactInstagram] = useState("");
+  const [contactTwitter, setContactTwitter] = useState("");
+  const [savingContact, setSavingContact] = useState(false);
+
   useEffect(() => {
     // Load current admin info from localStorage or token
     const token = localStorage.getItem("adminToken");
@@ -40,6 +50,17 @@ export default function AdminSettings() {
         console.error("Token decode failed", e);
       }
     }
+
+    // Load contact settings
+    api.get('/settings/contact').then(res => {
+      setContactAddress(res.data.address || "");
+      setContactPhone(res.data.phone || "");
+      setContactEmail(res.data.email || "");
+      setContactHours(res.data.working_hours || "");
+      setContactFacebook(res.data.facebook_url || "");
+      setContactInstagram(res.data.instagram_url || "");
+      setContactTwitter(res.data.twitter_url || "");
+    }).catch(() => {});
   }, []);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -139,6 +160,27 @@ export default function AdminSettings() {
       setTimeout(() => window.location.reload(), 2000);
     } catch {
       toast.error("Data reset failed");
+    }
+  };
+
+  const handleSaveContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingContact(true);
+    try {
+      await api.put('/settings/contact', {
+        address: contactAddress,
+        phone: contactPhone,
+        email: contactEmail,
+        working_hours: contactHours,
+        facebook_url: contactFacebook,
+        instagram_url: contactInstagram,
+        twitter_url: contactTwitter,
+      });
+      toast.success("Contact information updated!");
+    } catch {
+      toast.error("Failed to update contact information");
+    } finally {
+      setSavingContact(false);
     }
   };
 
@@ -272,6 +314,69 @@ export default function AdminSettings() {
               <div className="flex justify-end">
                 <Button type="submit" disabled={saving} className="bg-primary/10 text-primary hover:bg-primary hover:text-white border-primary/20 transition-all font-bold">
                   Update Login PIN
+                </Button>
+              </div>
+            </form>
+          </section>
+
+          {/* Website Contact Information */}
+          <section className="bg-card border border-border rounded-2xl p-6 space-y-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Globe className="w-5 h-5 text-primary" />
+              <h3 className="font-heading font-bold text-lg">Website Contact Info</h3>
+            </div>
+            <p className="text-xs text-muted-foreground">These details are shown publicly on the landing page footer.</p>
+            <form onSubmit={handleSaveContact} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Address</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input value={contactAddress} onChange={(e) => setContactAddress(e.target.value)} placeholder="123 Sports Complex, Green Park, Mumbai" className="pl-10 bg-background" />
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Phone Number</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+91 98765 43210" className="pl-10 bg-background" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="hello@example.com" className="pl-10 bg-background" />
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Working Hours</label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input value={contactHours} onChange={(e) => setContactHours(e.target.value)} placeholder="Mon–Sun: 6:00 AM – 12:00 AM" className="pl-10 bg-background" />
+                </div>
+              </div>
+              <div className="border-t border-border/50 pt-4">
+                <p className="text-xs text-muted-foreground mb-3 uppercase font-bold tracking-wider">Social Media Links (optional)</p>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Facebook</label>
+                    <Input value={contactFacebook} onChange={(e) => setContactFacebook(e.target.value)} placeholder="https://facebook.com/..." className="bg-background text-xs" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Instagram</label>
+                    <Input value={contactInstagram} onChange={(e) => setContactInstagram(e.target.value)} placeholder="https://instagram.com/..." className="bg-background text-xs" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Twitter / X</label>
+                    <Input value={contactTwitter} onChange={(e) => setContactTwitter(e.target.value)} placeholder="https://twitter.com/..." className="bg-background text-xs" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button type="submit" disabled={savingContact} className="bg-primary/10 text-primary hover:bg-primary hover:text-white border-primary/20 transition-all font-bold">
+                  {savingContact ? "Saving..." : "Save Contact Info"}
                 </Button>
               </div>
             </form>

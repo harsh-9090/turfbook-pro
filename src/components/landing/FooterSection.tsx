@@ -1,8 +1,30 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import logoImage from "@/assets/logo.png";
+import api from "@/lib/api";
+
+interface ContactInfo {
+  address: string;
+  phone: string;
+  email: string;
+  working_hours: string;
+}
 
 export default function FooterSection() {
+  const [contact, setContact] = useState<ContactInfo>({
+    address: "",
+    phone: "",
+    email: "",
+    working_hours: "",
+  });
+
+  useEffect(() => {
+    api.get("/settings/contact")
+      .then(res => setContact(res.data))
+      .catch(() => {});
+  }, []);
+
   return (
     <footer id="contact" className="py-16 border-t border-border">
       <div className="container mx-auto px-4 lg:px-8">
@@ -51,22 +73,30 @@ export default function FooterSection() {
           <div className="col-span-2 lg:col-span-1">
             <h4 className="font-heading font-semibold text-foreground mb-4">Contact</h4>
             <ul className="space-y-3">
-              <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
-                123 Sports Complex, Green Park, Mumbai 400001
-              </li>
-              <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="w-4 h-4 text-primary flex-shrink-0" />
-                +91 98765 43210
-              </li>
-              <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-                hello@akolasportsarena.com
-              </li>
-              <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="w-4 h-4 text-primary flex-shrink-0" />
-                Mon–Sun: 6:00 AM – 12:00 AM
-              </li>
+              {contact.address && (
+                <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <MapPin className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
+                  {contact.address}
+                </li>
+              )}
+              {contact.phone && (
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="w-4 h-4 text-primary flex-shrink-0" />
+                  <a href={`tel:${contact.phone}`} className="hover:text-primary transition-colors">{contact.phone}</a>
+                </li>
+              )}
+              {contact.email && (
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Mail className="w-4 h-4 text-primary flex-shrink-0" />
+                  <a href={`mailto:${contact.email}`} className="hover:text-primary transition-colors">{contact.email}</a>
+                </li>
+              )}
+              {contact.working_hours && (
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock className="w-4 h-4 text-primary flex-shrink-0" />
+                  {contact.working_hours}
+                </li>
+              )}
             </ul>
           </div>
         </div>
