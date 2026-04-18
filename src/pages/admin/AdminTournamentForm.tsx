@@ -17,7 +17,7 @@ interface Props {
 export default function AdminTournamentForm({ initialData, onSuccess }: Props) {
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  
+
   const formatDateForInput = (isoDate?: string | null) => {
     if (!isoDate) return "";
     return new Date(isoDate).toISOString().slice(0, 16);
@@ -60,7 +60,7 @@ export default function AdminTournamentForm({ initialData, onSuccess }: Props) {
     body.append("upload_preset", "turfbook");
 
     try {
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.CLOUDINARY_CLOUD_NAME}/image/upload`, {
         method: "POST",
         body,
       });
@@ -136,7 +136,7 @@ export default function AdminTournamentForm({ initialData, onSuccess }: Props) {
           <Label>Sport Type</Label>
           <Input name="sport_type" value={formData.sport_type} onChange={handleChange} required placeholder="e.g. Football" />
         </div>
-        
+
         <div className="space-y-2">
           <Label>Event Start Date</Label>
           <Input type="datetime-local" name="start_date" value={formData.start_date} onChange={handleChange} required />
@@ -145,7 +145,7 @@ export default function AdminTournamentForm({ initialData, onSuccess }: Props) {
           <Label>Event End Date</Label>
           <Input type="datetime-local" name="end_date" value={formData.end_date} onChange={handleChange} required />
         </div>
-        
+
         <div className="space-y-2">
           <Label>Entry Fee (₹)</Label>
           <Input type="number" name="entry_fee" value={formData.entry_fee} onChange={handleChange} required min={0} />
@@ -174,7 +174,7 @@ export default function AdminTournamentForm({ initialData, onSuccess }: Props) {
 
       <div className="bg-muted/30 p-4 rounded-xl border border-border space-y-4">
         <h4 className="font-heading font-semibold text-sm">Marketing & Display Controls</h4>
-        
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="flex items-center space-x-2">
             <Switch checked={formData.show_on_homepage} onCheckedChange={(c) => handleSwitchChange("show_on_homepage", c)} />
