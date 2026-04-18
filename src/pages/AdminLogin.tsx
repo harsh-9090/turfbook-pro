@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import api from "@/lib/api";
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState("admin@akolasportsarena.com");
+  const [email, setEmail] = useState("akolasportsarena@gmail.com");
   const [password, setPassword] = useState("");
   const [pin, setPin] = useState("");
   const [loginMode, setLoginMode] = useState<"password" | "pin">("password");
@@ -71,7 +71,7 @@ export default function AdminLogin() {
               <label className="text-xs font-bold text-muted-foreground mb-1.5 block uppercase tracking-wider">Admin Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@akolasportsarena.com" type="email" className="pl-10 bg-background border-border" />
+                <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="akolasportsarena@gmail.com" type="email" className="pl-10 bg-background border-border" />
               </div>
             </div>
 
