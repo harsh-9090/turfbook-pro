@@ -63,7 +63,7 @@ export default function UpcomingTournaments() {
           </div>
         </div>
 
-        <div className="relative w-full h-[400px] md:h-[500px] rounded-3xl overflow-hidden group">
+        <div className="relative w-full h-[400px] md:h-[500px] rounded-3xl overflow-hidden group bg-zinc-950">
           <AnimatePresence mode="wait">
             <motion.div
               key={current.id}
@@ -78,8 +78,8 @@ export default function UpcomingTournaments() {
                 className="w-full h-full object-cover" 
                 alt={current.name} 
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-transparent to-transparent hidden md:block" />
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/90 via-transparent to-transparent hidden md:block" />
               
               <div className="absolute inset-0 p-6 md:p-12 flex flex-col justify-end md:justify-center md:items-start max-w-3xl">
                 <motion.div
