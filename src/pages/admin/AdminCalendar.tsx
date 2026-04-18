@@ -42,9 +42,9 @@ interface CalendarBooking {
 }
 
 const STATUS_COLORS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
-  confirmed: { bg: "bg-emerald-500/15", border: "border-emerald-500/40", text: "text-emerald-400", dot: "bg-emerald-500" },
-  pending: { bg: "bg-amber-500/15", border: "border-amber-500/40", text: "text-amber-400", dot: "bg-amber-500" },
-  cancelled: { bg: "bg-red-500/10", border: "border-red-500/30", text: "text-red-400/60", dot: "bg-red-500/60" },
+  confirmed: { bg: "bg-emerald-500/15", border: "border-emerald-500/40", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
+  pending: { bg: "bg-amber-500/15", border: "border-amber-500/40", text: "text-amber-700 dark:text-amber-400", dot: "bg-amber-500" },
+  cancelled: { bg: "bg-red-500/10", border: "border-red-500/30", text: "text-red-600 dark:text-red-400/60", dot: "bg-red-500/60" },
 };
 
 const HOURS = Array.from({ length: 18 }, (_, i) => i + 6); // 6 AM to 11 PM
@@ -156,10 +156,10 @@ export default function AdminCalendar() {
         ) : (
           <>
             <p className={`text-xs font-bold truncate ${colors.text}`}>{booking.customer_name}</p>
-            <p className="text-[10px] text-muted-foreground truncate">
+            <p className="text-[10px] text-foreground/60 dark:text-muted-foreground truncate">
               {formatTime12(booking.start_time)} – {formatTime12(booking.end_time)}
             </p>
-            <p className="text-[10px] text-muted-foreground/70 truncate">{booking.facility_name}</p>
+            <p className="text-[10px] text-foreground/50 dark:text-muted-foreground/70 truncate">{booking.facility_name}</p>
           </>
         )}
       </button>
@@ -317,13 +317,13 @@ export default function AdminCalendar() {
                   {dayBookings.length > 0 && (
                     <div className="flex gap-1 mt-1.5">
                       {confirmedCount > 0 && (
-                        <span className="flex items-center gap-0.5 text-[9px] text-emerald-400">
+                        <span className="flex items-center gap-0.5 text-[9px] text-emerald-700 dark:text-emerald-400">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           {confirmedCount}
                         </span>
                       )}
                       {pendingCount > 0 && (
-                        <span className="flex items-center gap-0.5 text-[9px] text-amber-400">
+                        <span className="flex items-center gap-0.5 text-[9px] text-amber-700 dark:text-amber-400">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                           {pendingCount}
                         </span>
@@ -461,7 +461,7 @@ export default function AdminCalendar() {
                       <p className="font-medium text-foreground">
                         ₹{Number(selectedBooking.paid_amount || 0)} / ₹{Number(selectedBooking.total_amount)}
                         {Number(selectedBooking.remaining_amount) > 0 && (
-                          <span className="text-amber-400 text-xs ml-2">(₹{Number(selectedBooking.remaining_amount)} due)</span>
+                          <span className="text-amber-700 dark:text-amber-400 text-xs ml-2">(₹{Number(selectedBooking.remaining_amount)} due)</span>
                         )}
                       </p>
                     </div>
