@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,14 @@ export default function TournamentRegistrationDialog({ tournament, isOpen, onClo
   const [phone, setPhone] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // When Razorpay is active (isProcessing), we must prevent Radix UI from 
+  // keeping pointer-events: none on the body, which blocks the Razorpay iframe.
+  useEffect(() => {
+    if (isProcessing) {
+      document.body.style.pointerEvents = "auto";
+    }
+  }, [isProcessing]);
 
   const initPayment = async (e: React.FormEvent) => {
     e.preventDefault();
