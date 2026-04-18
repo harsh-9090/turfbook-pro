@@ -19,7 +19,7 @@ export default function HeroSection() {
   const isMobile = useIsMobile();
 
   return (
-    <section className="relative flex items-center overflow-hidden md:min-h-screen">
+    <section className="relative flex items-center overflow-hidden md:min-h-screen bg-black">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
@@ -212,7 +212,7 @@ export default function HeroSection() {
       </div>
 
       {/* Smooth transition into next section */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-b from-transparent to-background pointer-events-none z-[3]" />
+      <div className="absolute bottom-0 left-0 right-0 h-20 md:h-28 bg-gradient-to-b from-transparent to-background pointer-events-none z-[3]" />
     </section>
   );
 }
