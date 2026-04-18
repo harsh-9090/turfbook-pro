@@ -84,8 +84,10 @@ export default function AdminTournamentForm({ initialData, onSuccess }: Props) {
     try {
       const payload = {
         ...formData,
-        display_start_date: formData.display_start_date || null,
-        display_end_date: formData.display_end_date || null,
+        start_date: new Date(formData.start_date).toISOString(),
+        end_date: new Date(formData.end_date).toISOString(),
+        display_start_date: formData.display_start_date ? new Date(formData.display_start_date).toISOString() : null,
+        display_end_date: formData.display_end_date ? new Date(formData.display_end_date).toISOString() : null,
       };
 
       if (initialData?.id) {
