@@ -175,7 +175,7 @@ export default function HeroSection() {
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full sm:w-auto text-base md:text-lg px-8 border-border bg-background/40 hover:bg-secondary"
+                className="w-full sm:w-auto text-base md:text-lg px-8 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm"
               >
                 View Facilities
               </Button>
