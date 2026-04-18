@@ -10,6 +10,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./components/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBookings from "./pages/admin/AdminBookings";
+import AdminCalendar from "./pages/admin/AdminCalendar";
 import AdminSlots from "./pages/admin/AdminSlots";
 import AdminFacilities from "./pages/admin/AdminFacilities";
 import AdminSchedules from "./pages/admin/AdminSchedules";
@@ -52,6 +53,7 @@ const App = () => (
             >
               <Route index element={<AdminDashboard />} />
               <Route path="bookings" element={<AdminBookings />} />
+              <Route path="calendar" element={<AdminCalendar />} />
               <Route path="slots" element={<AdminSlots />} />
               <Route path="facilities" element={<AdminFacilities />} />
               <Route path="schedules" element={<AdminSchedules />} />
