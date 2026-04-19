@@ -34,7 +34,7 @@ export default function AdminTournaments() {
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editingData, setEditingData] = useState<Tournament | null>(null);
-  
+
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [viewRegistrations, setViewRegistrations] = useState<Tournament | null>(null);
 
@@ -77,23 +77,29 @@ export default function AdminTournaments() {
 
   if (viewRegistrations) {
     return (
-      <AdminTournamentRegistrations 
-        tournament={viewRegistrations} 
-        onBack={() => setViewRegistrations(null)} 
+      <AdminTournamentRegistrations
+        tournament={viewRegistrations}
+        onBack={() => setViewRegistrations(null)}
       />
     );
   }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center bg-card p-6 rounded-2xl border border-border">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-card p-6 rounded-2xl border border-border">
         <div>
           <h2 className="text-2xl font-heading font-bold flex items-center gap-2">
             <Trophy className="w-6 h-6 text-primary" /> Tournament Manager
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">Create and promote upcoming sports events</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Create and promote upcoming sports events
+          </p>
         </div>
-        <Button onClick={() => { setEditingData(null); setFormOpen(true); }} className="gap-2 font-bold shadow-lg">
+
+        <Button
+          onClick={() => { setEditingData(null); setFormOpen(true); }}
+          className="gap-2 font-bold shadow-lg w-full sm:w-auto"
+        >
           <Plus className="w-4 h-4" /> Create Tournament
         </Button>
       </div>
@@ -146,9 +152,9 @@ export default function AdminTournaments() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1 items-start">
-                          {t.is_active ? 
-                             <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-emerald-500/10 text-emerald-500">Active</span> 
-                           : <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-destructive/10 text-destructive">Inactive</span>}
+                          {t.is_active ?
+                            <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-emerald-500/10 text-emerald-500">Active</span>
+                            : <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-destructive/10 text-destructive">Inactive</span>}
                           {t.show_on_homepage && <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-primary/10 text-primary">On Homepage</span>}
                           {t.is_featured && <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-amber-500/10 text-amber-500 flex gap-1 items-center">Featured</span>}
                         </div>
@@ -195,11 +201,11 @@ export default function AdminTournaments() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-2">
-                    {t.is_active ? 
-                       <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-emerald-500/10 text-emerald-500">Active</span> 
-                     : <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-destructive/10 text-destructive">Inactive</span>}
+                    {t.is_active ?
+                      <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-emerald-500/10 text-emerald-500">Active</span>
+                      : <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-destructive/10 text-destructive">Inactive</span>}
                     {t.show_on_homepage && <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-primary/10 text-primary">On Homepage</span>}
                     {t.is_featured && <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-amber-500/10 text-amber-500">Featured</span>}
                   </div>
