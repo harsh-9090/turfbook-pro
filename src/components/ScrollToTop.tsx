@@ -6,11 +6,12 @@ import { useLocation } from "react-router-dom";
  * Place this component inside <BrowserRouter> in App.tsx.
  */
 export default function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if (hash) return; // let hash navigation handle scrolling
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname, hash]);
 
   return null;
 }
