@@ -44,6 +44,7 @@ export default function AdminSettings() {
   const [contactFacebook, setContactFacebook] = useState("");
   const [contactInstagram, setContactInstagram] = useState("");
   const [contactTwitter, setContactTwitter] = useState("");
+  const [contactMapUrl, setContactMapUrl] = useState("");
   const [savingContact, setSavingContact] = useState(false);
 
   useEffect(() => {
@@ -65,6 +66,7 @@ export default function AdminSettings() {
       setContactFacebook(res.data.facebook_url || "");
       setContactInstagram(res.data.instagram_url || "");
       setContactTwitter(res.data.twitter_url || "");
+      setContactMapUrl(res.data.map_embed_url || "");
     }).catch(() => {});
   }, []);
 
@@ -152,6 +154,7 @@ export default function AdminSettings() {
         address: contactAddress, phone: contactPhone, email: contactEmail,
         working_hours: contactHours, facebook_url: contactFacebook,
         instagram_url: contactInstagram, twitter_url: contactTwitter,
+        map_embed_url: contactMapUrl,
       });
       toast.success("Contact information updated!");
     } catch { toast.error("Failed to update contact information"); }
@@ -367,6 +370,11 @@ export default function AdminSettings() {
                         <Input value={contactTwitter} onChange={(e) => setContactTwitter(e.target.value)} placeholder="https://twitter.com/..." className="bg-background text-xs" />
                       </div>
                     </div>
+                  </div>
+                  <div className="border-t border-border/50 pt-4 space-y-1.5">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Google Maps Embed URL (optional)</label>
+                    <Input value={contactMapUrl} onChange={(e) => setContactMapUrl(e.target.value)} placeholder="https://www.google.com/maps/embed?pb=..." className="bg-background text-xs" />
+                    <p className="text-[11px] text-muted-foreground">In Google Maps → Share → Embed a map → copy the <code>src</code> URL. If empty, we'll use the address above.</p>
                   </div>
                   <div className="flex justify-end">
                     <Button type="submit" disabled={savingContact} className="bg-primary/10 text-primary hover:bg-primary hover:text-white border-primary/20 transition-all font-bold">
