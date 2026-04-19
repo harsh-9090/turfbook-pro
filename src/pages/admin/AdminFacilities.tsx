@@ -13,12 +13,12 @@ export default function AdminFacilities() {
   const [type, setType] = useState("cricket");
   const [desc, setDesc] = useState("");
   const [weekdayDayPrice, setWeekdayDayPrice] = useState("800");
-  const [weekdayNightPrice, setWeekdayNightPrice] = useState("1200");
-  const [weekendDayPrice, setWeekendDayPrice] = useState("1200");
-  const [weekendNightPrice, setWeekendNightPrice] = useState("1500");
-  const [hourlyPrice, setHourlyPrice] = useState("250");
+  const [weekdayNightPrice, setWeekdayNightPrice] = useState("1000");
+  const [weekendDayPrice, setWeekendDayPrice] = useState("1000");
+  const [weekendNightPrice, setWeekendNightPrice] = useState("1200");
+  const [hourlyPrice, setHourlyPrice] = useState("150");
   const [tableCount, setTableCount] = useState("1");
-  const [openingHour, setOpeningHour] = useState("6");
+  const [openingHour, setOpeningHour] = useState("8");
   const [closingHour, setClosingHour] = useState("23");
   const [minBookingAmount, setMinBookingAmount] = useState("0");
   const [isFormExpanded, setIsFormExpanded] = useState(false);
@@ -61,12 +61,12 @@ export default function AdminFacilities() {
       toast.success('Sports Event added & Slots autonomously synced!');
       setDesc('');
       setWeekdayDayPrice('800');
-      setWeekdayNightPrice('1200');
-      setWeekendDayPrice('1200');
-      setWeekendNightPrice('1500');
-      setHourlyPrice('250');
+      setWeekdayNightPrice('1000');
+      setWeekendDayPrice('1000');
+      setWeekendNightPrice('1200');
+      setHourlyPrice('150');
       setTableCount('1');
-      setOpeningHour('6');
+      setOpeningHour('8');
       setClosingHour('23');
       setMinBookingAmount('0');
       fetchFacilities();
@@ -97,9 +97,9 @@ export default function AdminFacilities() {
     setPricingTarget(facility);
     setEditPrices({
       wd_day: facility.weekday_day_price || "800",
-      wd_night: facility.weekday_night_price || "1200",
-      we_day: facility.weekend_day_price || "1200",
-      we_night: facility.weekend_night_price || "1500",
+      wd_night: facility.weekday_night_price || "1000",
+      we_day: facility.weekend_day_price || "1000",
+      we_night: facility.weekend_night_price || "1200",
       min_booking_amount: facility.min_booking_amount || "0",
     });
     setIsPricingModalOpen(true);
