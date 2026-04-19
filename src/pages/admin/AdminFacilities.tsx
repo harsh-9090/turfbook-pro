@@ -189,7 +189,7 @@ export default function AdminFacilities() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Wkend Night</Label>
-                  <Input type="number" placeholder="1500" value={weekendNightPrice} onChange={e => setWeekdayNightPrice(e.target.value)} className="h-10 px-2" />
+                  <Input type="number" placeholder="1500" value={weekendNightPrice} onChange={e => setWeekendNightPrice(e.target.value)} className="h-10 px-2" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Deposit (₹)</Label>
