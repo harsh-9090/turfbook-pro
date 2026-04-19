@@ -372,9 +372,9 @@ export default function AdminSettings() {
                     </div>
                   </div>
                   <div className="border-t border-border/50 pt-4 space-y-1.5">
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Google Maps Embed URL (optional)</label>
-                    <Input value={contactMapUrl} onChange={(e) => setContactMapUrl(e.target.value)} placeholder="https://www.google.com/maps/embed?pb=..." className="bg-background text-xs" />
-                    <p className="text-[11px] text-muted-foreground">In Google Maps → Share → Embed a map → copy the <code>src</code> URL. If empty, we'll use the address above.</p>
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Google Maps Embed (optional)</label>
+                    <Input value={contactMapUrl} onChange={(e) => setContactMapUrl(e.target.value)} placeholder='Paste full <iframe ...> OR just the src URL' className="bg-background text-xs" />
+                    <p className="text-[11px] text-muted-foreground">Google Maps → Share → Embed a map → copy. You can paste the entire <code>&lt;iframe&gt;</code> snippet OR just the URL. If empty, we'll auto-generate from the address.</p>
                   </div>
                   <div className="flex justify-end">
                     <Button type="submit" disabled={savingContact} className="bg-primary/10 text-primary hover:bg-primary hover:text-white border-primary/20 transition-all font-bold">
