@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Facebook, Instagram, Twitter } from "lucide-react";
 import logoImage from "@/assets/logo.png";
 import api from "@/lib/api";
 
@@ -9,6 +9,9 @@ interface ContactInfo {
   phone: string;
   email: string;
   working_hours: string;
+  facebook_url?: string;
+  instagram_url?: string;
+  twitter_url?: string;
 }
 
 export default function FooterSection() {
@@ -40,9 +43,25 @@ export default function FooterSection() {
                 Akola Sports <span className="text-gradient-turf">Arena</span>
               </span>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
               Premium sports arena with cricket turf, snooker & pool. Book online, show up, and play.
             </p>
+            {socials.length > 0 && (
+              <div className="flex items-center gap-2">
+                {socials.map(({ icon: Icon, url, label }) => (
+                  <a
+                    key={label}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="w-9 h-9 rounded-full bg-muted border border-border flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+                  >
+                    <Icon className="w-4 h-4" />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="col-span-1">
