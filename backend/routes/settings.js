@@ -18,7 +18,7 @@ router.get('/contact', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM site_settings WHERE id = 1');
     if (result.rows.length === 0) {
-      return res.json({ address: '', phone: '', email: '', working_hours: '', facebook_url: '', instagram_url: '', twitter_url: '' });
+      return res.json({ address: '', phone: '', email: '', working_hours: '', facebook_url: '', instagram_url: '', twitter_url: '', map_embed_url: '' });
     }
     res.json(result.rows[0]);
   } catch (err) {
@@ -29,16 +29,17 @@ router.get('/contact', async (req, res) => {
 
 // Update site settings (Admin only)
 router.put('/contact', authMiddleware, async (req, res) => {
-  const { address, phone, email, working_hours, facebook_url, instagram_url, twitter_url } = req.body;
+  const { address, phone, email, working_hours, facebook_url, instagram_url, twitter_url, map_embed_url } = req.body;
   try {
     const query = `
       UPDATE site_settings 
       SET address = $1, phone = $2, email = $3, working_hours = $4, 
-          facebook_url = $5, instagram_url = $6, twitter_url = $7, updated_at = NOW()
+          facebook_url = $5, instagram_url = $6, twitter_url = $7,
+          map_embed_url = $8, updated_at = NOW()
       WHERE id = 1
       RETURNING *
     `;
-    const result = await pool.query(query, [address, phone, email, working_hours, facebook_url, instagram_url, twitter_url]);
+    const result = await pool.query(query, [address, phone, email, working_hours, facebook_url, instagram_url, twitter_url, map_embed_url || '']);
     await logAction(req.user.id, 'UPDATE_CONTACT_SETTINGS', 'Updated website contact information');
     res.json({ success: true, data: result.rows[0] });
   } catch (err) {
