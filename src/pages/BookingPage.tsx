@@ -46,6 +46,10 @@ export default function BookingPage() {
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [step]);
+
   // Table-based state for snooker/pool
   const [allFacilities, setAllFacilities] = useState<any[]>([]);
   const facilityData = allFacilities.find((f: any) => f.facility_type === facility);
