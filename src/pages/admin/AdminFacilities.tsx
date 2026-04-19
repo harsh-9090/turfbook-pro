@@ -45,9 +45,9 @@ export default function AdminFacilities() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/facilities', { 
-        facility_type: type, 
-        description: desc, 
+      await api.post('/facilities', {
+        facility_type: type,
+        description: desc,
         location: 'Dynamic Arena',
         weekday_day_price: Number(isHourlySettings ? hourlyPrice : weekdayDayPrice),
         weekday_night_price: Number(isHourlySettings ? hourlyPrice : weekdayNightPrice),
@@ -89,7 +89,7 @@ export default function AdminFacilities() {
           }
         }
       },
-      cancel: { label: "Cancel", onClick: () => {} }
+      cancel: { label: "Cancel", onClick: () => { } }
     });
   };
 
@@ -126,7 +126,7 @@ export default function AdminFacilities() {
   return (
     <div className="space-y-6">
       <div className="rounded-xl bg-card border border-border overflow-hidden">
-        <button 
+        <button
           onClick={() => setIsFormExpanded(!isFormExpanded)}
           className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-muted/30 transition-colors"
         >
@@ -157,7 +157,7 @@ export default function AdminFacilities() {
                 <Input placeholder="Visual context for players..." value={desc} onChange={e => setDesc(e.target.value)} className="h-10" />
               </div>
             </div>
-            
+
             {isHourlySettings ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -181,15 +181,15 @@ export default function AdminFacilities() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Wkday Night</Label>
-                  <Input type="number" placeholder="1200" value={weekdayNightPrice} onChange={e => setWeekdayNightPrice(e.target.value)} className="h-10 px-2" />
+                  <Input type="number" placeholder="1000" value={weekdayNightPrice} onChange={e => setWeekdayNightPrice(e.target.value)} className="h-10 px-2" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Wkend Day</Label>
-                  <Input type="number" placeholder="1200" value={weekendDayPrice} onChange={e => setWeekendDayPrice(e.target.value)} className="h-10 px-2" />
+                  <Input type="number" placeholder="1000" value={weekendDayPrice} onChange={e => setWeekendDayPrice(e.target.value)} className="h-10 px-2" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Wkend Night</Label>
-                  <Input type="number" placeholder="1500" value={weekendNightPrice} onChange={e => setWeekendNightPrice(e.target.value)} className="h-10 px-2" />
+                  <Input type="number" placeholder="1200" value={weekendNightPrice} onChange={e => setWeekendNightPrice(e.target.value)} className="h-10 px-2" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Deposit (₹)</Label>
@@ -204,8 +204,8 @@ export default function AdminFacilities() {
                 <Select value={openingHour} onValueChange={setOpeningHour}>
                   <SelectTrigger className="w-full bg-card border-border h-10"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Array.from({length: 24}, (_, i) => (
-                      <SelectItem key={i} value={String(i)}>{i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i-12} PM`}</SelectItem>
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <SelectItem key={i} value={String(i)}>{i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -215,8 +215,8 @@ export default function AdminFacilities() {
                 <Select value={closingHour} onValueChange={setClosingHour}>
                   <SelectTrigger className="w-full bg-card border-border h-10"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Array.from({length: 24}, (_, i) => i + 1).filter(h => h > Number(openingHour)).map(h => (
-                      <SelectItem key={h} value={String(h)}>{h === 24 ? '12 AM (midnight)' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h-12} PM`}</SelectItem>
+                    {Array.from({ length: 24 }, (_, i) => i + 1).filter(h => h > Number(openingHour)).map(h => (
+                      <SelectItem key={h} value={String(h)}>{h === 24 ? '12 AM (midnight)' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -249,7 +249,7 @@ export default function AdminFacilities() {
             <div className="bg-muted/20 border border-border/50 px-3 py-2 rounded-md mb-3 flex items-center justify-between">
               <span className="text-muted-foreground font-semibold text-xs tracking-wider uppercase flex items-center gap-1.5"><Clock className="w-3 h-3" /> Hours</span>
               <div className="flex items-center gap-1">
-                <select className="bg-transparent border border-border rounded px-1.5 py-0.5 text-xs text-foreground font-medium w-[70px]" 
+                <select className="bg-transparent border border-border rounded px-1.5 py-0.5 text-xs text-foreground font-medium w-[70px]"
                   value={f.opening_hour ?? 6}
                   onChange={async (e) => {
                     try {
@@ -258,12 +258,12 @@ export default function AdminFacilities() {
                       fetchFacilities();
                     } catch { toast.error('Failed to update'); }
                   }}>
-                  {Array.from({length: 24}, (_, i) => (
-                    <option key={i} value={i}>{i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i-12} PM`}</option>
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={i}>{i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`}</option>
                   ))}
                 </select>
                 <span className="text-muted-foreground text-xs">→</span>
-                <select className="bg-transparent border border-border rounded px-1.5 py-0.5 text-xs text-foreground font-medium w-[70px]" 
+                <select className="bg-transparent border border-border rounded px-1.5 py-0.5 text-xs text-foreground font-medium w-[70px]"
                   value={f.closing_hour ?? 23}
                   onChange={async (e) => {
                     try {
@@ -272,8 +272,8 @@ export default function AdminFacilities() {
                       fetchFacilities();
                     } catch { toast.error('Failed to update'); }
                   }}>
-                  {Array.from({length: 24}, (_, i) => i + 1).filter(h => h > (f.opening_hour ?? 6)).map(h => (
-                    <option key={h} value={h}>{h === 24 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h-12} PM`}</option>
+                  {Array.from({ length: 24 }, (_, i) => i + 1).filter(h => h > (f.opening_hour ?? 6)).map(h => (
+                    <option key={h} value={h}>{h === 24 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`}</option>
                   ))}
                 </select>
               </div>
@@ -288,7 +288,7 @@ export default function AdminFacilities() {
                   <div className="bg-muted/30 px-3 py-2 rounded-md mb-2 flex items-center justify-between">
                     <span className="text-muted-foreground font-semibold text-xs tracking-wider uppercase">Physical Tables</span>
                     <div className="flex items-center gap-2">
-                      <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-foreground" 
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-foreground"
                         onClick={async () => {
                           const newCount = Math.max(1, (f.table_count || 1) - 1);
                           await api.patch(`/facilities/${f.id}/tables`, { table_count: newCount });
@@ -331,8 +331,8 @@ export default function AdminFacilities() {
                 </div>
               )}
               <div className="bg-primary/5 border border-primary/10 px-3 py-1.5 rounded-lg mb-2 flex justify-between items-center">
-                 <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Min Online Deposit</span>
-                 <span className="text-sm font-bold text-primary">₹{f.min_booking_amount || 0}</span>
+                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Min Online Deposit</span>
+                <span className="text-sm font-bold text-primary">₹{f.min_booking_amount || 0}</span>
               </div>
               <Button size="sm" variant="outline" className="w-full text-xs h-8" onClick={() => openPricingModal(f)}>Update Global Pricing</Button>
             </div>
@@ -348,45 +348,45 @@ export default function AdminFacilities() {
           <DialogHeader>
             <DialogTitle>Update Split Pricing Grid</DialogTitle>
           </DialogHeader>
-            {pricingTarget?.facility_type === 'snooker' || pricingTarget?.facility_type === 'pool' ? (
-              <>
-                <p className="text-sm text-muted-foreground mb-4">Changing this global hourly rate will autonomously recalculate all future templates and free slots for <b>{pricingTarget?.name}</b>.</p>
-                <div className="space-y-2 mb-4">
-                  <Label>Flat Hourly Engine Rate (₹)</Label>
-                  <Input type="number" value={editPrices.wd_day} onChange={(e) => setEditPrices({...editPrices, wd_day: e.target.value})} />
+          {pricingTarget?.facility_type === 'snooker' || pricingTarget?.facility_type === 'pool' ? (
+            <>
+              <p className="text-sm text-muted-foreground mb-4">Changing this global hourly rate will autonomously recalculate all future templates and free slots for <b>{pricingTarget?.name}</b>.</p>
+              <div className="space-y-2 mb-4">
+                <Label>Flat Hourly Engine Rate (₹)</Label>
+                <Input type="number" value={editPrices.wd_day} onChange={(e) => setEditPrices({ ...editPrices, wd_day: e.target.value })} />
+              </div>
+              <div className="space-y-2 mb-4">
+                <Label>Booking Deposit Amount (₹)</Label>
+                <Input type="number" value={editPrices.min_booking_amount} onChange={(e) => setEditPrices({ ...editPrices, min_booking_amount: e.target.value })} />
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground mb-4">Changing these prices will instantly recalculate all future unbooked slots & weekly templates for <b>{pricingTarget?.name}</b>. Night starts dynamically at 18:00 (6 PM).</p>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="space-y-2">
+                  <Label>Weekday Day (₹)</Label>
+                  <Input type="number" value={editPrices.wd_day} onChange={(e) => setEditPrices({ ...editPrices, wd_day: e.target.value })} />
                 </div>
-                <div className="space-y-2 mb-4">
-                  <Label>Booking Deposit Amount (₹)</Label>
-                  <Input type="number" value={editPrices.min_booking_amount} onChange={(e) => setEditPrices({...editPrices, min_booking_amount: e.target.value})} />
+                <div className="space-y-2">
+                  <Label>Weekday Night (₹)</Label>
+                  <Input type="number" value={editPrices.wd_night} onChange={(e) => setEditPrices({ ...editPrices, wd_night: e.target.value })} />
                 </div>
-              </>
-            ) : (
-              <>
-                <p className="text-sm text-muted-foreground mb-4">Changing these prices will instantly recalculate all future unbooked slots & weekly templates for <b>{pricingTarget?.name}</b>. Night starts dynamically at 18:00 (6 PM).</p>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="space-y-2">
-                    <Label>Weekday Day (₹)</Label>
-                    <Input type="number" value={editPrices.wd_day} onChange={(e) => setEditPrices({...editPrices, wd_day: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Weekday Night (₹)</Label>
-                    <Input type="number" value={editPrices.wd_night} onChange={(e) => setEditPrices({...editPrices, wd_night: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Weekend Day (₹)</Label>
-                    <Input type="number" value={editPrices.we_day} onChange={(e) => setEditPrices({...editPrices, we_day: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Weekend Night (₹)</Label>
-                    <Input type="number" value={editPrices.we_night} onChange={(e) => setEditPrices({...editPrices, we_night: e.target.value})} />
-                  </div>
-                  <div className="col-span-2 space-y-2">
-                    <Label>Default Online Booking Deposit (₹)</Label>
-                    <Input type="number" value={editPrices.min_booking_amount} onChange={(e) => setEditPrices({...editPrices, min_booking_amount: e.target.value})} />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Weekend Day (₹)</Label>
+                  <Input type="number" value={editPrices.we_day} onChange={(e) => setEditPrices({ ...editPrices, we_day: e.target.value })} />
                 </div>
-              </>
-            )}
+                <div className="space-y-2">
+                  <Label>Weekend Night (₹)</Label>
+                  <Input type="number" value={editPrices.we_night} onChange={(e) => setEditPrices({ ...editPrices, we_night: e.target.value })} />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>Default Online Booking Deposit (₹)</Label>
+                  <Input type="number" value={editPrices.min_booking_amount} onChange={(e) => setEditPrices({ ...editPrices, min_booking_amount: e.target.value })} />
+                </div>
+              </div>
+            </>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsPricingModalOpen(false)}>Cancel</Button>
             <Button onClick={handleSavePricing} className="bg-gradient-turf text-primary-foreground shadow-turf">Sync Updates</Button>
