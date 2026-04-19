@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Phone, Mail, Clock, Facebook, Instagram, Twitter as TwitterIcon } from "lucide-react";
+import { MapPin, Phone, Mail, Clock } from "lucide-react";
+
+const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H8v-3h2.4V9.4c0-2.4 1.4-3.7 3.6-3.7 1 0 2.1.2 2.1.2v2.3h-1.2c-1.2 0-1.5.7-1.5 1.5V12h2.6l-.4 3h-2.2v7A10 10 0 0 0 22 12Z"/></svg>
+);
+const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+);
+const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M18.244 2H21l-6.52 7.45L22 22h-6.79l-4.78-6.17L4.8 22H2l7.05-8.05L2 2h6.91l4.32 5.71L18.244 2Zm-2.38 18h1.83L8.27 4H6.32l9.544 16Z"/></svg>
+);
 import logoImage from "@/assets/logo.png";
 import api from "@/lib/api";
 
