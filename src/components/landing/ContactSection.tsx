@@ -25,9 +25,15 @@ export default function ContactSection() {
       .catch(() => {});
   }, []);
 
-  // Build a maps embed URL: prefer admin-provided embed, else derive from address
+  // Accept either a raw URL or a full <iframe> snippet pasted by admin
+  const extractSrc = (value: string) => {
+    if (!value) return "";
+    const match = value.match(/src=["']([^"']+)["']/i);
+    return match ? match[1] : value.trim();
+  };
+
   const mapSrc = contact.map_embed_url
-    ? contact.map_embed_url
+    ? extractSrc(contact.map_embed_url)
     : contact.address
       ? `https://www.google.com/maps?q=${encodeURIComponent(contact.address)}&output=embed`
       : "";
