@@ -90,9 +90,9 @@ router.post('/', authMiddleware, async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
       [
         generatedName, facility_type, description, location || 'Dynamic Arena', 
-        weekday_day_price || 800, weekday_night_price || 1200, 
-        weekend_day_price || 1200, weekend_night_price || 1500, 
-        table_count || 1, opening_hour || 6, closing_hour || 23,
+        weekday_day_price || 800, weekday_night_price || 1000, 
+        weekend_day_price || 1000, weekend_night_price || 1200, 
+        table_count || 1, opening_hour || 8, closing_hour || 23,
         min_booking_amount || 0
       ]
     );
