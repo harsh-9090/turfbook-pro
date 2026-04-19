@@ -11,7 +11,7 @@ const navLinks = [
   { name: "Book Now", path: "/book" },
   { name: "Facilities", path: "/#facilities" },
   { name: "Pricing", path: "/#pricing" },
-  { name: "Contact", path: "/#contact" },
+  { name: "Contact", path: "/#contact-section" },
 ];
 
 export default function Navbar() {
