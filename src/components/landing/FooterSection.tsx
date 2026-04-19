@@ -42,8 +42,8 @@ export default function FooterSection() {
   }, []);
 
   const socials = [
-    { icon: Facebook, url: contact.facebook_url, label: "Facebook" },
-    { icon: Instagram, url: contact.instagram_url, label: "Instagram" },
+    { icon: FacebookIcon, url: contact.facebook_url, label: "Facebook" },
+    { icon: InstagramIcon, url: contact.instagram_url, label: "Instagram" },
     { icon: TwitterIcon, url: contact.twitter_url, label: "Twitter" },
   ].filter(s => s.url);
 
