@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Phone, Mail, Clock, Facebook, Instagram, Twitter } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Facebook, Instagram, Twitter as TwitterIcon } from "lucide-react";
 import logoImage from "@/assets/logo.png";
 import api from "@/lib/api";
 
@@ -20,6 +20,9 @@ export default function FooterSection() {
     phone: "",
     email: "",
     working_hours: "",
+    facebook_url: "",
+    instagram_url: "",
+    twitter_url: "",
   });
 
   useEffect(() => {
@@ -27,6 +30,12 @@ export default function FooterSection() {
       .then(res => setContact(res.data))
       .catch(() => {});
   }, []);
+
+  const socials = [
+    { icon: Facebook, url: contact.facebook_url, label: "Facebook" },
+    { icon: Instagram, url: contact.instagram_url, label: "Instagram" },
+    { icon: TwitterIcon, url: contact.twitter_url, label: "Twitter" },
+  ].filter(s => s.url);
 
   return (
     <footer id="contact" className="py-16 border-t border-border">
