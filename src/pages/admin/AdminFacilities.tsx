@@ -167,13 +167,14 @@ export default function AdminFacilities() {
           className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-muted/30 transition-colors"
         >
           <h3 className="font-heading font-semibold text-foreground">Add New Sports Event</h3>
-          <div className="p-1 rounded-md bg-secondary text-muted-foreground sm:hidden">
+          <div className="p-1 rounded-md bg-secondary text-muted-foreground">
             {isFormExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
         </button>
 
-        <div className={`${isFormExpanded ? "block" : "hidden sm:block"} p-4 sm:p-5 pt-0 sm:pt-0 border-t border-border/50 sm:border-t-0`}>
-          <form onSubmit={handleAdd} className="flex flex-col gap-4 mt-4 sm:mt-0">
+        {isFormExpanded && (
+        <div className="p-4 sm:p-5 pt-0 sm:pt-0 border-t border-border/50">
+          <form onSubmit={handleAdd} className="flex flex-col gap-4 mt-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Sport</Label>
@@ -277,6 +278,7 @@ export default function AdminFacilities() {
             </div>
           </form>
         </div>
+      )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
