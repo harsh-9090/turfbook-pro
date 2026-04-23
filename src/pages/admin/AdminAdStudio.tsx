@@ -68,7 +68,9 @@ export default function AdminAdStudio() {
 
   const formatToAMPM = (timeStr: string) => {
     const [start, end] = timeStr.split(" - ");
-    return `${formatTime12Hour(start)} - ${formatTime12Hour(end)}`;
+    const startStr = formatTime12Hour(start).replace(":00", "");
+    const endStr = formatTime12Hour(end).replace(":00", "");
+    return `${startStr} - ${endStr}`;
   };
 
   // Support up to 18 slots (6 rows of 3)
