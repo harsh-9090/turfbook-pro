@@ -36,7 +36,7 @@ export default function AdminBookings() {
     const loadSlots = async () => {
       try {
         const res = await api.get(`/slots?date=${bDate}&facility_type=${bFacility}`);
-        const available = res.data.filter((s: any) => s.is_available);
+        const available = res.data.filter((s: any) => s.is_available && !s.is_booked);
         setBSlots(available);
       } catch (e) {
         toast.error('Failed to load slots for selected date/facility');

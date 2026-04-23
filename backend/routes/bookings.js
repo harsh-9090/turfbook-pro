@@ -14,6 +14,10 @@ router.post('/', bookingLimiter, async (req, res) => {
     const slotResult = await pool.query('SELECT * FROM slots WHERE id = $1 AND is_available = true', [slot_id]);
     if (slotResult.rows.length === 0) return res.status(400).json({ error: 'Slot not available' });
 
+    // Ensure slot doesn't already have an active booking
+    const activeBookingResult = await pool.query("SELECT id FROM bookings WHERE slot_id = $1 AND status != 'cancelled'", [slot_id]);
+    if (activeBookingResult.rows.length > 0) return res.status(400).json({ error: 'Slot is already booked by another user' });
+
     const slot = slotResult.rows[0];
 
     // Create or find user
