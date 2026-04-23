@@ -19,6 +19,7 @@ router.get('/', async (req, res) => {
     // JIT: Auto-generate missing slots for ALL active turfs before fetching!
     await pool.query('SELECT generate_daily_slots($1, id) FROM turfs', [date]);
 
+    
     let query = `
       SELECT s.*, 
         CASE 
