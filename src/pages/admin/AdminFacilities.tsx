@@ -141,16 +141,7 @@ export default function AdminFacilities() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Sport</Label>
-                <Select value={type} onValueChange={setType}>
-                  <SelectTrigger className="w-full bg-card border-border h-10">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cricket">Cricket Turf</SelectItem>
-                    <SelectItem value="snooker">Snooker Table</SelectItem>
-                    <SelectItem value="pool">Pool Table</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input placeholder="e.g. cricket, badminton, football..." value={type} onChange={e => setType(e.target.value.toLowerCase())} className="h-10" required />
               </div>
               <div className="sm:col-span-2 space-y-1.5">
                 <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Short Description</Label>

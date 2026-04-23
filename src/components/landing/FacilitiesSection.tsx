@@ -1,39 +1,33 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import api from "@/lib/api";
 import cricketImg from "@/assets/cricket-turf.jpg";
 import snookerImg from "@/assets/snooker-room.jpg";
 import poolImg from "@/assets/pool-room.jpg";
 
-const facilities = [
-  {
-    title: "Cricket Turf",
-    subtitle: "Professional Practice Nets",
-    description: "Premium synthetic turf with multiple batting lanes, bowling machines, and professional-grade LED floodlights. Perfect for team practice, coaching sessions, and friendly matches.",
-    image: cricketImg,
-    features: ["3 Batting Lanes", "Bowling Machine", "LED Floodlights", "Stumps & Gear"],
-    cta: "cricket",
-  },
-  {
-    title: "Snooker Lounge",
-    subtitle: "Championship Tables",
-    description: "Full-size championship snooker tables in a premium, climate-controlled lounge. Enjoy the classic game in a relaxed, upscale atmosphere with comfortable seating.",
-    image: snookerImg,
-    features: ["Full-Size Tables", "Premium Cues", "Scoreboard", "Lounge Seating"],
-    cta: "snooker",
-  },
-  {
-    title: "Pool Tables",
-    subtitle: "Modern Billiards Experience",
-    description: "High-quality pool tables with professional felt, perfect lighting, and a modern vibe. Great for casual games, competitions, and a fun night out with friends.",
-    image: poolImg,
-    features: ["Tournament Tables", "Quality Cues", "LED Lighting", "Music System"],
-    cta: "pool",
-  },
-];
+/** Fallback images for known sport types */
+const knownImages: Record<string, string> = {
+  cricket: cricketImg,
+  snooker: snookerImg,
+  pool: poolImg,
+};
+
+/** Generic placeholder for unknown sports */
+const defaultImage = "https://images.unsplash.com/photo-1461896836934-bd45ba8bf8bd?q=80&w=2000&auto=format&fit=crop";
 
 export default function FacilitiesSection() {
+  const [facilities, setFacilities] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.get('/facilities').then(res => setFacilities(res.data)).catch(() => { });
+  }, []);
+
+  const count = facilities.length;
+  const countWord = count === 1 ? "One Sport" : count === 2 ? "Two Sports" : count === 3 ? "Three Sports" : `${count} Sports`;
+
   return (
     <section id="facilities" className="py-20 lg:py-32 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-[120px]" />
@@ -46,17 +40,17 @@ export default function FacilitiesSection() {
         >
           <p className="text-primary font-semibold mb-2 uppercase tracking-wider text-sm">Our Sports Events</p>
           <h2 className="font-heading text-3xl lg:text-5xl font-bold mb-4">
-            Three Sports, <span className="text-gradient-turf">One Arena</span>
+            {countWord}, <span className="text-gradient-turf">One Arena</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            From cricket nets to the snooker lounge - everything you need for the perfect sports experience.
+            Everything you need for the perfect sports experience — all under one roof.
           </p>
         </motion.div>
 
         <div className="space-y-16">
-          {facilities.map((facility, i) => (
+          {facilities.map((f, i) => (
             <motion.div
-              key={facility.title}
+              key={f.id}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -66,8 +60,8 @@ export default function FacilitiesSection() {
               <div className="flex-1 w-full">
                 <div className="overflow-hidden rounded-2xl border border-border">
                   <img
-                    src={facility.image}
-                    alt={facility.title}
+                    src={knownImages[f.facility_type] || defaultImage}
+                    alt={f.name}
                     loading="lazy"
                     width={800}
                     height={600}
@@ -76,19 +70,12 @@ export default function FacilitiesSection() {
                 </div>
               </div>
               <div className="flex-1 w-full">
-                <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-1">{facility.subtitle}</p>
-                <h3 className="font-heading text-2xl lg:text-3xl font-bold text-foreground mb-3">{facility.title}</h3>
-                <p className="text-muted-foreground leading-relaxed mb-5">{facility.description}</p>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {facility.features.map((f) => (
-                    <span key={f} className="px-3 py-1.5 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20">
-                      {f}
-                    </span>
-                  ))}
-                </div>
-                <Link to={`/book?facility=${facility.cta}`}>
+                <p className="text-primary font-semibold text-sm uppercase tracking-wider mb-1">{f.facility_type}</p>
+                <h3 className="font-heading text-2xl lg:text-3xl font-bold text-foreground mb-3">{f.name}</h3>
+                <p className="text-muted-foreground leading-relaxed mb-5">{f.description || "Experience premium sports facilities with professional equipment and a great atmosphere."}</p>
+                <Link to={`/book?facility=${f.facility_type}`}>
                   <Button className="bg-gradient-turf text-primary-foreground font-semibold shadow-turf hover:opacity-90 group">
-                    Book {facility.title}
+                    Book {f.name}
                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>

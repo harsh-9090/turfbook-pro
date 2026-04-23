@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
-import { type Slot, type FacilityType, facilityLabels } from "@/lib/mock-data";
+import { type Slot, type FacilityType, getFacilityLabel } from "@/lib/mock-data";
 import api from "@/lib/api";
 import { useSocket } from "@/hooks/useSocket";
 import Navbar from "@/components/Navbar";
@@ -19,13 +19,13 @@ import cricketImg from "@/assets/cricket-turf.jpg";
 import snookerImg from "@/assets/snooker-room.jpg";
 import poolImg from "@/assets/pool-room.jpg";
 
-type Step = "facility" | "date" | "slot" | "details" | "confirm" | "success";
-
-const facilityCards: { id: FacilityType; name: string; desc: string; image: string }[] = [
-  { id: "cricket", name: "Cricket Turf", desc: "Professional batting lanes with nets & bowling machine", image: cricketImg },
-  { id: "snooker", name: "Snooker Table", desc: "Full-size championship tables in AC lounge", image: snookerImg },
-  { id: "pool", name: "Pool Table", desc: "Tournament-quality pool tables with great ambiance", image: poolImg },
-];
+/** Fallback images for known sport types */
+const knownImages: Record<string, string> = {
+  cricket: cricketImg,
+  snooker: snookerImg,
+  pool: poolImg,
+};
+const defaultImage = "https://images.unsplash.com/photo-1461896836934-bd45ba8bf8bd?q=80&w=2000&auto=format&fit=crop";
 
 function formatHour(h: number): string {
   if (h === 0 || h === 24) return "12AM";
@@ -37,8 +37,8 @@ export default function BookingPage() {
   const [searchParams] = useSearchParams();
   const preselected = searchParams.get("facility") as FacilityType | null;
 
-  const [step, setStep] = useState<Step>(preselected ? "date" : "facility");
-  const [facility, setFacility] = useState<FacilityType>(preselected || "cricket");
+  const [step, setStep] = useState<string>(preselected ? "date" : "facility");
+  const [facility, setFacility] = useState<FacilityType>(preselected || "");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [groupedSlots, setGroupedSlots] = useState<{ time: string, price: number, slots: any[], availableSlots: any[], isAvailable: boolean }[]>([]);
   const [selectedSlotGroup, setSelectedSlotGroup] = useState<any | null>(null);
@@ -54,6 +54,8 @@ export default function BookingPage() {
   // Table-based state for snooker/pool
   const [allFacilities, setAllFacilities] = useState<any[]>([]);
   const facilityData = allFacilities.find((f: any) => f.facility_type === facility);
+  /** Get the display name for the selected facility */
+  const facilityName = allFacilities.find((f: any) => f.facility_type === facility)?.name || getFacilityLabel(facility);
   const [isPartialPayment, setIsPartialPayment] = useState(false);
   const [tableStatus, setTableStatus] = useState<any[]>([]);
   const [selectedTableSlot, setSelectedTableSlot] = useState<any | null>(null);
@@ -215,7 +217,7 @@ export default function BookingPage() {
         amount: orderAmount,
         currency: currency,
         name: "Akola Sports Arena",
-        description: `Booking for ${facilityLabels[facility]}`,
+        description: `Booking for ${facilityName}`,
         order_id: order_id,
         handler: async function (response: any) {
           // 4. Verify Signature
@@ -312,20 +314,17 @@ export default function BookingPage() {
                   <p className="text-muted-foreground">What would you like to play today?</p>
                 </div>
                 <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
-                  {facilityCards.map((f) => (
-                    <button key={f.id} onClick={() => handleFacilitySelect(f.id)}
+                  {allFacilities.map((f: any) => (
+                    <button key={f.id} onClick={() => handleFacilitySelect(f.facility_type)}
                       className="group text-left rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-turf transition-all duration-300">
                       <div className="h-40 overflow-hidden">
-                        <img src={f.image} alt={f.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img src={knownImages[f.facility_type] || defaultImage} alt={f.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       </div>
                       <div className="p-4">
                         <h3 className="font-heading font-semibold text-foreground mb-1">{f.name}</h3>
-                        <p className="text-xs text-muted-foreground mb-2">{f.desc}</p>
+                        <p className="text-xs text-muted-foreground mb-2">{f.description || "Experience premium sports facilities"}</p>
                         <span className="text-xs text-primary font-medium">
-                          {(() => {
-                            const match = allFacilities.find((fac: any) => fac.facility_type === f.id);
-                            return match ? `${formatHour(match.opening_hour)} – ${formatHour(match.closing_hour)}` : "";
-                          })()}
+                          {f.opening_hour != null ? `${formatHour(f.opening_hour)} – ${formatHour(f.closing_hour)}` : ""}
                         </span>
                       </div>
                     </button>
@@ -341,7 +340,7 @@ export default function BookingPage() {
                   <ArrowLeft className="w-4 h-4" /> Change sport
                 </button>
                 <h1 className="font-heading text-3xl lg:text-4xl font-bold mb-2">Pick a <span className="text-gradient-turf">Date</span></h1>
-                <p className="text-muted-foreground mb-8">Booking <span className="text-primary font-medium">{facilityLabels[facility]}</span></p>
+                <p className="text-muted-foreground mb-8">Booking <span className="text-primary font-medium">{facilityName}</span></p>
                 <div className="flex justify-center">
                   <Calendar
                     mode="single"
@@ -360,7 +359,7 @@ export default function BookingPage() {
                 <div className="text-center mb-8">
                   <h1 className="font-heading text-3xl lg:text-4xl font-bold mb-2">Choose a <span className="text-gradient-turf">Slot</span></h1>
                   <p className="text-muted-foreground">
-                    <span className="text-primary font-medium">{facilityLabels[facility]}</span> · {selectedDate && format(selectedDate, "EEEE, MMMM d, yyyy")}
+                    <span className="text-primary font-medium">{facilityName}</span> · {selectedDate && format(selectedDate, "EEEE, MMMM d, yyyy")}
                     <button onClick={() => setStep("date")} className="ml-2 text-primary hover:underline text-sm">Change</button>
                   </p>
                 </div>
@@ -397,7 +396,7 @@ export default function BookingPage() {
                     </div>
                   ) : groupedSlots.length === 0 ? (
                     <div className="col-span-full py-12 text-center text-muted-foreground">
-                      No slots available on this date for {facilityLabels[facility]}. Try another day!
+                      No slots available on this date for {facilityName}. Try another day!
                     </div>
                   ) : null}
                 </div>
@@ -452,7 +451,7 @@ export default function BookingPage() {
                   <h1 className="font-heading text-3xl font-bold mb-2">Confirm <span className="text-gradient-turf">Booking</span></h1>
                 </div>
                 <div className="rounded-2xl bg-card border border-border p-6 space-y-4 mb-6">
-                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Event</span><span className="text-foreground font-medium">{facilityLabels[facility]}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Event</span><span className="text-foreground font-medium">{facilityName}</span></div>
                   {selectedTableSlot ? (
                     <div className="flex justify-between text-sm"><span className="text-muted-foreground">Table</span><span className="text-foreground font-medium">{selectedTableSlot.name}</span></div>
                   ) : (
@@ -518,7 +517,7 @@ export default function BookingPage() {
                   <CheckCircle2 className="w-10 h-10 text-primary" />
                 </div>
                 <h1 className="font-heading text-3xl font-bold mb-2">Booking <span className="text-gradient-turf">Confirmed!</span></h1>
-                <p className="text-muted-foreground mb-2">Your <span className="text-primary font-medium">{facilityLabels[facility]}</span> session is booked.</p>
+                <p className="text-muted-foreground mb-2">Your <span className="text-primary font-medium">{facilityName}</span> session is booked.</p>
                 <p className="text-muted-foreground mb-8 text-sm">You'll receive a confirmation on WhatsApp shortly.</p>
                 <Button onClick={resetBooking} className="bg-gradient-turf text-primary-foreground font-semibold shadow-turf hover:opacity-90">
                   Book Another Session

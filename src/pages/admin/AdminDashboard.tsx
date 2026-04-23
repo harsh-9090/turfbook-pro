@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Calendar, DollarSign, TrendingUp, Clock, ArrowUpRight } from "lucide-react";
 import { formatTime12Hour } from "@/lib/utils";
-import { facilityLabels } from "@/lib/mock-data";
+import { getFacilityLabel } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
@@ -111,7 +111,7 @@ export default function AdminDashboard() {
                     <p className="text-xs text-muted-foreground">{b.phone}</p>
                   </td>
                   <td className="px-5 py-3">
-                    <Badge variant="outline" className="text-primary border-primary/20">{facilityLabels[b.facility as keyof typeof facilityLabels] || b.facility}</Badge>
+                    <Badge variant="outline" className="text-primary border-primary/20">{getFacilityLabel(b.facility)}</Badge>
                   </td>
                   <td className="px-5 py-3 text-foreground">{b.date}</td>
                   <td className="px-5 py-3 text-foreground">{b.startTime}–{b.endTime}</td>
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <Badge variant="outline" className="text-[10px] text-primary border-primary/20">
-                {facilityLabels[b.facility as keyof typeof facilityLabels] || b.facility}
+                {getFacilityLabel(b.facility)}
               </Badge>
             </div>
           ))}

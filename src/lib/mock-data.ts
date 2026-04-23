@@ -1,6 +1,6 @@
 import { addDays, format } from "date-fns";
 
-export type FacilityType = "cricket" | "snooker" | "pool";
+export type FacilityType = string;
 
 export interface Facility {
   id: FacilityType;
@@ -32,13 +32,27 @@ export interface Booking {
   createdAt: string;
 }
 
-
-
-export const facilityLabels: Record<FacilityType, string> = {
+/** Static fallback map for known types */
+const knownLabels: Record<string, string> = {
   cricket: "Cricket Turf",
   snooker: "Snooker Table",
   pool: "Pool Table",
 };
+
+/** Dynamic label resolver — uses known map or capitalizes the raw type */
+export function getFacilityLabel(type: string): string {
+  if (!type) return "";
+  const lower = type.toLowerCase();
+  if (knownLabels[lower]) return knownLabels[lower];
+  return type.charAt(0).toUpperCase() + type.slice(1);
+}
+
+/** Legacy compat — acts as a proxy so existing `facilityLabels[x]` still works */
+export const facilityLabels: Record<string, string> = new Proxy(knownLabels, {
+  get(target, prop: string) {
+    return getFacilityLabel(prop);
+  }
+});
 
 
 

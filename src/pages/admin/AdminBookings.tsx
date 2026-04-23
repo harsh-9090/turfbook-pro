@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { facilityLabels } from "@/lib/mock-data";
+import { getFacilityLabel } from "@/lib/mock-data";
 import api from "@/lib/api";
 import { useSocket } from "@/hooks/useSocket";
 import { format } from "date-fns";
@@ -17,6 +17,14 @@ export default function AdminBookings() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [facilityFilter, setFacilityFilter] = useState<string>("all");
+  const [facilityTypes, setFacilityTypes] = useState<string[]>([]);
+
+  useEffect(() => {
+    api.get('/facilities').then(res => {
+      const types = [...new Set(res.data.map((f: any) => f.facility_type))] as string[];
+      setFacilityTypes(types);
+    }).catch(() => {});
+  }, []);
 
   const [showModal, setShowModal] = useState(false);
   const [bName, setBName] = useState("");
@@ -143,11 +151,11 @@ export default function AdminBookings() {
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, ID, date..." className="pl-10 bg-card border-border" />
           </div>
           <div className="flex flex-wrap gap-2">
-            {["all", "cricket", "snooker", "pool"].map((f) => (
+            {["all", ...facilityTypes].map((f) => (
               <Button key={f} size="sm" variant={facilityFilter === f ? "default" : "outline"}
                 onClick={() => setFacilityFilter(f)}
                 className={facilityFilter === f ? "bg-gradient-turf text-primary-foreground" : ""}>
-                {f === "all" ? "All" : facilityLabels[f as keyof typeof facilityLabels]}
+                {f === "all" ? "All" : getFacilityLabel(f)}
               </Button>
             ))}
           </div>
@@ -180,7 +188,7 @@ export default function AdminBookings() {
                   <p className="text-xs text-muted-foreground">{b.phone}</p>
                 </td>
                 <td className="px-5 py-3 text-center">
-                  <Badge variant="outline" className="text-primary border-primary/20">{facilityLabels[b.facility as keyof typeof facilityLabels] || b.facility}</Badge>
+                  <Badge variant="outline" className="text-primary border-primary/20">{getFacilityLabel(b.facility)}</Badge>
                 </td>
                 <td className="px-5 py-3 text-foreground">{b.date}</td>
                 <td className="px-5 py-3 text-foreground font-medium">{b.startTime}–{b.endTime}</td>
@@ -278,7 +286,7 @@ export default function AdminBookings() {
 
             <div className="flex items-center justify-between">
               <Badge variant="outline" className="text-[10px] text-primary border-primary/20">
-                {facilityLabels[b.facility as keyof typeof facilityLabels] || b.facility}
+                {getFacilityLabel(b.facility)}
               </Badge>
               <div className="flex items-center gap-2">
                 {b.paymentStatus === 'pending' && b.status !== 'cancelled' && (

@@ -83,7 +83,7 @@ router.post('/', authMiddleware, async (req, res) => {
     } = req.body;
     if (!facility_type) return res.status(400).json({ error: 'facility_type required' });
 
-    const generatedName = facility_type.charAt(0).toUpperCase() + facility_type.slice(1) + (facility_type === 'cricket' ? ' Turf' : ' Table');
+    const generatedName = facility_type.charAt(0).toUpperCase() + facility_type.slice(1);
 
     const result = await pool.query(
       `INSERT INTO turfs (name, facility_type, description, location, weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, table_count, opening_hour, closing_hour, min_booking_amount) 

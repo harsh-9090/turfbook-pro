@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { type FacilityType, facilityLabels } from "@/lib/mock-data";
+import { type FacilityType, facilityLabels, getFacilityLabel } from "@/lib/mock-data";
 import { Lock, Unlock, Plus, CalendarIcon, User, Phone, CreditCard, Clock } from "lucide-react";
 import { formatTime12Hour } from "@/lib/utils";
 import { toast } from "sonner";
@@ -14,8 +14,18 @@ import api from "@/lib/api";
 
 export default function AdminSlots() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [facility, setFacility] = useState<FacilityType>("cricket");
+  const [facility, setFacility] = useState<FacilityType>("");
   const [slots, setSlots] = useState<any[]>([]);
+  const [facilityTypes, setFacilityTypes] = useState<string[]>([]);
+
+  // Fetch available facility types
+  useEffect(() => {
+    api.get('/facilities').then(res => {
+      const types = [...new Set(res.data.map((f: any) => f.facility_type))] as string[];
+      setFacilityTypes(types);
+      if (types.length > 0 && !facility) setFacility(types[0]);
+    }).catch(() => {});
+  }, []);
 
   const fetchSlots = async (date: Date) => {
     try {
@@ -153,11 +163,11 @@ export default function AdminSlots() {
     <div className="space-y-6">
       {/* Facility filter */}
       <div className="flex gap-2">
-        {(["cricket", "snooker", "pool"] as FacilityType[]).map((f) => (
+        {facilityTypes.map((f) => (
           <Button key={f} size="sm" variant={facility === f ? "default" : "outline"}
             onClick={() => handleFacilityChange(f)}
             className={facility === f ? "bg-gradient-turf text-primary-foreground" : ""}>
-            {facilityLabels[f]}
+            {getFacilityLabel(f)}
           </Button>
         ))}
       </div>
@@ -167,7 +177,7 @@ export default function AdminSlots() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
             <div className="flex flex-col gap-1">
               <h3 className="font-heading font-semibold text-lg text-foreground">
-                {facilityLabels[facility]} Manage Overrides
+                {getFacilityLabel(facility)} Manage Overrides
               </h3>
               <p className="text-sm text-muted-foreground">Select a specific date to manually block slots or add irregular timings.</p>
             </div>
