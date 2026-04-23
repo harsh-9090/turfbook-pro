@@ -41,7 +41,19 @@ export default function UpcomingTournaments() {
     return () => clearInterval(timer);
   }, [tournaments.length]);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <section className="py-12 bg-card/30 border-y border-border">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="flex items-center gap-2 mb-8">
+            <Trophy className="w-5 h-5 text-amber-500" />
+            <h2 className="text-2xl font-heading font-bold text-foreground">Featured Tournaments</h2>
+          </div>
+          <div className="relative w-full h-[400px] md:h-[500px] rounded-3xl overflow-hidden bg-muted animate-pulse" />
+        </div>
+      </section>
+    );
+  }
   if (tournaments.length === 0) return null;
 
   const current = tournaments[currentIndex];

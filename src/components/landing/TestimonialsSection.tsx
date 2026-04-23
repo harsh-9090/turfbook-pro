@@ -18,6 +18,7 @@ interface Testimonial {
 
 export default function TestimonialsSection() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -30,7 +31,10 @@ export default function TestimonialsSection() {
   const [rating, setRating] = useState(5);
 
   useEffect(() => {
-    api.get("/testimonials").then(res => setTestimonials(res.data)).catch(() => {});
+    api.get("/testimonials")
+      .then(res => setTestimonials(res.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   // Auto-scroll

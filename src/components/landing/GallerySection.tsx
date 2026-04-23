@@ -11,12 +11,34 @@ interface GalleryImage {
 
 export default function GallerySection() {
   const [images, setImages] = useState<GalleryImage[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.get("/gallery")
       .then(res => setImages(res.data))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) {
+    return (
+      <section id="gallery" className="py-20 lg:py-32">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center mb-16">
+            <p className="text-primary font-semibold mb-2 uppercase tracking-wider text-sm">Gallery</p>
+            <h2 className="font-heading text-3xl lg:text-5xl font-bold mb-4">
+              Inside <span className="text-gradient-turf">Akola Sports Arena</span>
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-5xl mx-auto">
+            {[0,1,2,3,4,5,6,7].map(i => (
+              <div key={i} className="aspect-square rounded-2xl bg-muted animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (images.length === 0) return null;
 

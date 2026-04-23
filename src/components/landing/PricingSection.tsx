@@ -18,10 +18,34 @@ interface Plan {
 
 export default function PricingSection() {
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/pricing").then(res => setPlans(res.data)).catch(() => {});
+    api.get("/pricing")
+      .then(res => setPlans(res.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) {
+    return (
+      <section id="pricing" className="py-20 lg:py-32">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="text-center mb-16">
+            <p className="text-primary font-semibold mb-2 uppercase tracking-wider text-sm">Pricing</p>
+            <h2 className="font-heading text-3xl lg:text-5xl font-bold mb-4">
+              Simple, <span className="text-gradient-turf">Transparent</span> Pricing
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {[0,1,2].map(i => (
+              <div key={i} className="h-[420px] rounded-2xl bg-card border border-border animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (plans.length === 0) return null;
 
