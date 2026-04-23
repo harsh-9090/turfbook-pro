@@ -59,7 +59,7 @@ export default function BookingPage() {
 
   // Fetch all facilities on mount to get dynamic hours
   useEffect(() => {
-    api.get('/facilities').then(res => setAllFacilities(res.data)).catch(() => {});
+    api.get('/facilities').then(res => setAllFacilities(res.data)).catch(() => { });
   }, []);
 
   const isTableSport = facility === "snooker" || facility === "pool";
@@ -347,8 +347,8 @@ export default function BookingPage() {
                     <button key={group.time} onClick={() => group.isAvailable && handleGroupSelect(group)}
                       disabled={!group.isAvailable}
                       className={`p-4 rounded-xl border text-left transition-all duration-200 ${!group.isAvailable ? "bg-muted/30 border-border/50 opacity-50 cursor-not-allowed"
-                          : selectedSlotGroup?.time === group.time ? "bg-primary/10 border-primary shadow-turf"
-                            : "bg-card border-border hover:border-primary/40 hover:shadow-turf cursor-pointer"
+                        : selectedSlotGroup?.time === group.time ? "bg-primary/10 border-primary shadow-turf"
+                          : "bg-card border-border hover:border-primary/40 hover:shadow-turf cursor-pointer"
                         }`}>
                       <div className="flex items-center gap-1 mb-1">
                         <Clock className={`w-3.5 h-3.5 ${group.isAvailable ? "text-primary" : "text-muted-foreground"}`} />
@@ -358,7 +358,7 @@ export default function BookingPage() {
                       <p className={`text-sm font-bold mt-1 ${group.isAvailable ? "text-primary" : "text-muted-foreground"}`}>₹{group.price}</p>
                       {group.isAvailable ? (
                         <p className="text-[10px] text-primary/80 mt-1 font-medium">
-                          {group.availableSlots.length} {facility === "cricket" ? "lane" : "table"}(s) available
+                          {group.availableSlots.length} {facility === "cricket" ? "lane" : "table"}s available
                         </p>
                       ) : (
                         <p className="text-[10px] text-destructive mt-1 font-semibold">Booked Full</p>
@@ -393,14 +393,14 @@ export default function BookingPage() {
                     <label className="text-sm text-muted-foreground mb-1.5 block">Phone Number</label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input 
-                        value={phone} 
+                      <Input
+                        value={phone}
                         onChange={(e) => {
                           const val = e.target.value.replace(/\D/g, '').substring(0, 10);
                           setPhone(val);
-                        }} 
-                        placeholder="+91 98765 43210" 
-                        className="pl-10 bg-card border-border" 
+                        }}
+                        placeholder="+91 98765 43210"
+                        className="pl-10 bg-card border-border"
                         type="tel"
                       />
                     </div>
@@ -447,8 +447,8 @@ export default function BookingPage() {
                           <button
                             onClick={() => setIsPartialPayment(false)}
                             className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${!isPartialPayment
-                                ? "border-primary bg-primary/10 text-primary shadow-turf"
-                                : "border-border bg-transparent text-muted-foreground hover:border-border/80"
+                              ? "border-primary bg-primary/10 text-primary shadow-turf"
+                              : "border-border bg-transparent text-muted-foreground hover:border-border/80"
                               }`}>
                             <span className="text-[10px] font-bold uppercase mb-1">Full Payment</span>
                             <span className="font-bold text-lg">₹{selectedSlotGroup.price}</span>
@@ -456,8 +456,8 @@ export default function BookingPage() {
                           <button
                             onClick={() => setIsPartialPayment(true)}
                             className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${isPartialPayment
-                                ? "border-primary bg-primary/10 text-primary shadow-turf"
-                                : "border-border bg-transparent text-muted-foreground hover:border-border/80"
+                              ? "border-primary bg-primary/10 text-primary shadow-turf"
+                              : "border-border bg-transparent text-muted-foreground hover:border-border/80"
                               }`}>
                             <span className="text-[10px] font-bold uppercase mb-1">Pay Deposit</span>
                             <span className="font-bold text-lg">₹{facilityData.min_booking_amount}</span>

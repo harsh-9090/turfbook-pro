@@ -114,7 +114,7 @@ export default function AdminAdStudio() {
           <Button variant={selectedDate.getDate() === addDays(new Date(), 1).getDate() ? "default" : "ghost"} onClick={() => setSelectedDate(addDays(new Date(), 1))} className="rounded-xl">Tomorrow</Button>
           <Button variant={selectedDate.getDate() === addDays(new Date(), 2).getDate() ? "default" : "ghost"} onClick={() => setSelectedDate(addDays(new Date(), 2))} className="rounded-xl">Day After</Button>
         </div>
-        
+
         <div className="flex gap-2 items-center bg-card p-2 rounded-2xl border border-border w-fit">
           <Button variant={!isLight ? "default" : "ghost"} onClick={() => setAdTheme("dark")} className="rounded-xl">Dark Theme</Button>
           <Button variant={isLight ? "default" : "ghost"} onClick={() => setAdTheme("light")} className="rounded-xl bg-white text-black hover:bg-neutral-200">Light Theme</Button>
@@ -132,7 +132,7 @@ export default function AdminAdStudio() {
             </div>
           ) : (
             <div className="bg-card border border-border rounded-2xl p-6">
-              <h3 className="font-bold text-xl mb-4 text-foreground">{slots.length} available slot(s) for {format(selectedDate, "EEEE")}</h3>
+              <h3 className="font-bold text-xl mb-4 text-foreground">{slots.length} available slots for {format(selectedDate, "EEEE")}</h3>
               {slots.length > 18 && (
                 <p className="text-xs text-amber-500 mb-4 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
                   Note: Found {slots.length} slots, but only the first 18 will visibly fit into the Instagram story template.
@@ -158,7 +158,7 @@ export default function AdminAdStudio() {
             <div ref={captureRef} className={`w-[1080px] h-[1920px] flex flex-col relative ${isLight ? "bg-stone-100" : "bg-[#040d07]"}`}>
               {/* Background Design */}
               <div className={`absolute inset-0 bg-[url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=3532&auto=format&fit=crop')] bg-cover bg-center ${isLight ? "opacity-30" : "opacity-40"}`} />
-              
+
               {isLight ? (
                 <>
                   <div className="absolute inset-0 bg-gradient-to-t from-stone-100 via-stone-100/90 to-stone-100/40" />
@@ -173,13 +173,13 @@ export default function AdminAdStudio() {
 
               {/* Content Layer */}
               <div className="relative z-10 w-full h-full">
-                
+
                 {/* 1) Top Header Section */}
                 <div className="pt-20 px-12 flex flex-col items-center">
                   <div className={`w-40 h-40 rounded-full overflow-hidden mb-6 shadow-2xl flex items-center justify-center
                       ${isLight ? "bg-white border-[4px] border-[#059669]" : "bg-white/5 border-[4px] border-[#10b981]/50"}
                     `}>
-                     <img src={logoImage} alt="Logo" className="w-[110%] h-[110%] object-cover object-center" />
+                    <img src={logoImage} alt="Logo" className="w-[110%] h-[110%] object-cover object-center" />
                   </div>
                   <p className={`font-bold text-4xl uppercase tracking-widest mb-4 ${isLight ? "text-[#059669]" : "text-[#10b981]"}`}>
                     Akola Sports Arena
@@ -208,8 +208,8 @@ export default function AdminAdStudio() {
                       <div className={`grid ${gridStyles.cols} ${gridStyles.gap} w-full max-w-4xl mx-auto`}>
                         {displaySlots.map(s => (
                           <div key={s} className={`backdrop-blur-md rounded-[1.5rem] ${gridStyles.py} text-center font-bold flex items-center justify-center ${gridStyles.text}
-                            ${isLight 
-                              ? "bg-white border-[3px] border-neutral-200 text-neutral-800 shadow-[0_10px_30px_rgba(0,0,0,0.05)]" 
+                            ${isLight
+                              ? "bg-white border-[3px] border-neutral-200 text-neutral-800 shadow-[0_10px_30px_rgba(0,0,0,0.05)]"
                               : "bg-white/5 border-[3px] border-[#10b981]/50 text-white shadow-[0_0_30px_rgba(16,185,129,0.1)]"}
                           `}>
                             {formatToAMPM(s)}
@@ -236,7 +236,7 @@ export default function AdminAdStudio() {
                     ⚽ www.akolasportsarena.vercel.app
                   </p>
                 </div>
-                
+
               </div>
             </div>
             {/* END CAPTURE */}
