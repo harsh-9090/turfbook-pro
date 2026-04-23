@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Calendar, DollarSign, TrendingUp, Clock, ArrowUpRight } from "lucide-react";
+import { formatTime12Hour } from "@/lib/utils";
 import { facilityLabels } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
@@ -34,8 +35,8 @@ export default function AdminDashboard() {
         phone: b.phone,
         facility: b.facility_type || "cricket",
         date: format(new Date(b.date), 'yyyy-MM-dd'),
-        startTime: b.start_time?.substring(0, 5) || "",
-        endTime: b.end_time?.substring(0, 5) || "",
+        startTime: b.start_time ? formatTime12Hour(b.start_time) : "",
+        endTime: b.end_time ? formatTime12Hour(b.end_time) : "",
         status: b.status,
         amount: Number(b.total_amount)
       }));

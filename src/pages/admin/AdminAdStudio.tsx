@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { format, addDays } from "date-fns";
 import * as htmlToImage from "html-to-image";
 import { Download, Loader2, Megaphone } from "lucide-react";
+import { formatTime12Hour } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import api from "@/lib/api";
@@ -29,7 +30,7 @@ export default function AdminAdStudio() {
       // Group by start time to handle multiple lanes seamlessly
       const grouped: Record<string, number> = {};
       available.forEach((s: any) => {
-        const time = `${s.start_time.substring(0, 5)} - ${s.end_time.substring(0, 5)}`;
+        const time = `${formatTime12Hour(s.start_time)} - ${formatTime12Hour(s.end_time)}`;
         grouped[time] = (grouped[time] || 0) + 1;
       });
 

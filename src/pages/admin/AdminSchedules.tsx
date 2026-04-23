@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Edit2, CalendarDays, Clock } from "lucide-react";
+import { formatTime12Hour } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,8 +56,8 @@ export default function AdminSchedules() {
     if (tmpl) {
       setFormData({ 
         id: tmpl.id, 
-        startTime: tmpl.start_time?.substring(0, 5) || "10:00", 
-        endTime: tmpl.end_time?.substring(0, 5) || "11:00", 
+        startTime: tmpl.start_time ? formatTime12Hour(tmpl.start_time) : "10:00 AM", 
+        endTime: tmpl.end_time ? formatTime12Hour(tmpl.end_time) : "11:00 AM", 
         price: tmpl.price?.toString() || "800" 
       });
     } else {
@@ -166,7 +167,7 @@ export default function AdminSchedules() {
                <div className="flex items-center gap-1 mb-2">
                  <Clock className="w-3.5 h-3.5 text-primary" />
                  <span className="text-sm font-semibold text-foreground">
-                   {tmpl.start_time?.substring(0, 5)} – {tmpl.end_time?.substring(0, 5)}
+                   {tmpl.start_time ? formatTime12Hour(tmpl.start_time) : ""} – {tmpl.end_time ? formatTime12Hour(tmpl.end_time) : ""}
                  </span>
                </div>
                <p className="text-sm font-bold text-primary mb-3">₹{tmpl.price}</p>

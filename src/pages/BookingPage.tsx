@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { format, addDays, startOfDay, parse, isAfter } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, Clock, User, Phone, ArrowRight, CheckCircle2, ArrowLeft, Loader2 } from "lucide-react";
+import { formatTime12Hour } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -78,7 +79,7 @@ export default function BookingPage() {
 
       const groups: Record<string, any[]> = {};
       response.data.forEach((s: any) => {
-        const time = s.start_time.substring(0, 5) + " – " + s.end_time.substring(0, 5);
+        const time = formatTime12Hour(s.start_time) + " – " + formatTime12Hour(s.end_time);
         if (!groups[time]) groups[time] = [];
         groups[time].push(s);
       });

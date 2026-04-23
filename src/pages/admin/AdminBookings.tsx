@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, XCircle, Plus, CheckCircle2, IndianRupee, Smartphone, Wallet, Banknote } from "lucide-react";
+import { formatTime12Hour } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -74,8 +75,8 @@ export default function AdminBookings() {
         phone: b.phone,
         facility: b.facility_type || "cricket",
         date: format(new Date(b.date), 'yyyy-MM-dd'),
-        startTime: b.start_time?.substring(0, 5) || "",
-        endTime: b.end_time?.substring(0, 5) || "",
+        startTime: b.start_time ? formatTime12Hour(b.start_time) : "",
+        endTime: b.end_time ? formatTime12Hour(b.end_time) : "",
         rawStatus: b.status,
         paymentStatus: b.payment_status,
         amount: Number(b.total_amount),
@@ -338,7 +339,7 @@ export default function AdminBookings() {
                   <option value="">Select a slot...</option>
                   {bSlots.map(s => (
                     <option key={s.id} value={s.id}>
-                      {s.start_time.substring(0, 5)} - {s.end_time.substring(0, 5)} {s.facility_name ? `(${s.facility_name})` : ''}
+                      {formatTime12Hour(s.start_time)} - {formatTime12Hour(s.end_time)} {s.facility_name ? `(${s.facility_name})` : ''}
                     </option>
                   ))}
                 </select>

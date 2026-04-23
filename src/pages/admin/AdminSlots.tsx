@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type FacilityType, facilityLabels } from "@/lib/mock-data";
 import { Lock, Unlock, Plus, CalendarIcon, User, Phone, CreditCard, Clock } from "lucide-react";
+import { formatTime12Hour } from "@/lib/utils";
 import { toast } from "sonner";
 import api from "@/lib/api";
 
@@ -24,8 +25,8 @@ export default function AdminSlots() {
         .map((s: any) => ({
           id: s.id,
           turf_id: s.turf_id,
-          startTime: s.start_time?.substring(0, 5) || "",
-          endTime: s.end_time?.substring(0, 5) || "",
+          startTime: s.start_time ? formatTime12Hour(s.start_time) : "",
+          endTime: s.end_time ? formatTime12Hour(s.end_time) : "",
           isAvailable: s.is_available,
           price: Number(s.price),
           isBooked: s.is_booked,
