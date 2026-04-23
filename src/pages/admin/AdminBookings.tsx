@@ -150,7 +150,7 @@ export default function AdminBookings() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, ID, date..." className="pl-10 bg-card border-border" />
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex overflow-x-auto flex-nowrap gap-2 pb-1 scrollbar-hide">
             {["all", ...facilityTypes].map((f) => (
               <Button key={f} size="sm" variant={facilityFilter === f ? "default" : "outline"}
                 onClick={() => setFacilityFilter(f)}

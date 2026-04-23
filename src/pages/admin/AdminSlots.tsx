@@ -162,7 +162,7 @@ export default function AdminSlots() {
   return (
     <div className="space-y-6">
       {/* Facility filter */}
-      <div className="flex gap-2">
+      <div className="flex overflow-x-auto flex-nowrap gap-2 pb-1 scrollbar-hide">
         {facilityTypes.map((f) => (
           <Button key={f} size="sm" variant={facility === f ? "default" : "outline"}
             onClick={() => handleFacilityChange(f)}
