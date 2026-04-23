@@ -155,7 +155,7 @@ export default function AdminAdStudio() {
           <div className="w-[1080px] h-[1920px] shrink-0 origin-center" style={{ transform: 'scale(0.32)' }}>
 
             {/* THIS IS THE ACTUAL ELEMENT CAPTURED BY htmlToImage */}
-            <div ref={captureRef} className={`w-[1080px] h-[1920px] flex flex-col justify-between overflow-hidden relative ${isLight ? "bg-stone-100" : "bg-black"}`}>
+            <div ref={captureRef} className={`w-[1080px] h-[1920px] flex flex-col relative ${isLight ? "bg-stone-100" : "bg-[#040d07]"}`}>
               {/* Background Design */}
               <div className={`absolute inset-0 bg-[url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=3532&auto=format&fit=crop')] bg-cover bg-center ${isLight ? "opacity-30" : "opacity-40"}`} />
               
@@ -166,47 +166,48 @@ export default function AdminAdStudio() {
                 </>
               ) : (
                 <>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-[#081f13]/90 to-[#041109]/40 mix-blend-multiply opacity-90" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#040d07] via-[#081f13]/90 to-[#041109]/40 mix-blend-multiply opacity-90" />
                   <div className="absolute inset-0 bg-gradient-to-b from-[#10b981]/20 via-transparent to-transparent" />
                 </>
               )}
 
-              {/* Content */}
-              <div className="relative z-10 p-20 flex flex-col h-full">
-                <div className="text-center mt-12">
-                  <div className="flex justify-center mb-6">
-                    <div className={`w-40 h-40 rounded-full backdrop-blur-md overflow-hidden flex items-center justify-center p-2 
-                        ${isLight ? "bg-white border-[4px] border-[#059669] shadow-[0_0_40px_rgba(5,150,105,0.2)]" : "bg-white/10 border-[4px] border-[#10b981]/50 shadow-[0_0_40px_rgba(16,185,129,0.3)]"}
-                      `}>
-                       <img src={logoImage} alt="Logo" className="w-full h-full object-contain scale-110" />
-                    </div>
+              {/* Content Layer */}
+              <div className="relative z-10 w-full h-full">
+                
+                {/* 1) Top Header Section */}
+                <div className="pt-20 px-12 flex flex-col items-center">
+                  <div className={`w-40 h-40 rounded-full overflow-hidden mb-6 shadow-2xl flex items-center justify-center
+                      ${isLight ? "bg-white border-[4px] border-[#059669]" : "bg-white/5 border-[4px] border-[#10b981]/50"}
+                    `}>
+                     <img src={logoImage} alt="Logo" className="w-[110%] h-[110%] object-cover object-center" />
                   </div>
-                  <p className={`font-bold text-4xl uppercase tracking-widest mb-6 ${isLight ? "text-[#059669]" : "text-[#10b981]"}`}>
+                  <p className={`font-bold text-4xl uppercase tracking-widest mb-4 ${isLight ? "text-[#059669]" : "text-[#10b981]"}`}>
                     Akola Sports Arena
                   </p>
-                  <h1 className={`text-[140px] font-black leading-none uppercase font-heading italic tracking-tighter ${isLight ? "text-neutral-900" : "text-white"}`}>
+                  <h1 className={`text-[120px] font-black leading-none uppercase font-heading italic tracking-tighter ${isLight ? "text-neutral-900" : "text-white"}`}>
                     Game<br />On.
                   </h1>
-                  <div className={`w-32 h-3 mx-auto mt-12 mb-16 rounded-full ${isLight ? "bg-[#059669]" : "bg-[#10b981] shadow-[0_0_30px_rgba(16,185,129,0.8)]"}`} />
+                  <div className={`w-28 h-2 mx-auto mt-8 mb-8 rounded-full ${isLight ? "bg-[#059669]" : "bg-[#10b981] shadow-[0_0_30px_rgba(16,185,129,0.8)]"}`} />
 
-                  <p className={`text-5xl font-bold mb-6 tracking-wide ${isLight ? "text-neutral-800" : "text-white"}`}>
+                  <p className={`text-4xl font-bold mb-5 tracking-wide ${isLight ? "text-neutral-800" : "text-white"}`}>
                     CRICKET TURF
                   </p>
-                  <div className={`text-black inline-block px-10 py-5 rounded-[2rem] text-5xl font-black uppercase tracking-wider 
-                    ${isLight ? "bg-[#10b981] shadow-[0_10px_30px_rgba(16,185,129,0.3)]" : "bg-[#10b981] shadow-[0_0_50px_rgba(16,185,129,0.4)]"}`}>
+                  <div className={`text-black inline-block px-10 py-5 rounded-[2rem] text-4xl font-black uppercase tracking-wider 
+                    ${isLight ? "bg-[#10b981] shadow-[0_10px_30px_rgba(16,185,129,0.3)]" : "bg-[#10b981] shadow-[0_0_40px_rgba(16,185,129,0.5)]"}`}>
                     {selectedDate.getDate() === new Date().getDate() ? "Open Today" : format(selectedDate, "EEEE, MMM do")}
                   </div>
                 </div>
 
-                <div className="flex-1 flex flex-col justify-center items-center mt-12">
+                {/* 2) Middle Slots Section (Takes natural height but constrained) */}
+                <div className="w-full flex-1 flex flex-col items-center justify-start mt-12 px-12 pb-[350px]">
                   {displaySlots.length > 0 ? (
                     <div className="w-full">
-                      <h2 className={`text-[55px] font-black text-center mb-12 uppercase tracking-widest text-shadow-sm ${isLight ? "text-[#059669]" : "text-[#10b981]"}`}>
+                      <h2 className={`text-[45px] font-black text-center mb-8 uppercase tracking-widest text-shadow-sm ${isLight ? "text-[#059669]" : "text-[#10b981]"}`}>
                         Available Slots
                       </h2>
                       <div className={`grid ${gridStyles.cols} ${gridStyles.gap} w-full max-w-4xl mx-auto`}>
                         {displaySlots.map(s => (
-                          <div key={s} className={`backdrop-blur-md rounded-3xl ${gridStyles.py} text-center font-bold ${gridStyles.text}
+                          <div key={s} className={`backdrop-blur-md rounded-[1.5rem] ${gridStyles.py} text-center font-bold flex items-center justify-center ${gridStyles.text}
                             ${isLight 
                               ? "bg-white border-[3px] border-neutral-200 text-neutral-800 shadow-[0_10px_30px_rgba(0,0,0,0.05)]" 
                               : "bg-white/5 border-[3px] border-[#10b981]/50 text-white shadow-[0_0_30px_rgba(16,185,129,0.1)]"}
@@ -217,23 +218,25 @@ export default function AdminAdStudio() {
                       </div>
                     </div>
                   ) : (
-                    <div className={`text-7xl font-black text-center uppercase border-[6px] p-24 rounded-[4rem] rotate-[-5deg] backdrop-blur-md
+                    <div className={`mt-10 text-6xl font-black text-center uppercase border-[6px] p-24 rounded-[4rem] rotate-[-5deg] backdrop-blur-md
                       ${isLight ? "text-neutral-800 border-neutral-300 bg-white/80" : "text-white border-[#10b981] bg-black/50"}`}>
                       Fully<br />Booked!
                     </div>
                   )}
                 </div>
 
-                <div className={`mt-auto text-center mb-16 backdrop-blur-md rounded-[3rem] py-12 px-8
-                  ${isLight ? "bg-white/80 border border-neutral-200 shadow-xl" : "bg-black/40 border border-white/10"}
+                {/* 3) Bottom Footer Section (Absolutely positioned so it never disappears) */}
+                <div className={`absolute bottom-16 left-12 right-12 text-center backdrop-blur-md rounded-[3rem] py-10 px-8
+                  ${isLight ? "bg-white/90 border border-neutral-200 shadow-xl" : "bg-black/60 border border-white/10 shadow-2xl"}
                 `}>
-                  <p className={`text-4xl font-medium mb-6 ${isLight ? "text-neutral-600" : "text-white/80"}`}>
+                  <p className={`text-4xl font-medium mb-4 ${isLight ? "text-neutral-600" : "text-white/80"}`}>
                     Book instantly via Website
                   </p>
-                  <p className={`text-[42px] font-black tracking-widest flex justify-center items-center gap-4 ${isLight ? "text-[#059669]" : "text-[#10b981]"}`}>
+                  <p className={`text-[46px] font-black tracking-widest flex justify-center items-center gap-4 ${isLight ? "text-[#059669]" : "text-[#10b981]"}`}>
                     ⚽ www.akolasportsarena.vercel.app
                   </p>
                 </div>
+                
               </div>
             </div>
             {/* END CAPTURE */}
