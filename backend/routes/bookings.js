@@ -27,7 +27,7 @@ router.post('/', bookingLimiter, async (req, res) => {
     const overlayTournament = await pool.query(`
       SELECT id FROM tournaments 
       WHERE is_active = true 
-      AND sport_type = $1 
+      AND sport_type ILIKE $1 
       AND start_date::DATE <= $2::DATE 
       AND end_date::DATE >= $2::DATE
     `, [facilityType, slot.date]);

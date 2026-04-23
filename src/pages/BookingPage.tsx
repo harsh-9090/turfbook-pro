@@ -83,7 +83,7 @@ export default function BookingPage() {
       const activeTournament = tournaments.find(t => {
          const tStart = format(new Date(t.start_date), "yyyy-MM-dd");
          const tEnd = format(new Date(t.end_date), "yyyy-MM-dd");
-         return t.sport_type === facility && formattedDate >= tStart && formattedDate <= tEnd;
+         return t.sport_type.toLowerCase() === facility.toLowerCase() && formattedDate >= tStart && formattedDate <= tEnd;
       });
 
       if (activeTournament) {
