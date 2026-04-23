@@ -379,7 +379,7 @@ export default function BookingPage() {
                       <p className={`text-sm font-bold mt-1 ${group.isAvailable ? "text-primary" : "text-muted-foreground"}`}>₹{group.price}</p>
                       {group.isAvailable ? (
                         <p className="text-[10px] text-primary/80 mt-1 font-medium">
-                          {group.availableSlots.length} {facility === "cricket" ? "lane" : "table"}s available
+                          {group.availableSlots.length} {facilityData?.pricing_model === "slot" ? "turf" : "table"}s available
                         </p>
                       ) : (
                         <p className="text-[10px] text-destructive mt-1 font-semibold">Booked Full</p>
