@@ -30,7 +30,7 @@ export default function AdminAdStudio() {
       // Group by start time to handle multiple lanes seamlessly
       const grouped: Record<string, number> = {};
       available.forEach((s: any) => {
-        const time = `${formatTime12Hour(s.start_time)} - ${formatTime12Hour(s.end_time)}`;
+        const time = `${s.start_time.substring(0, 5)} - ${s.end_time.substring(0, 5)}`;
         grouped[time] = (grouped[time] || 0) + 1;
       });
 
@@ -68,16 +68,7 @@ export default function AdminAdStudio() {
 
   const formatToAMPM = (timeStr: string) => {
     const [start, end] = timeStr.split(" - ");
-    const startHour = parseInt(start.split(":")[0]);
-    const endHour = parseInt(end.split(":")[0]);
-
-    const formatHour = (h: number) => {
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const hr = h % 12 || 12;
-      return `${hr} ${ampm}`;
-    };
-
-    return `${formatHour(startHour)} - ${formatHour(endHour)}`;
+    return `${formatTime12Hour(start)} - ${formatTime12Hour(end)}`;
   };
 
   // Support up to 18 slots (6 rows of 3)
