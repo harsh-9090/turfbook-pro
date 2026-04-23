@@ -36,7 +36,7 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 lg:translate-x-0 lg:static ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 flex flex-col lg:translate-x-0 lg:static ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex items-center gap-2 px-6 h-16 border-b border-border min-w-0 overflow-hidden">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-white/5 border border-white/10 shrink-0">
             <img src={logoImage} alt="Logo" className="w-full h-full object-cover scale-110" />
@@ -44,7 +44,7 @@ export default function AdminLayout() {
           <span className="font-heading font-bold text-foreground truncate">Akola Sports Arena <span className="text-primary text-xs">Admin</span></span>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto text-muted-foreground shrink-0"><X size={20} /></button>
         </div>
-        <nav className="p-4 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 64px - 60px)' }}>
+        <nav className="p-4 space-y-1 flex-1 overflow-y-auto">
           {sidebarLinks.map((link) => (
             <Link key={link.path} to={link.path} onClick={() => setSidebarOpen(false)}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === link.path ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -53,7 +53,7 @@ export default function AdminLayout() {
             </Link>
           ))}
         </nav>
-        <div className="absolute bottom-4 left-4 right-4">
+        <div className="p-4 border-t border-border/50">
           <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-muted-foreground hover:text-destructive">
             <LogOut className="w-4 h-4 mr-2" /> Logout
           </Button>
