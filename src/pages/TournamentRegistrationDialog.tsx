@@ -96,9 +96,19 @@ export default function TournamentRegistrationDialog({ tournament, isOpen, onClo
         prefill: { name: captainName, contact: phone },
         theme: { color: "#10b981" },
         modal: {
-          ondismiss: () => {
+          ondismiss: async () => {
             setIsProcessing(false);
-            toast.info("Payment window was closed.");
+            if (registrationId) {
+              try {
+                await api.patch(`/tournaments/registrations/${registrationId}/cancel-pending`);
+                toast.info("Registration cancelled.");
+              } catch (err) {
+                console.error("Auto-cancel failed:", err);
+                toast.info("Payment window was closed.");
+              }
+            } else {
+              toast.info("Payment window was closed.");
+            }
           }
         }
       };

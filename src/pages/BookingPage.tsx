@@ -223,8 +223,14 @@ export default function BookingPage() {
           color: "#10b981", // turf-primary
         },
         modal: {
-          ondismiss: function () {
-            toast.warning("Payment cancelled. Booking remains pending.");
+          ondismiss: async function () {
+            try {
+              await api.patch(`/bookings/${bookingId}/cancel-pending`);
+              toast.info("Payment cancelled. Booking was not completed.");
+            } catch (err) {
+              console.error("Auto-cancel failed:", err);
+              toast.warning("Payment cancelled.");
+            }
           }
         }
       };

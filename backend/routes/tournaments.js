@@ -229,4 +229,28 @@ router.delete('/registrations/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// Public: Cancel pending tournament registration
+router.patch('/registrations/:id/cancel-pending', async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Only allow cancellation if status is 'pending'
+    const result = await pool.query(
+      `UPDATE tournament_registrations SET payment_status = 'cancelled' WHERE id = $1 AND payment_status = 'pending' RETURNING *`,
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'Registration cannot be cancelled' });
+    }
+
+    await cache.delPattern('tournaments:*');
+    const io = req.app.get('io');
+    if (io) io.emit('tournament_registration_success');
+    
+    res.json({ success: true, message: 'Pending registration cancelled' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

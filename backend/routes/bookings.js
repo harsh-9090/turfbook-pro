@@ -179,21 +179,25 @@ router.patch('/:id/pay', authMiddleware, async (req, res) => {
   }
 });
 
-router.patch('/:id/cancel', authMiddleware, async (req, res) => {
+// Public: Cancel a pending booking (called when user aborts Razorpay)
+router.patch('/:id/cancel-pending', async (req, res) => {
   try {
+    const { id } = req.params;
+    // Only allow cancellation if status is 'pending'
     const result = await pool.query(
-      `UPDATE bookings SET status = 'cancelled', payment_status = 'refunded' WHERE id = $1 RETURNING *`,
-      [req.params.id]
+      `UPDATE bookings SET status = 'cancelled' WHERE id = $1 AND status = 'pending' RETURNING *`,
+      [id]
     );
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Booking not found' });
+    
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'Booking cannot be cancelled (not found or already processed)' });
+    }
 
     await cache.delPattern('bookings:*');
     await cache.delPattern('slots:*');
-    await cache.del('admin:stats');
-    await cache.del('analytics:dashboard');
-
     req.app.get('io').emit('booking_updated');
-    res.json(result.rows[0]);
+    
+    res.json({ success: true, message: 'Pending booking cancelled' });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
