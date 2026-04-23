@@ -4,6 +4,44 @@ const pool = require('../config/db');
 const authMiddleware = require('../middleware/auth');
 const cache = require('../config/cache');
 
+const cloudinary = require('../config/cloudinary');
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'akola-sports-arena/facilities',
+    allowed_formats: ['jpg', 'png', 'webp', 'jpeg'],
+  },
+});
+const upload = multer({ storage: storage });
+
+// Admin: Upload Facility Image
+router.post('/upload', authMiddleware, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
+    res.json({ secure_url: req.file.path });
+  } catch (err) {
+    res.status(500).json({ error: 'Upload failed: ' + err.message });
+  }
+});
+
+// Admin: Update facility image
+router.patch('/:id/image', authMiddleware, async (req, res) => {
+  try {
+    const { image_url } = req.body;
+    if (!image_url) return res.status(400).json({ error: 'image_url required' });
+    const result = await pool.query('UPDATE turfs SET image_url = $1 WHERE id = $2 RETURNING *', [image_url, req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Facility not found' });
+
+    await cache.del('facilities:all');
+    req.app.get('io').emit('facility_updated');
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+});
 // Public: Get all facilities
 router.get('/', async (req, res) => {
   try {

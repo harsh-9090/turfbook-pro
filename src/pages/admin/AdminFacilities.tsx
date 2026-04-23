@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Layers, Minus, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Trash2, Layers, Minus, Clock, ChevronDown, ChevronUp, UploadCloud, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,25 @@ export default function AdminFacilities() {
   const [closingHour, setClosingHour] = useState("23");
   const [minBookingAmount, setMinBookingAmount] = useState("0");
   const [isFormExpanded, setIsFormExpanded] = useState(false);
+  const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
+
+  const handleImageUpload = async (facilityId: string, file: File) => {
+    setUploadingImageId(facilityId);
+    const body = new FormData();
+    body.append('image', file);
+    try {
+      const uploadRes = await api.post('/facilities/upload', body, { headers: { 'Content-Type': 'multipart/form-data' } });
+      if (uploadRes.data?.secure_url) {
+        await api.patch(`/facilities/${facilityId}/image`, { image_url: uploadRes.data.secure_url });
+        toast.success('Image updated!');
+        fetchFacilities();
+      }
+    } catch {
+      toast.error('Image upload failed');
+    } finally {
+      setUploadingImageId(null);
+    }
+  };
 
   const isHourlySettings = type === "snooker" || type === "pool";
 
@@ -224,7 +243,30 @@ export default function AdminFacilities() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {facilities.map((f) => (
-          <div key={f.id} className="rounded-xl bg-card border border-border p-5 flex flex-col hover:border-primary/30 transition-colors">
+          <div key={f.id} className="rounded-xl bg-card border border-border overflow-hidden flex flex-col hover:border-primary/30 transition-colors">
+            {/* Image Section */}
+            <div className="relative h-36 bg-muted/30 overflow-hidden group">
+              {f.image_url ? (
+                <img src={f.image_url} alt={f.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Layers className="w-10 h-10 text-muted-foreground/30" />
+                </div>
+              )}
+              <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                {uploadingImageId === f.id ? (
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                ) : (
+                  <div className="flex items-center gap-2 text-white text-xs font-semibold">
+                    <UploadCloud className="w-4 h-4" /> Change Image
+                  </div>
+                )}
+                <input type="file" accept="image/*" className="hidden" disabled={uploadingImageId === f.id}
+                  onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(f.id, file); }} />
+              </label>
+            </div>
+
+            <div className="p-5 flex flex-col flex-1">
             <div className="flex justify-between items-start mb-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Layers className="w-5 h-5 text-primary" />
@@ -326,6 +368,7 @@ export default function AdminFacilities() {
                 <span className="text-sm font-bold text-primary">₹{f.min_booking_amount || 0}</span>
               </div>
               <Button size="sm" variant="outline" className="w-full text-xs h-8" onClick={() => openPricingModal(f)}>Update Global Pricing</Button>
+            </div>
             </div>
           </div>
         ))}

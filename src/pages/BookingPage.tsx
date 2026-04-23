@@ -318,7 +318,7 @@ export default function BookingPage() {
                     <button key={f.id} onClick={() => handleFacilitySelect(f.facility_type)}
                       className="group text-left rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-turf transition-all duration-300">
                       <div className="h-40 overflow-hidden">
-                        <img src={knownImages[f.facility_type] || defaultImage} alt={f.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img src={f.image_url || knownImages[f.facility_type] || defaultImage} alt={f.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       </div>
                       <div className="p-4">
                         <h3 className="font-heading font-semibold text-foreground mb-1">{f.name}</h3>

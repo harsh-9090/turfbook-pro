@@ -60,7 +60,7 @@ export default function FacilitiesSection() {
               <div className="flex-1 w-full">
                 <div className="overflow-hidden rounded-2xl border border-border">
                   <img
-                    src={knownImages[f.facility_type] || defaultImage}
+                    src={f.image_url || knownImages[f.facility_type] || defaultImage}
                     alt={f.name}
                     loading="lazy"
                     width={800}
