@@ -117,7 +117,7 @@ export default function TestimonialsSection() {
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={() => setIsPaused(true)}
         onTouchEnd={() => setIsPaused(false)}
-        className="flex gap-6 overflow-x-auto px-4 pb-2 snap-x touch-pan-x"
+        className="flex gap-6 overflow-x-auto px-4 pb-2 snap-x touch-pan-x mx-auto w-max max-w-full"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {displayItems.map((t, i) => (
