@@ -32,6 +32,7 @@ export default function AdminPricing() {
   const [fFacility, setFFacility] = useState("");
   const [fFeatures, setFFeatures] = useState<string[]>([""]);
   const [fOrder, setFOrder] = useState("0");
+  const [facilityTypes, setFacilityTypes] = useState<string[]>([]);
 
   const fetchPlans = async () => {
     try {
@@ -41,6 +42,13 @@ export default function AdminPricing() {
   };
 
   useEffect(() => { fetchPlans(); }, []);
+
+  useEffect(() => {
+    api.get('/facilities').then(res => {
+      const types = [...new Set(res.data.map((f: any) => f.facility_type))] as string[];
+      setFacilityTypes(types);
+    }).catch(() => {});
+  }, []);
 
   const openCreate = () => {
     setEditing(null);
@@ -205,9 +213,9 @@ export default function AdminPricing() {
               <Label>Facility Link</Label>
               <select value={fFacility} onChange={e => setFFacility(e.target.value)} className="w-full border border-border bg-background rounded-md h-10 px-3 text-sm">
                 <option value="">None</option>
-                <option value="cricket">Cricket</option>
-                <option value="snooker">Snooker</option>
-                <option value="pool">Pool</option>
+                {facilityTypes.map(ft => (
+                  <option key={ft} value={ft}>{ft.charAt(0).toUpperCase() + ft.slice(1)}</option>
+                ))}
               </select>
             </div>
             <div className="space-y-2">

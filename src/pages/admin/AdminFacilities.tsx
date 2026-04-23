@@ -10,7 +10,8 @@ import api from "@/lib/api";
 
 export default function AdminFacilities() {
   const [facilities, setFacilities] = useState<any[]>([]);
-  const [type, setType] = useState("cricket");
+  const [type, setType] = useState("");
+  const [pricingModel, setPricingModel] = useState<"slot" | "hourly">("slot");
   const [desc, setDesc] = useState("");
   const [weekdayDayPrice, setWeekdayDayPrice] = useState("800");
   const [weekdayNightPrice, setWeekdayNightPrice] = useState("1000");
@@ -42,7 +43,7 @@ export default function AdminFacilities() {
     }
   };
 
-  const isHourlySettings = type === "snooker" || type === "pool";
+  const isHourlySettings = pricingModel === "hourly";
 
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [pricingTarget, setPricingTarget] = useState<any>(null);
@@ -68,6 +69,7 @@ export default function AdminFacilities() {
         facility_type: type,
         description: desc,
         location: 'Dynamic Arena',
+        pricing_model: pricingModel,
         weekday_day_price: Number(isHourlySettings ? hourlyPrice : weekdayDayPrice),
         weekday_night_price: Number(isHourlySettings ? hourlyPrice : weekdayNightPrice),
         weekend_day_price: Number(isHourlySettings ? hourlyPrice : weekendDayPrice),
@@ -126,7 +128,7 @@ export default function AdminFacilities() {
 
   const handleSavePricing = async () => {
     try {
-      const isHourlyPatch = pricingTarget?.facility_type === "snooker" || pricingTarget?.facility_type === "pool";
+      const isHourlyPatch = pricingTarget?.pricing_model === "hourly";
       await api.patch(`/facilities/${pricingTarget.id}/pricing`, {
         weekday_day_price: Number(isHourlyPatch ? editPrices.wd_day : editPrices.wd_day), // Using wd_day as the absolute hourly rate if snooker
         weekday_night_price: Number(isHourlyPatch ? editPrices.wd_day : editPrices.wd_night),
@@ -162,7 +164,19 @@ export default function AdminFacilities() {
                 <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Sport</Label>
                 <Input placeholder="e.g. cricket, badminton, football..." value={type} onChange={e => setType(e.target.value.toLowerCase())} className="h-10" required />
               </div>
-              <div className="sm:col-span-2 space-y-1.5">
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Pricing Model</Label>
+                <Select value={pricingModel} onValueChange={(v: "slot" | "hourly") => setPricingModel(v)}>
+                  <SelectTrigger className="w-full bg-card border-border h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="slot">Slot-Based (Day/Night tiers)</SelectItem>
+                    <SelectItem value="hourly">Hourly (flat rate + tables)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
                 <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Short Description</Label>
                 <Input placeholder="Visual context for players..." value={desc} onChange={e => setDesc(e.target.value)} className="h-10" />
               </div>
@@ -312,7 +326,7 @@ export default function AdminFacilities() {
               </div>
             </div>
             <div className="mt-auto pt-4 border-t border-border flex flex-col gap-3">
-              {f.facility_type === 'snooker' || f.facility_type === 'pool' ? (
+              {f.pricing_model === 'hourly' ? (
                 <>
                   <div className="bg-primary/5 border border-primary/20 px-3 py-2 rounded-md mb-2 flex items-center justify-between">
                     <span className="text-muted-foreground font-semibold text-xs tracking-wider uppercase">Flat Hourly Engine</span>
@@ -382,7 +396,7 @@ export default function AdminFacilities() {
           <DialogHeader>
             <DialogTitle>Update Split Pricing Grid</DialogTitle>
           </DialogHeader>
-          {pricingTarget?.facility_type === 'snooker' || pricingTarget?.facility_type === 'pool' ? (
+          {pricingTarget?.pricing_model === 'hourly' ? (
             <>
               <p className="text-sm text-muted-foreground mb-4">Changing this global hourly rate will autonomously recalculate all future templates and free slots for <b>{pricingTarget?.name}</b>.</p>
               <div className="space-y-2 mb-4">

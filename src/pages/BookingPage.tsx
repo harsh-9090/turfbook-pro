@@ -69,7 +69,7 @@ export default function BookingPage() {
     api.get('/facilities').then(res => setAllFacilities(res.data)).catch(() => { });
   }, []);
 
-  const isTableSport = facility === "snooker" || facility === "pool";
+  const isTableSport = facilityData?.pricing_model === "hourly";
 
   const handleFacilitySelect = async (f: FacilityType) => {
     setFacility(f);

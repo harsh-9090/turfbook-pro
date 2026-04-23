@@ -61,12 +61,12 @@ export default function AdminTables() {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch hourly facilities (snooker/pool only)
+  // Fetch hourly facilities
   useEffect(() => {
     (async () => {
       try {
         const res = await api.get("/facilities");
-        const hourlyFacs = res.data.filter((f: any) => f.facility_type === "snooker" || f.facility_type === "pool");
+        const hourlyFacs = res.data.filter((f: any) => f.pricing_model === "hourly");
         setFacilities(hourlyFacs);
       } catch { toast.error("Failed to load facilities"); }
     })();
@@ -255,7 +255,7 @@ export default function AdminTables() {
 
       {facilities.length === 0 && (
         <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">
-          No Snooker or Pool tables found. Add one under Sports Events first!
+          No hourly-priced tables found. Add a sport with "Hourly" pricing model under Sports Events first!
         </div>
       )}
 
@@ -272,8 +272,9 @@ export default function AdminTables() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Sports</SelectItem>
-                <SelectItem value="snooker">Snooker</SelectItem>
-                <SelectItem value="pool">Pool</SelectItem>
+                {facilities.map(f => (
+                  <SelectItem key={f.id} value={f.facility_type}>{f.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Input type="date" className="w-[130px] h-8 text-xs bg-card border-border" value={filterDate} onChange={e => setFilterDate(e.target.value)} />

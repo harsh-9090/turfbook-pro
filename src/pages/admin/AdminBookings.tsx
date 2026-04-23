@@ -331,9 +331,9 @@ export default function AdminBookings() {
                 <div className="flex-1">
                   <label className="text-sm text-muted-foreground block mb-1">Event Type</label>
                   <select value={bFacility} onChange={e => setBFacility(e.target.value)} className="w-full border border-border bg-background rounded-md h-10 px-3 text-sm">
-                    <option value="cricket">Cricket</option>
-                    <option value="snooker">Snooker</option>
-                    <option value="pool">Pool</option>
+                    {facilityTypes.map(ft => (
+                      <option key={ft} value={ft}>{ft.charAt(0).toUpperCase() + ft.slice(1)}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="flex-1">

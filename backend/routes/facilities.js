@@ -117,21 +117,21 @@ router.post('/', authMiddleware, async (req, res) => {
       weekday_day_price, weekday_night_price, 
       weekend_day_price, weekend_night_price, 
       table_count, opening_hour, closing_hour,
-      min_booking_amount
+      min_booking_amount, pricing_model
     } = req.body;
     if (!facility_type) return res.status(400).json({ error: 'facility_type required' });
 
     const generatedName = facility_type.charAt(0).toUpperCase() + facility_type.slice(1);
 
     const result = await pool.query(
-      `INSERT INTO turfs (name, facility_type, description, location, weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, table_count, opening_hour, closing_hour, min_booking_amount) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
+      `INSERT INTO turfs (name, facility_type, description, location, weekday_day_price, weekday_night_price, weekend_day_price, weekend_night_price, table_count, opening_hour, closing_hour, min_booking_amount, pricing_model) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
       [
         generatedName, facility_type, description, location || 'Dynamic Arena', 
         weekday_day_price || 800, weekday_night_price || 1000, 
         weekend_day_price || 1000, weekend_night_price || 1200, 
         table_count || 1, opening_hour || 8, closing_hour || 23,
-        min_booking_amount || 0
+        min_booking_amount || 0, pricing_model || 'slot'
       ]
     );
 
