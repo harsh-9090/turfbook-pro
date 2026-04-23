@@ -22,6 +22,7 @@ import AdminGallery from "./pages/admin/AdminGallery";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminTournaments from "./pages/admin/AdminTournaments";
+import AdminAdStudio from "./pages/admin/AdminAdStudio";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -65,7 +66,9 @@ const App = () => (
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="pricing" element={<AdminPricing />} />
               <Route path="gallery" element={<AdminGallery />} />
+              <Route path="gallery" element={<AdminGallery />} />
               <Route path="testimonials" element={<AdminTestimonials />} />
+              <Route path="ads" element={<AdminAdStudio />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
             <Route path="*" element={<NotFound />} />

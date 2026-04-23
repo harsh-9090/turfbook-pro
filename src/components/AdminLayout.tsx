@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom";
 import logoImage from "@/assets/logo.png";
-import { LayoutDashboard, Calendar, CalendarDays, Settings, LogOut, BarChart3, Menu, X, Layers, Clock, Timer, DollarSign, Image as LucideImage, MessageSquare, Sun, Moon, Trophy } from "lucide-react";
+import { LayoutDashboard, Calendar, CalendarDays, Settings, LogOut, BarChart3, Menu, X, Layers, Clock, Timer, DollarSign, Image as LucideImage, MessageSquare, Sun, Moon, Trophy, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 
@@ -17,6 +17,7 @@ const sidebarLinks = [
   { name: "Pricing Plans", path: "/admin/pricing", icon: DollarSign },
   { name: "Gallery", path: "/admin/gallery", icon: LucideImage },
   { name: "Testimonials", path: "/admin/testimonials", icon: MessageSquare },
+  { name: "Ad Studio", path: "/admin/ads", icon: Megaphone },
   { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
   { name: "Settings Hub", path: "/admin/settings", icon: Settings },
 ];
