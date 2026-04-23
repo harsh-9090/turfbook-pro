@@ -5,6 +5,7 @@ import { Download, Loader2, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import logoImage from "@/assets/logo.png";
 
 export default function AdminAdStudio() {
   const [selectedDate, setSelectedDate] = useState<Date>(addDays(new Date(), 1)); // Default to tomorrow
@@ -84,11 +85,13 @@ export default function AdminAdStudio() {
   const getGridConfig = (count: number) => {
     if (count <= 6) return { cols: "grid-cols-2", gap: "gap-10", py: "py-10", text: "text-[50px]" };
     if (count <= 10) return { cols: "grid-cols-2", gap: "gap-8", py: "py-6", text: "text-[45px]" };
-    // 11 to 18 slots
-    return { cols: "grid-cols-3 max-w-[1000px]", gap: "gap-6", py: "py-5 px-3", text: "text-[32px]" };
+    return { cols: "grid-cols-3 max-w-[1000px]", gap: "gap-6", py: "py-6 px-3", text: "text-[32px]" };
   };
 
   const gridStyles = getGridConfig(displaySlots.length);
+  const [adTheme, setAdTheme] = useState<"dark" | "light">("dark");
+
+  const isLight = adTheme === "light";
 
   return (
     <div className="space-y-6">
@@ -105,10 +108,17 @@ export default function AdminAdStudio() {
         </Button>
       </div>
 
-      <div className="flex gap-4 items-center bg-card p-2 rounded-2xl border border-border w-fit">
-        <Button variant={selectedDate.getDate() === new Date().getDate() ? "default" : "ghost"} onClick={() => setSelectedDate(new Date())} className="rounded-xl">Today</Button>
-        <Button variant={selectedDate.getDate() === addDays(new Date(), 1).getDate() ? "default" : "ghost"} onClick={() => setSelectedDate(addDays(new Date(), 1))} className="rounded-xl">Tomorrow</Button>
-        <Button variant={selectedDate.getDate() === addDays(new Date(), 2).getDate() ? "default" : "ghost"} onClick={() => setSelectedDate(addDays(new Date(), 2))} className="rounded-xl">Day After</Button>
+      <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex gap-2 items-center bg-card p-2 rounded-2xl border border-border w-fit">
+          <Button variant={selectedDate.getDate() === new Date().getDate() ? "default" : "ghost"} onClick={() => setSelectedDate(new Date())} className="rounded-xl">Today</Button>
+          <Button variant={selectedDate.getDate() === addDays(new Date(), 1).getDate() ? "default" : "ghost"} onClick={() => setSelectedDate(addDays(new Date(), 1))} className="rounded-xl">Tomorrow</Button>
+          <Button variant={selectedDate.getDate() === addDays(new Date(), 2).getDate() ? "default" : "ghost"} onClick={() => setSelectedDate(addDays(new Date(), 2))} className="rounded-xl">Day After</Button>
+        </div>
+        
+        <div className="flex gap-2 items-center bg-card p-2 rounded-2xl border border-border w-fit">
+          <Button variant={!isLight ? "default" : "ghost"} onClick={() => setAdTheme("dark")} className="rounded-xl">Dark Theme</Button>
+          <Button variant={isLight ? "default" : "ghost"} onClick={() => setAdTheme("light")} className="rounded-xl bg-white text-black hover:bg-neutral-200">Light Theme</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr,500px] gap-8">
@@ -138,28 +148,52 @@ export default function AdminAdStudio() {
         </div>
 
         {/* 1080x1920 Preview Canvas - Scaled down for UI */}
-        <div className="bg-neutral-900 border border-border rounded-2xl p-4 overflow-hidden flex justify-center items-center h-[700px] relative">
+        <div className="bg-neutral-900 border border-border rounded-2xl p-4 overflow-hidden flex justify-center items-center h-[700px] relative mt-4">
           <p className="absolute top-4 left-4 text-xs font-bold text-muted-foreground z-20 uppercase tracking-widest bg-black/50 px-2 py-1 rounded">Scale Preview</p>
 
           {/* Transforming the 1080x1920 canvas to fit inside the preview container */}
           <div className="w-[1080px] h-[1920px] shrink-0 origin-center" style={{ transform: 'scale(0.32)' }}>
 
             {/* THIS IS THE ACTUAL ELEMENT CAPTURED BY htmlToImage */}
-            <div ref={captureRef} className="w-[1080px] h-[1920px] bg-black flex flex-col justify-between overflow-hidden relative">
+            <div ref={captureRef} className={`w-[1080px] h-[1920px] flex flex-col justify-between overflow-hidden relative ${isLight ? "bg-stone-100" : "bg-black"}`}>
               {/* Background Design */}
-              <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=3532&auto=format&fit=crop')] bg-cover bg-center" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-[#081f13] to-[#041109] mix-blend-multiply opacity-80" />
-              <div className="absolute inset-0 bg-gradient-to-b from-[#10b981]/10 via-transparent to-transparent" />
+              <div className={`absolute inset-0 bg-[url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=3532&auto=format&fit=crop')] bg-cover bg-center ${isLight ? "opacity-30" : "opacity-40"}`} />
+              
+              {isLight ? (
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-t from-stone-100 via-stone-100/90 to-stone-100/40" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#10b981]/10 via-transparent to-transparent" />
+                </>
+              ) : (
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-[#081f13]/90 to-[#041109]/40 mix-blend-multiply opacity-90" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#10b981]/20 via-transparent to-transparent" />
+                </>
+              )}
 
               {/* Content */}
               <div className="relative z-10 p-20 flex flex-col h-full">
-                <div className="text-center mt-20">
-                  <p className="text-[#10b981] font-bold text-4xl uppercase tracking-widest mb-6">Akola Sports Arena</p>
-                  <h1 className="text-[140px] font-black text-white leading-none uppercase font-heading italic tracking-tighter">Game<br />On.</h1>
-                  <div className="w-32 h-3 bg-[#10b981] mx-auto mt-12 mb-16 rounded-full shadow-[0_0_30px_rgba(16,185,129,0.8)]" />
+                <div className="text-center mt-12">
+                  <div className="flex justify-center mb-6">
+                    <div className={`w-40 h-40 rounded-full backdrop-blur-md overflow-hidden flex items-center justify-center p-2 
+                        ${isLight ? "bg-white border-[4px] border-[#059669] shadow-[0_0_40px_rgba(5,150,105,0.2)]" : "bg-white/10 border-[4px] border-[#10b981]/50 shadow-[0_0_40px_rgba(16,185,129,0.3)]"}
+                      `}>
+                       <img src={logoImage} alt="Logo" className="w-full h-full object-contain scale-110" />
+                    </div>
+                  </div>
+                  <p className={`font-bold text-4xl uppercase tracking-widest mb-6 ${isLight ? "text-[#059669]" : "text-[#10b981]"}`}>
+                    Akola Sports Arena
+                  </p>
+                  <h1 className={`text-[140px] font-black leading-none uppercase font-heading italic tracking-tighter ${isLight ? "text-neutral-900" : "text-white"}`}>
+                    Game<br />On.
+                  </h1>
+                  <div className={`w-32 h-3 mx-auto mt-12 mb-16 rounded-full ${isLight ? "bg-[#059669]" : "bg-[#10b981] shadow-[0_0_30px_rgba(16,185,129,0.8)]"}`} />
 
-                  <p className="text-white text-5xl font-bold mb-6 tracking-wide">CRICKET TURF</p>
-                  <div className="bg-[#10b981] text-black inline-block px-10 py-5 rounded-[2rem] text-5xl font-black uppercase tracking-wider shadow-[0_0_50px_rgba(16,185,129,0.4)]">
+                  <p className={`text-5xl font-bold mb-6 tracking-wide ${isLight ? "text-neutral-800" : "text-white"}`}>
+                    CRICKET TURF
+                  </p>
+                  <div className={`text-black inline-block px-10 py-5 rounded-[2rem] text-5xl font-black uppercase tracking-wider 
+                    ${isLight ? "bg-[#10b981] shadow-[0_10px_30px_rgba(16,185,129,0.3)]" : "bg-[#10b981] shadow-[0_0_50px_rgba(16,185,129,0.4)]"}`}>
                     {selectedDate.getDate() === new Date().getDate() ? "Open Today" : format(selectedDate, "EEEE, MMM do")}
                   </div>
                 </div>
@@ -167,25 +201,36 @@ export default function AdminAdStudio() {
                 <div className="flex-1 flex flex-col justify-center items-center mt-12">
                   {displaySlots.length > 0 ? (
                     <div className="w-full">
-                      <h2 className="text-[#10b981] text-[55px] font-black text-center mb-12 uppercase tracking-widest text-shadow-sm">Available Slots</h2>
+                      <h2 className={`text-[55px] font-black text-center mb-12 uppercase tracking-widest text-shadow-sm ${isLight ? "text-[#059669]" : "text-[#10b981]"}`}>
+                        Available Slots
+                      </h2>
                       <div className={`grid ${gridStyles.cols} ${gridStyles.gap} w-full max-w-4xl mx-auto`}>
                         {displaySlots.map(s => (
-                          <div key={s} className={`bg-white/5 backdrop-blur-md border-[3px] border-[#10b981]/50 text-white rounded-3xl ${gridStyles.py} text-center font-bold ${gridStyles.text} shadow-[0_0_30px_rgba(16,185,129,0.1)]`}>
+                          <div key={s} className={`backdrop-blur-md rounded-3xl ${gridStyles.py} text-center font-bold ${gridStyles.text}
+                            ${isLight 
+                              ? "bg-white border-[3px] border-neutral-200 text-neutral-800 shadow-[0_10px_30px_rgba(0,0,0,0.05)]" 
+                              : "bg-white/5 border-[3px] border-[#10b981]/50 text-white shadow-[0_0_30px_rgba(16,185,129,0.1)]"}
+                          `}>
                             {formatToAMPM(s)}
                           </div>
                         ))}
                       </div>
                     </div>
                   ) : (
-                    <div className="text-white text-7xl font-black text-center uppercase border-[6px] border-[#10b981] p-24 rounded-[4rem] rotate-[-5deg] bg-black/50 backdrop-blur-md">
+                    <div className={`text-7xl font-black text-center uppercase border-[6px] p-24 rounded-[4rem] rotate-[-5deg] backdrop-blur-md
+                      ${isLight ? "text-neutral-800 border-neutral-300 bg-white/80" : "text-white border-[#10b981] bg-black/50"}`}>
                       Fully<br />Booked!
                     </div>
                   )}
                 </div>
 
-                <div className="mt-auto text-center mb-16 bg-black/40 backdrop-blur-md border border-white/10 rounded-[3rem] py-12 px-8">
-                  <p className="text-white/80 text-4xl font-medium mb-6">Book instantly via Website</p>
-                  <p className="text-[#10b981] text-[42px] font-black tracking-widest flex justify-center items-center gap-4">
+                <div className={`mt-auto text-center mb-16 backdrop-blur-md rounded-[3rem] py-12 px-8
+                  ${isLight ? "bg-white/80 border border-neutral-200 shadow-xl" : "bg-black/40 border border-white/10"}
+                `}>
+                  <p className={`text-4xl font-medium mb-6 ${isLight ? "text-neutral-600" : "text-white/80"}`}>
+                    Book instantly via Website
+                  </p>
+                  <p className={`text-[42px] font-black tracking-widest flex justify-center items-center gap-4 ${isLight ? "text-[#059669]" : "text-[#10b981]"}`}>
                     ⚽ www.akolasportsarena.vercel.app
                   </p>
                 </div>
