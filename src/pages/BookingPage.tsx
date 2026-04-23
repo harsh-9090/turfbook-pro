@@ -386,6 +386,7 @@ export default function BookingPage() {
                       )}
                     </button>
                   ))}
+
                   {blockingTournament ? (
                     <div className="col-span-full py-12 px-4 text-center border border-border rounded-xl bg-card">
                       <Trophy className="w-12 h-12 text-primary mx-auto mb-4" />
