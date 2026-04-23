@@ -20,6 +20,21 @@ router.post('/', bookingLimiter, async (req, res) => {
 
     const slot = slotResult.rows[0];
 
+    // Ensure slot is not blocked by a tournament
+    const turfResult = await pool.query('SELECT facility_type FROM turfs WHERE id = $1', [slot.turf_id]);
+    const facilityType = turfResult.rows[0].facility_type;
+
+    const overlayTournament = await pool.query(`
+      SELECT id FROM tournaments 
+      WHERE is_active = true 
+      AND sport_type = $1 
+      AND start_date::DATE <= $2::DATE 
+      AND end_date::DATE >= $2::DATE
+    `, [facilityType, slot.date]);
+
+    if (overlayTournament.rows.length > 0) return res.status(400).json({ error: 'Turf is closed due to an active tournament on this date' });
+
+
     // Create or find user
     let userResult = await pool.query('SELECT * FROM users WHERE phone = $1', [phone]);
     let userId;

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format, addDays, startOfDay, parse, isAfter } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { CalendarDays, Clock, User, Phone, ArrowRight, CheckCircle2, ArrowLeft, Loader2 } from "lucide-react";
+import { CalendarDays, Clock, User, Phone, ArrowRight, CheckCircle2, ArrowLeft, Loader2, Trophy } from "lucide-react";
 import { formatTime12Hour } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,8 +58,12 @@ export default function BookingPage() {
   const [tableStatus, setTableStatus] = useState<any[]>([]);
   const [selectedTableSlot, setSelectedTableSlot] = useState<any | null>(null);
 
-  // Fetch all facilities on mount to get dynamic hours
+  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [blockingTournament, setBlockingTournament] = useState<any | null>(null);
+
+  // Fetch all facilities and tournaments on mount
   useEffect(() => {
+    api.get('/tournaments').then(res => setTournaments(res.data)).catch(() => { });
     api.get('/facilities').then(res => setAllFacilities(res.data)).catch(() => { });
   }, []);
 
@@ -75,6 +79,23 @@ export default function BookingPage() {
     setSelectedDate(date);
     try {
       const formattedDate = format(date, "yyyy-MM-dd");
+
+      const activeTournament = tournaments.find(t => {
+         const tStart = format(new Date(t.start_date), "yyyy-MM-dd");
+         const tEnd = format(new Date(t.end_date), "yyyy-MM-dd");
+         return t.sport_type === facility && formattedDate >= tStart && formattedDate <= tEnd;
+      });
+
+      if (activeTournament) {
+         setBlockingTournament(activeTournament);
+         setGroupedSlots([]);
+         setSelectedSlotGroup(null);
+         setSelectedSlot(null);
+         setStep("slot");
+         return;
+      }
+      setBlockingTournament(null);
+
       const response = await api.get(`/slots?date=${formattedDate}&facility_type=${facility}`);
 
       const groups: Record<string, any[]> = {};
@@ -366,11 +387,19 @@ export default function BookingPage() {
                       )}
                     </button>
                   ))}
-                  {groupedSlots.length === 0 && (
+                  {blockingTournament ? (
+                    <div className="col-span-full py-12 px-4 text-center border border-border rounded-xl bg-card">
+                      <Trophy className="w-12 h-12 text-primary mx-auto mb-4 glow-turf" />
+                      <h3 className="text-xl font-bold text-foreground mb-2">Turf is Closed for {blockingTournament.name}</h3>
+                      <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
+                        This turf is booked from <span className="font-semibold text-foreground">{format(new Date(blockingTournament.start_date), "MMM d, yyyy")}</span> to <span className="font-semibold text-foreground">{format(new Date(blockingTournament.end_date), "MMM d, yyyy")}</span> for a tournament. You can visit the turf to enjoy the matches!
+                      </p>
+                    </div>
+                  ) : groupedSlots.length === 0 ? (
                     <div className="col-span-full py-12 text-center text-muted-foreground">
                       No slots available on this date for {facilityLabels[facility]}. Try another day!
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </motion.div>
             )}
