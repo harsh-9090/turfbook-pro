@@ -34,5 +34,35 @@ router.get('/stats', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+// Get audit logs (paginated)
+router.get('/audit-logs', authMiddleware, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+
+    const [logs, countResult] = await Promise.all([
+      pool.query(
+        `SELECT a.id, a.action, a.details, a.created_at, u.name as admin_name
+         FROM audit_logs a
+         LEFT JOIN users u ON u.id = a.admin_id
+         ORDER BY a.created_at DESC
+         LIMIT $1 OFFSET $2`,
+        [limit, offset]
+      ),
+      pool.query('SELECT COUNT(*) FROM audit_logs')
+    ]);
+
+    res.json({
+      logs: logs.rows,
+      total: parseInt(countResult.rows[0].count),
+      page,
+      totalPages: Math.ceil(parseInt(countResult.rows[0].count) / limit)
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 module.exports = router;

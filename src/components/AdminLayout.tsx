@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom";
 import logoImage from "@/assets/logo.png";
-import { LayoutDashboard, Calendar, CalendarDays, Settings, LogOut, BarChart3, Menu, X, Layers, Clock, Timer, DollarSign, Image as LucideImage, MessageSquare, Sun, Moon, Trophy, Megaphone } from "lucide-react";
+import { LayoutDashboard, Calendar, CalendarDays, Settings, LogOut, BarChart3, Menu, X, Layers, Clock, Timer, DollarSign, Image as LucideImage, MessageSquare, Sun, Moon, Trophy, Megaphone, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 
@@ -19,6 +19,7 @@ const sidebarLinks = [
   { name: "Testimonials", path: "/admin/testimonials", icon: MessageSquare },
   { name: "Ad Studio", path: "/admin/ads", icon: Megaphone },
   { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
+  { name: "Audit Logs", path: "/admin/audit-logs", icon: Shield },
   { name: "Settings Hub", path: "/admin/settings", icon: Settings },
 ];
 
@@ -43,7 +44,7 @@ export default function AdminLayout() {
           <span className="font-heading font-bold text-foreground truncate">Akola Sports Arena <span className="text-primary text-xs">Admin</span></span>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto text-muted-foreground shrink-0"><X size={20} /></button>
         </div>
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 64px - 60px)' }}>
           {sidebarLinks.map((link) => (
             <Link key={link.path} to={link.path} onClick={() => setSidebarOpen(false)}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === link.path ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
