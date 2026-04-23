@@ -259,7 +259,7 @@ export default function AdminFacilities() {
                     } catch { toast.error('Failed to update'); }
                   }}>
                   {Array.from({ length: 24 }, (_, i) => (
-                    <option key={i} value={i}>{i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`}</option>
+                    <option key={i} value={i} className="bg-card text-foreground">{i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i - 12} PM`}</option>
                   ))}
                 </select>
                 <span className="text-muted-foreground text-xs">→</span>
@@ -273,7 +273,7 @@ export default function AdminFacilities() {
                     } catch { toast.error('Failed to update'); }
                   }}>
                   {Array.from({ length: 24 }, (_, i) => i + 1).filter(h => h > (f.opening_hour ?? 6)).map(h => (
-                    <option key={h} value={h}>{h === 24 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`}</option>
+                    <option key={h} value={h} className="bg-card text-foreground">{h === 24 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`}</option>
                   ))}
                 </select>
               </div>
