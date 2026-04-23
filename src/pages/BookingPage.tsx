@@ -389,7 +389,7 @@ export default function BookingPage() {
                   ))}
                   {blockingTournament ? (
                     <div className="col-span-full py-12 px-4 text-center border border-border rounded-xl bg-card">
-                      <Trophy className="w-12 h-12 text-primary mx-auto mb-4 glow-turf" />
+                      <Trophy className="w-12 h-12 text-primary mx-auto mb-4" />
                       <h3 className="text-xl font-bold text-foreground mb-2">Turf is Closed for {blockingTournament.name}</h3>
                       <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
                         This turf is booked from <span className="font-semibold text-foreground">{format(new Date(blockingTournament.start_date), "MMM d, yyyy")}</span> to <span className="font-semibold text-foreground">{format(new Date(blockingTournament.end_date), "MMM d, yyyy")}</span> for a tournament. You can visit the turf to enjoy the matches!
