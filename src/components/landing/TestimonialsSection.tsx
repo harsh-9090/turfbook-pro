@@ -21,9 +21,9 @@ export default function TestimonialsSection() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const directionRef = useRef<number>(1);
 
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
@@ -37,7 +37,7 @@ export default function TestimonialsSection() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Auto-scroll
+  // Ping-pong auto-scroll
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || testimonials.length === 0 || isPaused) return;
@@ -46,11 +46,16 @@ export default function TestimonialsSection() {
     let animId: number;
 
     const scroll = () => {
-      el.scrollLeft += speed;
-      // Reset to start when we've scrolled past half (the duplicated set)
-      if (el.scrollLeft >= el.scrollWidth / 2) {
-        el.scrollLeft = 0;
+      if (!el) return;
+      el.scrollLeft += speed * directionRef.current;
+
+      // Reverse direction if we hit the right or left edge
+      if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
+        directionRef.current = -1;
+      } else if (el.scrollLeft <= 0) {
+        directionRef.current = 1;
       }
+
       animId = requestAnimationFrame(scroll);
     };
 
@@ -78,8 +83,8 @@ export default function TestimonialsSection() {
     }
   };
 
-  // Duplicate items for infinite scroll effect
-  const displayItems = [...testimonials, ...testimonials];
+  // No duplicate items needed anymore
+  const displayItems = testimonials;
 
   return (
     <section className="py-20 lg:py-32 relative bg-card/50 overflow-hidden">
@@ -104,17 +109,19 @@ export default function TestimonialsSection() {
         </motion.div>
       </div>
 
-      {/* Horizontal auto-scrolling marquee */}
+      {/* Horizontal auto-scrolling marquee with ping-pong effect */}
       <div
         ref={scrollRef}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        className="flex gap-6 overflow-x-hidden px-4 pb-2"
+        onTouchStart={() => setIsPaused(true)}
+        onTouchEnd={() => setIsPaused(false)}
+        className="flex gap-6 overflow-x-auto px-4 pb-2 snap-x touch-pan-x"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {displayItems.map((t, i) => (
           <div key={`${t.id}-${i}`}
-            className="flex-shrink-0 w-[320px] p-6 rounded-2xl bg-card border border-border hover:border-primary/20 transition-all">
+            className="snap-center flex-shrink-0 w-[320px] p-6 rounded-2xl bg-card border border-border hover:border-primary/20 transition-all">
             <div className="flex gap-1 mb-4">
               {Array.from({ length: 5 }).map((_, j) => (
                 <Star key={j} className={`w-4 h-4 ${j < t.rating ? "text-accent fill-accent" : "text-muted-foreground"}`} />

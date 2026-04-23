@@ -7,13 +7,13 @@ import { useTheme } from "@/components/ThemeProvider";
 
 const sidebarLinks = [
   { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
-  { name: "Bookings", path: "/admin/bookings", icon: Calendar },
   { name: "Calendar", path: "/admin/calendar", icon: CalendarDays },
-  { name: "Tournaments", path: "/admin/tournaments", icon: Trophy },
-  { name: "Daily Overrides", path: "/admin/slots", icon: Settings },
+  { name: "Bookings", path: "/admin/bookings", icon: Calendar },
+  { name: "Daily Slots", path: "/admin/slots", icon: Settings },
+  { name: "Live Tables", path: "/admin/tables", icon: Timer },
   { name: "Weekly Schedule", path: "/admin/schedules", icon: Clock },
   { name: "Sports Events", path: "/admin/facilities", icon: Layers },
-  { name: "Live Tables", path: "/admin/tables", icon: Timer },
+  { name: "Tournaments", path: "/admin/tournaments", icon: Trophy },
   { name: "Pricing Plans", path: "/admin/pricing", icon: DollarSign },
   { name: "Gallery", path: "/admin/gallery", icon: LucideImage },
   { name: "Testimonials", path: "/admin/testimonials", icon: MessageSquare },
@@ -45,9 +45,8 @@ export default function AdminLayout() {
         <nav className="p-4 space-y-1">
           {sidebarLinks.map((link) => (
             <Link key={link.path} to={link.path} onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === link.path ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}>
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === link.path ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                }`}>
               <link.icon className="w-4 h-4" />{link.name}
             </Link>
           ))}
