@@ -83,18 +83,18 @@ export default function BookingPage() {
       const formattedDate = format(date, "yyyy-MM-dd");
 
       const activeTournament = tournaments.find(t => {
-         const tStart = format(new Date(t.start_date), "yyyy-MM-dd");
-         const tEnd = format(new Date(t.end_date), "yyyy-MM-dd");
-         return t.sport_type.toLowerCase() === facility.toLowerCase() && formattedDate >= tStart && formattedDate <= tEnd;
+        const tStart = format(new Date(t.start_date), "yyyy-MM-dd");
+        const tEnd = format(new Date(t.end_date), "yyyy-MM-dd");
+        return t.sport_type.toLowerCase() === facility.toLowerCase() && formattedDate >= tStart && formattedDate <= tEnd;
       });
 
       if (activeTournament) {
-         setBlockingTournament(activeTournament);
-         setGroupedSlots([]);
-         setSelectedSlotGroup(null);
-         setSelectedSlot(null);
-         setStep("slot");
-         return;
+        setBlockingTournament(activeTournament);
+        setGroupedSlots([]);
+        setSelectedSlotGroup(null);
+        setSelectedSlot(null);
+        setStep("slot");
+        return;
       }
       setBlockingTournament(null);
 
@@ -322,7 +322,7 @@ export default function BookingPage() {
                       </div>
                       <div className="p-4">
                         <h3 className="font-heading font-semibold text-foreground mb-1">{f.name}</h3>
-                        <p className="text-xs text-muted-foreground mb-2">{f.description || "Experience premium sports facilities"}</p>
+                        {/* <p className="text-xs text-muted-foreground mb-2">{f.description || "Experience premium sports facilities"}</p> */}
                         <span className="text-xs text-primary font-medium">
                           {f.opening_hour != null ? `${formatHour(f.opening_hour)} – ${formatHour(f.closing_hour)}` : ""}
                         </span>
