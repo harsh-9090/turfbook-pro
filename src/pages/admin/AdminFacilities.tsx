@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Layers, Minus, Clock, ChevronDown, ChevronUp, UploadCloud, Loader2 } from "lucide-react";
+import { Plus, Trash2, Layers, Minus, Clock, ChevronDown, ChevronUp, UploadCloud, Loader2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,9 @@ export default function AdminFacilities() {
   const [minBookingAmount, setMinBookingAmount] = useState("0");
   const [isFormExpanded, setIsFormExpanded] = useState(false);
   const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
+  const [createImageFile, setCreateImageFile] = useState<File | null>(null);
+  const [editingDescId, setEditingDescId] = useState<string | null>(null);
+  const [editingDescVal, setEditingDescVal] = useState("");
 
   const handleImageUpload = async (facilityId: string, file: File) => {
     setUploadingImageId(facilityId);
@@ -65,7 +68,7 @@ export default function AdminFacilities() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/facilities', {
+      const res = await api.post('/facilities', {
         facility_type: type,
         description: desc,
         location: 'Dynamic Arena',
@@ -79,8 +82,20 @@ export default function AdminFacilities() {
         closing_hour: Number(closingHour),
         min_booking_amount: Number(minBookingAmount)
       });
+      // Upload image if selected
+      if (createImageFile && res.data?.id) {
+        const body = new FormData();
+        body.append('image', createImageFile);
+        try {
+          const uploadRes = await api.post('/facilities/upload', body, { headers: { 'Content-Type': 'multipart/form-data' } });
+          if (uploadRes.data?.secure_url) {
+            await api.patch(`/facilities/${res.data.id}/image`, { image_url: uploadRes.data.secure_url });
+          }
+        } catch { /* image upload is optional */ }
+      }
       toast.success('Sports Event added & Slots autonomously synced!');
       setDesc('');
+      setCreateImageFile(null);
       setWeekdayDayPrice('800');
       setWeekdayNightPrice('1000');
       setWeekendDayPrice('1000');
@@ -246,6 +261,15 @@ export default function AdminFacilities() {
                 </Select>
               </div>
             </div>
+            {/* Image Upload */}
+            <div className="space-y-1.5">
+              <Label className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Cover Image (optional)</Label>
+              <label className="flex items-center gap-2 border border-dashed border-border rounded-lg px-4 py-2.5 cursor-pointer hover:border-primary/40 transition-colors">
+                <UploadCloud className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground truncate">{createImageFile ? createImageFile.name : 'Choose image...'}</span>
+                <input type="file" accept="image/*" className="hidden" onChange={e => setCreateImageFile(e.target.files?.[0] || null)} />
+              </label>
+            </div>
             <div className="flex justify-end pt-2">
               <Button type="submit" className="w-full sm:w-auto bg-gradient-turf text-primary-foreground font-bold shadow-turf h-11 px-8">
                 <Plus className="w-5 h-5 mr-2" /> Add Selection
@@ -291,7 +315,31 @@ export default function AdminFacilities() {
             </div>
             <h4 className="font-heading font-semibold text-lg text-foreground">{f.name}</h4>
             <p className="text-sm font-medium text-primary capitalize mb-2">{f.facility_type}</p>
-            <p className="text-xs text-muted-foreground line-clamp-2 mb-4">{f.description}</p>
+            {editingDescId === f.id ? (
+              <input
+                autoFocus
+                className="text-xs text-muted-foreground mb-4 w-full bg-transparent border-b border-primary/40 outline-none py-1"
+                value={editingDescVal}
+                onChange={e => setEditingDescVal(e.target.value)}
+                onBlur={async () => {
+                  if (editingDescVal !== f.description) {
+                    try {
+                      await api.patch(`/facilities/${f.id}`, { description: editingDescVal });
+                      toast.success('Description updated!');
+                      fetchFacilities();
+                    } catch { toast.error('Failed to update'); }
+                  }
+                  setEditingDescId(null);
+                }}
+                onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+              />
+            ) : (
+              <p className="text-xs text-muted-foreground line-clamp-2 mb-4 cursor-pointer hover:text-foreground transition-colors group/desc flex items-start gap-1"
+                onClick={() => { setEditingDescId(f.id); setEditingDescVal(f.description || ''); }}>
+                {f.description || <span className="italic">Click to add description...</span>}
+                <Pencil className="w-3 h-3 shrink-0 mt-0.5 opacity-0 group-hover/desc:opacity-100 transition-opacity" />
+              </p>
+            )}
             {/* Operating Hours Row */}
             <div className="bg-muted/20 border border-border/50 px-3 py-2 rounded-md mb-3 flex items-center justify-between">
               <span className="text-muted-foreground font-semibold text-xs tracking-wider uppercase flex items-center gap-1.5"><Clock className="w-3 h-3" /> Hours</span>
