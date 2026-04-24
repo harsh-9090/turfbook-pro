@@ -86,18 +86,6 @@ app.use('/api/staff', staffRoutes);
 // Health check
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 
-// Temporary migration endpoint (remove after first successful run)
-app.get('/api/migrate-staff', async (_, res) => {
-  try {
-    await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`);
-    await pool.query(`ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user', 'admin', 'staff'))`);
-    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS allowed_tabs TEXT[] DEFAULT '{}'`);
-    res.json({ status: 'ok', message: 'Staff schema applied' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error('[SERVER ERROR]', err.stack);
