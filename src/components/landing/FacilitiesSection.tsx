@@ -26,7 +26,7 @@ export default function FacilitiesSection() {
   }, []);
 
   const count = facilities.length;
-  const countWord = count === 1 ? "One Sport" : count === 2 ? "Two Sports" : count === 3 ? "Three Sports" : `${count} Sports`;
+  const countWord = count === 1 ? "One Sport" : count === 2 ? "Two Sports" : count === 3 ? "Three Sports" : count === 4 ? "Four Sports" : `${count} Sports`;
 
   return (
     <section id="facilities" className="py-20 lg:py-32 relative overflow-hidden">
@@ -43,7 +43,7 @@ export default function FacilitiesSection() {
             {countWord}, <span className="text-gradient-turf">One Arena</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Everything you need for the perfect sports experience — all under one roof.
+            Everything you need for the perfect sports experience - all under one roof.
           </p>
         </motion.div>
 
