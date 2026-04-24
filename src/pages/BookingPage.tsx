@@ -463,15 +463,23 @@ export default function BookingPage() {
                   )}
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Name</span><span className="text-foreground font-medium">{name}</span></div>
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Phone</span><span className="text-foreground font-medium">{phone}</span></div>
-
-                  <div className="border-t border-border pt-4 space-y-4">
-                    <div className="flex justify-between items-baseline">
-                      <span className="font-semibold text-foreground">Total Amount</span>
-                      <span className="font-heading text-xl font-bold text-foreground">₹{selectedSlotGroup?.price}</span>
+ 
+                  <div className="border-t border-border pt-4 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Base Amount</span>
+                      <span className="text-foreground font-medium">₹{selectedSlotGroup?.price}</span>
                     </div>
-
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Platform Fee (2.36%)</span>
+                      <span className="text-foreground font-medium">₹{(selectedSlotGroup?.price * 0.0236).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-baseline pt-2 border-t border-border/50">
+                      <span className="font-semibold text-foreground">Total Payable</span>
+                      <span className="font-heading text-xl font-bold text-primary">₹{(selectedSlotGroup?.price * 1.0236).toFixed(2)}</span>
+                    </div>
+ 
                     {facilityData?.min_booking_amount > 0 && facilityData.min_booking_amount < selectedSlotGroup.price && (
-                      <div className="space-y-3">
+                      <div className="space-y-3 pt-4">
                         <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Choose Payment Level</Label>
                         <div className="grid grid-cols-2 gap-3">
                           <button
@@ -481,7 +489,7 @@ export default function BookingPage() {
                               : "border-border bg-transparent text-muted-foreground hover:border-border/80"
                               }`}>
                             <span className="text-[10px] font-bold uppercase mb-1">Full Payment</span>
-                            <span className="font-bold text-lg">₹{selectedSlotGroup.price}</span>
+                            <span className="font-bold text-lg">₹{(selectedSlotGroup.price * 1.0236).toFixed(2)}</span>
                           </button>
                           <button
                             onClick={() => setIsPartialPayment(true)}
@@ -490,12 +498,12 @@ export default function BookingPage() {
                               : "border-border bg-transparent text-muted-foreground hover:border-border/80"
                               }`}>
                             <span className="text-[10px] font-bold uppercase mb-1">Pay Deposit</span>
-                            <span className="font-bold text-lg">₹{facilityData.min_booking_amount}</span>
+                            <span className="font-bold text-lg">₹{(facilityData.min_booking_amount * 1.0236).toFixed(2)}</span>
                           </button>
                         </div>
                         <p className="text-[10px] text-muted-foreground text-center italic">
                           {isPartialPayment
-                            ? `You'll need to pay ₹${selectedSlotGroup.price - facilityData.min_booking_amount} extra at the venue.`
+                            ? `You'll need to pay ₹${(selectedSlotGroup.price - facilityData.min_booking_amount).toFixed(2)} extra at the venue.`
                             : "No extra charges at the venue."}
                         </p>
                       </div>

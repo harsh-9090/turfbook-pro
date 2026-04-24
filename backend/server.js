@@ -106,7 +106,8 @@ server.listen(PORT, async () => {
     await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`);
     await pool.query(`ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user', 'admin', 'staff'))`);
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS allowed_tabs TEXT[] DEFAULT '{}'`);
-    console.log('[MIGRATION] Staff schema ready');
+    await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS platform_fee DECIMAL(10, 2) DEFAULT 0.00`);
+    console.log('[MIGRATION] Schema ready');
   } catch (err) {
     console.error('[MIGRATION] Staff schema error (non-fatal):', err.message);
   }

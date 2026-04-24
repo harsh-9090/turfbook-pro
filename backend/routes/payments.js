@@ -12,6 +12,13 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+const PLATFORM_FEE_RATE = 0.0236; // 2% gateway + 18% GST (0.36%)
+
+const calculateTotal = (amount) => {
+  const fee = Math.round(amount * PLATFORM_FEE_RATE * 100) / 100;
+  return { fee, total: amount + fee };
+};
+
 // Create Order
 router.post('/create-order', paymentLimiter, async (req, res) => {
   try {
@@ -21,8 +28,10 @@ router.post('/create-order', paymentLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Amount and booking_id are required' });
     }
 
+    const { fee, total } = calculateTotal(amount);
+
     const options = {
-      amount: Math.round(amount * 100), // Convert to paise
+      amount: Math.round(total * 100), // Total including fee in paise
       currency: "INR",
       receipt: booking_id,
     };
@@ -112,10 +121,16 @@ router.post('/verify', paymentLimiter, async (req, res) => {
         );
 
         // Record the payment in the payments table
+        const { fee } = calculateTotal(amountPaid / (1 + PLATFORM_FEE_RATE)); // Reverse calculate the internal fee part
+        // Actually, better to just store the known fee if we can, but since order creation and verify are decoupled, 
+        // we recalculate the fee portion from the total amount paid.
+        const baseAmount = Math.round((amountPaid / (1 + PLATFORM_FEE_RATE)) * 100) / 100;
+        const platformFee = Math.round((amountPaid - baseAmount) * 100) / 100;
+
         await client.query(
-          `INSERT INTO payments (booking_id, amount, method, razorpay_order_id, razorpay_payment_id) 
-           VALUES ($1, $2, 'online', $3, $4)`,
-          [booking_id, amountPaid, razorpay_order_id, razorpay_payment_id]
+          `INSERT INTO payments (booking_id, amount, platform_fee, method, razorpay_order_id, razorpay_payment_id) 
+           VALUES ($1, $2, $3, 'online', $4, $5)`,
+          [booking_id, baseAmount, platformFee, razorpay_order_id, razorpay_payment_id]
         );
 
         await client.query('COMMIT');
@@ -152,8 +167,10 @@ router.post('/tournament/create-order', paymentLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Amount and registration_id are required' });
     }
 
+    const { total } = calculateTotal(amount);
+
     const options = {
-      amount: Math.round(amount * 100), 
+      amount: Math.round(total * 100), 
       currency: "INR",
       receipt: registration_id,
     };
@@ -186,17 +203,29 @@ router.post('/tournament/verify', paymentLimiter, async (req, res) => {
     const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body).digest('hex');
 
     if (expectedSignature === razorpay_signature) {
-       await pool.query(
-         `UPDATE tournament_registrations 
-          SET payment_status = 'paid', razorpay_payment_id = $1 
-          WHERE id = $2`,
-         [razorpay_payment_id, registration_id]
-       );
-       
-       await cache.delPattern('tournaments:*');
-       req.app.get('io').emit('tournament_registration_success', { registration_id });
-       
-       res.json({ success: true, message: 'Tournament registration complete' });
+      const rzpOrder = await razorpay.orders.fetch(razorpay_order_id);
+      const amountPaid = rzpOrder.amount / 100;
+      const baseAmount = Math.round((amountPaid / (1 + PLATFORM_FEE_RATE)) * 100) / 100;
+      const platformFee = Math.round((amountPaid - baseAmount) * 100) / 100;
+
+      await pool.query(
+        `UPDATE tournament_registrations 
+         SET payment_status = 'paid', razorpay_payment_id = $1 
+         WHERE id = $2`,
+        [razorpay_payment_id, registration_id]
+      );
+      
+      // Storing Tournament fee in payments for unified accounting
+      await pool.query(
+        `INSERT INTO payments (booking_id, amount, platform_fee, method, razorpay_order_id, razorpay_payment_id) 
+         VALUES ($1, $2, $3, 'online', $4, $5)`,
+        [registration_id, baseAmount, platformFee, razorpay_order_id, razorpay_payment_id]
+      );
+     
+     await cache.delPattern('tournaments:*');
+     req.app.get('io').emit('tournament_registration_success', { registration_id });
+     
+     res.json({ success: true, message: 'Tournament registration complete' });
     } else {
        res.status(400).json({ success: false, error: 'Invalid signature' });
     }

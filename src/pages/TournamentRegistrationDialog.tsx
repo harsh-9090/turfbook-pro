@@ -183,12 +183,22 @@ export default function TournamentRegistrationDialog({ tournament, isOpen, onClo
             </div>
           </div>
 
-          <div className="bg-muted/30 border border-border rounded-xl p-4 flex justify-between items-center">
-            <div className="space-y-0.5">
-              <p className="text-sm font-bold text-foreground">Total Entry Fee</p>
-              <p className="text-xs text-muted-foreground flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> Safe & secure checkout</p>
+          <div className="bg-muted/30 border border-border rounded-xl p-4 space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Entry Fee</span>
+              <span className="text-foreground font-medium">₹{tournament.entry_fee}</span>
             </div>
-            <div className="text-2xl font-black text-emerald-500">₹{tournament.entry_fee}</div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Platform Fee (2.36%)</span>
+              <span className="text-foreground font-medium">₹{(tournament.entry_fee * 0.0236).toFixed(2)}</span>
+            </div>
+            <div className="pt-2 border-t border-border/50 flex justify-between items-center">
+              <div className="space-y-0.5">
+                <p className="text-sm font-bold text-foreground">Total Payable</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> Safe checkout</p>
+              </div>
+              <div className="text-2xl font-black text-emerald-500">₹{(tournament.entry_fee * 1.0236).toFixed(2)}</div>
+            </div>
           </div>
 
           <Button type="submit" disabled={isProcessing || phone.length < 10} className="w-full h-12 text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all shadow-lg shadow-primary/20">
