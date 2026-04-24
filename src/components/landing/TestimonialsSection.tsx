@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { Star, MessageSquare, CheckCircle2, Globe, ShieldCheck, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,31 +39,25 @@ export default function TestimonialsSection() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Ping-pong auto-scroll
+  // Triple items for seamless loop
+  const displayItems = [...testimonials, ...testimonials, ...testimonials, ...testimonials];
+
+  const controls = useAnimation();
+
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el || testimonials.length === 0 || isPaused) return;
-
-    const speed = 0.5; // pixels per frame
-    let animId: number;
-
-    const scroll = () => {
-      if (!el) return;
-      el.scrollLeft += speed * directionRef.current;
-
-      // Reverse direction if we hit the right or left edge
-      if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
-        directionRef.current = -1;
-      } else if (el.scrollLeft <= 0) {
-        directionRef.current = 1;
-      }
-
-      animId = requestAnimationFrame(scroll);
-    };
-
-    animId = requestAnimationFrame(scroll);
-    return () => cancelAnimationFrame(animId);
-  }, [testimonials, isPaused]);
+    if (!loading && testimonials.length > 0 && !isPaused) {
+      controls.start({
+        x: ["0%", "-50%"],
+        transition: {
+          duration: testimonials.length * 10, // speed based on count
+          ease: "linear",
+          repeat: Infinity
+        }
+      });
+    } else {
+      controls.stop();
+    }
+  }, [loading, testimonials, isPaused, controls]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,8 +79,7 @@ export default function TestimonialsSection() {
     }
   };
 
-  // No duplicate items needed anymore
-  const displayItems = testimonials;
+
 
   return (
     <section className="py-20 lg:py-32 relative bg-card/50 overflow-hidden">
@@ -111,48 +104,50 @@ export default function TestimonialsSection() {
         </motion.div>
       </div>
 
-      {/* Horizontal auto-scrolling marquee with ping-pong effect */}
-      <div
-        ref={scrollRef}
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setIsPaused(false)}
-        className="flex gap-6 overflow-x-auto px-4 pb-2 snap-x touch-pan-x mx-auto w-max max-w-full"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
-        {displayItems.map((t, i) => (
-          <div key={`${t.id}-${i}`}
-            className={`snap-center flex-shrink-0 w-[320px] p-6 rounded-2xl bg-card border transition-all ${t.source === 'google' ? 'border-blue-500/20 hover:border-blue-500/40' : 'border-border hover:border-primary/20'
-              }`}>
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex gap-1">
-                {Array.from({ length: 5 }).map((_, j) => (
-                  <Star key={j} className={`w-4 h-4 ${j < t.rating ? "text-accent fill-accent" : "text-muted-foreground"}`} />
-                ))}
-              </div>
-              {t.source === 'google' && (
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-bold uppercase tracking-wider border border-blue-500/20">
-                  <Globe className="w-3 h-3" /> Google
-                </div>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground mb-4 leading-relaxed line-clamp-4">"{t.text}"</p>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm ${t.source === 'google' ? 'bg-blue-600' : 'bg-gradient-turf'
+      {/* Infinite Scrolling Marquee with Drag Support */}
+      <div className="relative w-full overflow-hidden">
+        <motion.div
+          animate={controls}
+          drag="x"
+          dragConstraints={{ left: -2000, right: 0 }}
+          onDragStart={() => setIsPaused(true)}
+          onHoverStart={() => setIsPaused(true)}
+          onHoverEnd={() => setIsPaused(false)}
+          className="flex gap-6 px-4 py-8 cursor-grab active:cursor-grabbing w-max"
+        >
+          {displayItems.map((t, i) => (
+            <div key={`${t.id}-${i}`}
+              className={`flex-shrink-0 w-[320px] p-6 rounded-2xl bg-card border transition-all ${t.source === 'google' ? 'border-blue-500/20 hover:border-blue-500/40' : 'border-border hover:border-primary/20'
                 }`}>
-                {t.name[0]}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-1.5">
-                  <p className="text-sm font-semibold text-foreground">{t.name}</p>
-                  {t.source === 'google' && <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />}
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex gap-1">
+                  {Array.from({ length: 5 }).map((_, j) => (
+                    <Star key={j} className={`w-4 h-4 ${j < t.rating ? "text-accent fill-accent" : "text-muted-foreground"}`} />
+                  ))}
                 </div>
-                <p className="text-xs text-muted-foreground">{t.role || "Player"}</p>
+                {t.source === 'google' && (
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-bold uppercase tracking-wider border border-blue-500/20">
+                    <Globe className="w-3 h-3" /> Google
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mb-4 leading-relaxed line-clamp-4">"{t.text}"</p>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm ${t.source === 'google' ? 'bg-blue-600' : 'bg-gradient-turf'
+                  }`}>
+                  {t.name[0]}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                    {t.source === 'google' && <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t.role || "Player"}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </motion.div>
       </div>
 
       {/* Submission Modal */}
