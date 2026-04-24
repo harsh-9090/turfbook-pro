@@ -94,11 +94,24 @@ export default function BookingPage() {
     setSelectedDate(date);
     try {
       const formattedDate = format(date, "yyyy-MM-dd");
+      const currentTurf = allFacilities.find(f => f.facility_type === facility);
 
       const activeTournament = tournaments.find(t => {
         const tStart = format(new Date(t.start_date), "yyyy-MM-dd");
         const tEnd = format(new Date(t.end_date), "yyyy-MM-dd");
-        return t.sport_type.toLowerCase() === facility.toLowerCase() && formattedDate >= tStart && formattedDate <= tEnd;
+        
+        // 1. Direct match with current sport
+        const isDirectMatch = t.sport_type.toLowerCase() === facility.toLowerCase();
+        
+        // 2. Shared physical resource match
+        // If current sport shares a turf with the sport that has a tournament
+        const isSharedMatch = currentTurf?.physical_resource_id != null && 
+          allFacilities.some(f => 
+            f.physical_resource_id === currentTurf.physical_resource_id && 
+            f.facility_type.toLowerCase() === t.sport_type.toLowerCase()
+          );
+
+        return (isDirectMatch || isSharedMatch) && formattedDate >= tStart && formattedDate <= tEnd;
       });
 
       if (activeTournament) {
