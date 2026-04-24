@@ -48,8 +48,8 @@ export default function AdminSettings() {
   const [contactMapUrl, setContactMapUrl] = useState("");
   
   // Financial Settings
-  const [gatewayPercent, setGatewayPercent] = useState(2.0);
-  const [gstPercent, setGstPercent] = useState(18.0);
+  const [gatewayPercent, setGatewayPercent] = useState("2.0");
+  const [gstPercent, setGstPercent] = useState("18.0");
   
   const [savingContact, setSavingContact] = useState(false);
 
@@ -73,8 +73,8 @@ export default function AdminSettings() {
       setContactInstagram(res.data.instagram_url || "");
       setContactTwitter(res.data.twitter_url || "");
       setContactMapUrl(res.data.map_embed_url || "");
-      setGatewayPercent(Number(res.data.gateway_percent) || 2.0);
-      setGstPercent(Number(res.data.gst_percent) || 18.0);
+      setGatewayPercent(res.data.gateway_percent?.toString() || "2.0");
+      setGstPercent(res.data.gst_percent?.toString() || "18.0");
     }).catch(() => {});
   }, []);
 
@@ -163,8 +163,8 @@ export default function AdminSettings() {
         working_hours: contactHours, facebook_url: contactFacebook,
         instagram_url: contactInstagram, twitter_url: contactTwitter,
         map_embed_url: contactMapUrl,
-        gateway_percent: gatewayPercent,
-        gst_percent: gstPercent
+        gateway_percent: parseFloat(gatewayPercent) || 0,
+        gst_percent: parseFloat(gstPercent) || 0
       });
       toast.success("Settings updated!");
     } catch { toast.error("Failed to update settings"); }
@@ -414,10 +414,9 @@ export default function AdminSettings() {
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Gateway Charge (%)</label>
                       <div className="relative">
                         <Input 
-                          type="number" 
-                          step="0.01" 
+                          type="text" 
                           value={gatewayPercent} 
-                          onChange={(e) => setGatewayPercent(Number(e.target.value))} 
+                          onChange={(e) => setGatewayPercent(e.target.value.replace(/[^0-9.]/g, ""))} 
                           className="bg-background font-bold text-lg" 
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">%</span>
@@ -429,10 +428,9 @@ export default function AdminSettings() {
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">GST on Charge (%)</label>
                       <div className="relative">
                         <Input 
-                          type="number" 
-                          step="0.01" 
+                          type="text" 
                           value={gstPercent} 
-                          onChange={(e) => setGstPercent(Number(e.target.value))} 
+                          onChange={(e) => setGstPercent(e.target.value.replace(/[^0-9.]/g, ""))} 
                           className="bg-background font-bold text-lg" 
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">%</span>
@@ -447,7 +445,7 @@ export default function AdminSettings() {
                       <p className="text-[11px] text-muted-foreground">Effective rate applied to user bookings</p>
                     </div>
                     <div className="text-3xl font-black text-primary">
-                      {(gatewayPercent * (1 + gstPercent / 100)).toFixed(2)}%
+                      {(parseFloat(gatewayPercent || "0") * (1 + parseFloat(gstPercent || "0") / 100)).toFixed(2)}%
                     </div>
                   </div>
  
