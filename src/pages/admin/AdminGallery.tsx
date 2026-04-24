@@ -15,6 +15,7 @@ interface GalleryImage {
   alt_text: string;
   span_type: string;
   sort_order: number;
+  resource_type: 'image' | 'video';
 }
 
 export default function AdminGallery() {
@@ -57,7 +58,12 @@ export default function AdminGallery() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return toast.error("Please select an image first");
+    if (!selectedFile) return toast.error("Please select a file first");
+    
+    const isVideo = selectedFile.type.startsWith('video');
+    if (isVideo && selectedFile.size > 20 * 1024 * 1024) {
+      return toast.error("Video size must be less than 20MB");
+    }
     
     setIsUploading(true);
     const formData = new FormData();
@@ -70,7 +76,7 @@ export default function AdminGallery() {
       await api.post("/gallery", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      toast.success("Image uploaded successfully!");
+      toast.success(isVideo ? "Video uploaded successfully!" : "Image uploaded successfully!");
       setIsOpen(false);
       resetForm();
       fetchImages();
@@ -115,21 +121,32 @@ export default function AdminGallery() {
           <p className="text-sm text-muted-foreground">Manage landing page images via Cloudinary</p>
         </div>
         <Button onClick={() => setIsOpen(true)} className="bg-gradient-turf text-primary-foreground shadow-turf">
-          <Plus className="w-4 h-4 mr-2" /> Add Image
+          <Plus className="w-4 h-4 mr-2" /> Add Media
         </Button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {images.map((img) => (
           <div key={img.id} className="group relative rounded-xl border border-border bg-card overflow-hidden transition-all hover:border-primary/30">
-            <div className="aspect-square overflow-hidden bg-muted">
-              <img src={img.cloudinary_url} alt={img.alt_text} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+            <div className="aspect-square overflow-hidden bg-muted relative">
+              {img.resource_type === 'video' ? (
+                <div className="w-full h-full flex items-center justify-center bg-black">
+                  <video src={img.cloudinary_url} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <div className="ml-0.5 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent" />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <img src={img.cloudinary_url} alt={img.alt_text} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+              )}
             </div>
             
             <div className="p-3 space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  {img.span_type === 'large' ? 'Large Card' : 'Default'}
+                  {img.resource_type === 'video' ? 'Video' : (img.span_type === 'large' ? 'Large Card' : 'Image')}
                 </span>
                 <div className="flex gap-1">
                   <a href={img.cloudinary_url} target="_blank" rel="noreferrer" className="p-1 text-muted-foreground hover:text-primary">
@@ -183,20 +200,24 @@ export default function AdminGallery() {
               className="group relative cursor-pointer border-2 border-dashed border-border rounded-xl aspect-video flex flex-col items-center justify-center hover:border-primary/50 transition-colors bg-muted/30 overflow-hidden"
             >
               {previewUrl ? (
-                <>
-                  <img src={previewUrl} className="w-full h-full object-cover" />
+                <div className="w-full h-full relative">
+                  {selectedFile?.type.startsWith('video') ? (
+                    <video src={previewUrl} className="w-full h-full object-cover" controls={false} muted />
+                  ) : (
+                    <img src={previewUrl} className="w-full h-full object-cover" />
+                  )}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <p className="text-white text-sm font-medium">Change Image</p>
+                    <p className="text-white text-sm font-medium">Change File</p>
                   </div>
-                </>
+                </div>
               ) : (
                 <>
                   <Upload className="w-8 h-8 text-muted-foreground mb-2 group-hover:text-primary" />
-                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground">Click to select image</p>
-                  <p className="text-xs text-muted-foreground/60">JPG, PNG or WEBP</p>
+                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground">Click to select file</p>
+                  <p className="text-xs text-muted-foreground/60">JPG, PNG, MP4 or WEBM</p>
                 </>
               )}
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileChange} />
             </div>
 
             <div className="space-y-4">

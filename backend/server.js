@@ -109,6 +109,7 @@ server.listen(PORT, async () => {
     await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS platform_fee DECIMAL(10, 2) DEFAULT 0.00`);
     // Site settings expansion
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pin_hash TEXT`);
+    await pool.query(`ALTER TABLE gallery_images ADD COLUMN IF NOT EXISTS resource_type TEXT DEFAULT 'image'`);
     // Ensure at least one setting row exists
     await pool.query(`INSERT INTO site_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
     

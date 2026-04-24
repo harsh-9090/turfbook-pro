@@ -8,6 +8,7 @@ interface GalleryImage {
   cloudinary_url: string;
   alt_text: string;
   span_type: string;
+  resource_type?: 'image' | 'video';
 }
 
 export default function GallerySection() {
@@ -90,8 +91,21 @@ export default function GallerySection() {
               className={`overflow-hidden rounded-2xl cursor-zoom-in ${img.span_type === 'large' ? 'md:col-span-2 md:row-span-2' : ''}`}
               onClick={() => setSelectedIndex(i)}
             >
-              <img src={img.cloudinary_url} alt={img.alt_text} loading="lazy"
-                className="w-full h-full object-cover min-h-[160px] hover:scale-105 transition-transform duration-500" />
+              <div className="relative w-full h-full">
+                {img.resource_type === 'video' ? (
+                  <>
+                    <video src={img.cloudinary_url} className="w-full h-full object-cover min-h-[160px] pointer-events-none" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                      <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 transform group-hover:scale-110 transition-transform duration-300">
+                        <div className="ml-1 border-t-[8px] border-t-transparent border-l-[14px] border-l-white border-b-[8px] border-b-transparent" />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <img src={img.cloudinary_url} alt={img.alt_text} loading="lazy"
+                    className="w-full h-full object-cover min-h-[160px] hover:scale-105 transition-transform duration-500" />
+                )}
+              </div>
             </motion.div>
           ))}
         </div>
@@ -134,11 +148,20 @@ export default function GallerySection() {
                 className="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center"
                 onClick={(e) => e.stopPropagation()}
               >
-                <img 
-                  src={images[selectedIndex].cloudinary_url} 
-                  alt={images[selectedIndex].alt_text}
-                  className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
-                />
+                {images[selectedIndex].resource_type === 'video' ? (
+                  <video 
+                    src={images[selectedIndex].cloudinary_url} 
+                    controls 
+                    autoPlay 
+                    className="max-w-full max-h-full rounded-xl shadow-2xl"
+                  />
+                ) : (
+                  <img 
+                    src={images[selectedIndex].cloudinary_url} 
+                    alt={images[selectedIndex].alt_text}
+                    className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+                  />
+                )}
                 
                 <div className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 text-white/50 text-sm font-medium">
                   {selectedIndex + 1} / {images.length}

@@ -12,7 +12,8 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'akola-sports-arena/gallery',
-    allowed_formats: ['jpg', 'png', 'webp', 'jpeg'],
+    resource_type: 'auto',
+    allowed_formats: ['jpg', 'png', 'webp', 'jpeg', 'mp4', 'webm', 'mov'],
   },
 });
 
@@ -38,14 +39,15 @@ router.get('/', async (req, res) => {
 router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
   try {
     const { alt_text, span_type, sort_order } = req.body;
-    if (!req.file) return res.status(400).json({ error: 'No image file uploaded' });
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const resource_type = req.file.mimetype.startsWith('video') ? 'video' : 'image';
 
     // With CloudinaryStorage, Cloudinary handles the upload automatically 
     // and returns the results in req.file
     const result = await pool.query(
-      `INSERT INTO gallery_images (cloudinary_url, public_id, alt_text, span_type, sort_order)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [req.file.path, req.file.filename, alt_text || '', span_type || 'default', Number(sort_order) || 0]
+      `INSERT INTO gallery_images (cloudinary_url, public_id, alt_text, span_type, sort_order, resource_type)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [req.file.path, req.file.filename, alt_text || '', span_type || 'default', Number(sort_order) || 0, resource_type]
     );
 
     await cache.del('gallery:all');
