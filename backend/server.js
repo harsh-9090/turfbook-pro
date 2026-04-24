@@ -48,6 +48,7 @@ const galleryRoutes = require('./routes/gallery');
 const testimonialsRoutes = require('./routes/testimonials');
 const settingsRoutes = require('./routes/settings');
 const tournamentsRoutes = require('./routes/tournaments');
+const staffRoutes = require('./routes/staff');
 
 const app = express();
 const server = http.createServer(app);
@@ -80,9 +81,22 @@ app.use('/api/gallery', galleryRoutes);
 app.use('/api/testimonials', testimonialsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/tournaments', tournamentsRoutes);
+app.use('/api/staff', staffRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
+
+// Temporary migration endpoint (remove after first successful run)
+app.get('/api/migrate-staff', async (_, res) => {
+  try {
+    await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`);
+    await pool.query(`ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user', 'admin', 'staff'))`);
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS allowed_tabs TEXT[] DEFAULT '{}'`);
+    res.json({ status: 'ok', message: 'Staff schema applied' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -97,7 +111,18 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => console.log('Client disconnected:', socket.id));
 });
 
-server.listen(PORT, () => console.log(`Akola Sports Arena API running on port ${PORT}`));
+server.listen(PORT, async () => {
+  console.log(`Akola Sports Arena API running on port ${PORT}`);
+  // One-time staff migration
+  try {
+    await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`);
+    await pool.query(`ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user', 'admin', 'staff'))`);
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS allowed_tabs TEXT[] DEFAULT '{}'`);
+    console.log('[MIGRATION] Staff schema ready');
+  } catch (err) {
+    console.error('[MIGRATION] Staff schema error (non-fatal):', err.message);
+  }
+});
 
 // Graceful Shutdown
 const shutdown = async (signal) => {

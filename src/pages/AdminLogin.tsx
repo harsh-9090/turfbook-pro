@@ -19,16 +19,18 @@ export default function AdminLogin() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      if (loginMode === "password") {
-        const response = await api.post('/auth/login', { email, password });
-        localStorage.setItem("adminToken", response.data.token);
-      } else {
-        if (pin.length !== 4) return toast.error("Please enter 4-digit PIN");
-        const response = await api.post('/auth/login-pin', { email, pin });
-        localStorage.setItem("adminToken", response.data.token);
+      if (loginMode === "pin" && pin.length !== 4) {
+        setIsSubmitting(false);
+        return toast.error("Please enter 4-digit PIN");
       }
 
-      toast.success("Welcome back, Admin!");
+      const response = loginMode === "password"
+        ? await api.post('/auth/login', { email, password })
+        : await api.post('/auth/login-pin', { email, pin });
+
+      localStorage.setItem("adminToken", response.data.token);
+      const user = response.data.user;
+      toast.success(user.role === "admin" ? "Welcome back, Admin!" : `Welcome, ${user.name}!`);
       navigate("/admin");
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Invalid credentials.");
@@ -44,7 +46,7 @@ export default function AdminLogin() {
           <div className="w-14 h-14 rounded-2xl bg-gradient-turf flex items-center justify-center mx-auto mb-4">
             <span className="font-heading font-bold text-primary-foreground text-2xl">S</span>
           </div>
-          <h1 className="font-heading text-2xl font-bold text-foreground">Admin Login</h1>
+          <h1 className="font-heading text-2xl font-bold text-foreground">Login</h1>
           <p className="text-sm text-muted-foreground mt-1">Akola Sports Arena Management Panel</p>
         </div>
 

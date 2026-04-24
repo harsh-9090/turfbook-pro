@@ -21,7 +21,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
-    const result = await pool.query('SELECT * FROM users WHERE email = $1 AND role = $2', [email, 'admin']);
+    const result = await pool.query('SELECT * FROM users WHERE email = $1 AND role IN ($2, $3)', [email, 'admin', 'staff']);
     const user = result.rows[0];
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
@@ -29,11 +29,11 @@ router.post('/login', loginLimiter, async (req, res) => {
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, token_version: user.token_version }, 
+      { id: user.id, email: user.email, role: user.role, allowed_tabs: user.allowed_tabs || [], token_version: user.token_version }, 
       process.env.JWT_SECRET, 
       { expiresIn: '24h' }
     );
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, allowed_tabs: user.allowed_tabs || [] } });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
@@ -44,7 +44,7 @@ router.post('/login-pin', loginLimiter, async (req, res) => {
     const { email, pin } = req.body;
     if (!email || !pin) return res.status(400).json({ error: 'Email and PIN required' });
 
-    const result = await pool.query('SELECT * FROM users WHERE email = $1 AND role = $2', [email, 'admin']);
+    const result = await pool.query('SELECT * FROM users WHERE email = $1 AND role IN ($2, $3)', [email, 'admin', 'staff']);
     const user = result.rows[0];
     if (!user || !user.pin_hash) return res.status(401).json({ error: 'PIN login not set up or invalid credentials' });
 
@@ -52,11 +52,11 @@ router.post('/login-pin', loginLimiter, async (req, res) => {
     if (!valid) return res.status(401).json({ error: 'Invalid PIN' });
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, token_version: user.token_version }, 
+      { id: user.id, email: user.email, role: user.role, allowed_tabs: user.allowed_tabs || [], token_version: user.token_version }, 
       process.env.JWT_SECRET, 
       { expiresIn: '24h' }
     );
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, allowed_tabs: user.allowed_tabs || [] } });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }

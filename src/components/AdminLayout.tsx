@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom";
 import logoImage from "@/assets/logo.png";
-import { LayoutDashboard, Calendar, CalendarDays, Settings, LogOut, BarChart3, Menu, X, Layers, Clock, Timer, DollarSign, Image as LucideImage, MessageSquare, Sun, Moon, Trophy, Megaphone, Shield } from "lucide-react";
+import { LayoutDashboard, Calendar, CalendarDays, Settings, LogOut, BarChart3, Menu, X, Layers, Clock, Timer, DollarSign, Image as LucideImage, MessageSquare, Sun, Moon, Trophy, Megaphone, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 
-const sidebarLinks = [
+const allSidebarLinks = [
   { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { name: "Calendar", path: "/admin/calendar", icon: CalendarDays },
   { name: "Bookings", path: "/admin/bookings", icon: Calendar },
@@ -20,8 +20,16 @@ const sidebarLinks = [
   { name: "Ad Studio", path: "/admin/ads", icon: Megaphone },
   { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
   { name: "Audit Logs", path: "/admin/audit-logs", icon: Shield },
+  { name: "Staff Management", path: "/admin/staff", icon: Users, adminOnly: true },
   { name: "Settings Hub", path: "/admin/settings", icon: Settings },
 ];
+
+function parseJwt(token: string): any {
+  try {
+    const base64 = token.split('.')[1];
+    return JSON.parse(atob(base64));
+  } catch { return null; }
+}
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -29,10 +37,30 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
+  const tokenData = useMemo(() => {
+    const token = localStorage.getItem("adminToken");
+    return token ? parseJwt(token) : null;
+  }, []);
+
+  const isAdmin = tokenData?.role === "admin";
+  const allowedTabs: string[] = tokenData?.allowed_tabs || [];
+
+  const sidebarLinks = useMemo(() => {
+    if (isAdmin) return allSidebarLinks; // Admin sees everything
+    // Staff: filter to allowed tabs + Dashboard (always)
+    return allSidebarLinks.filter(link =>
+      link.path === "/admin" || // Dashboard always
+      (!link.adminOnly && allowedTabs.includes(link.path))
+    );
+  }, [isAdmin, allowedTabs]);
+
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     navigate("/admin/login");
   };
+
+  // Block staff from accessing non-allowed routes via URL
+  const isBlocked = !isAdmin && location.pathname !== "/admin" && !allowedTabs.includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -41,7 +69,7 @@ export default function AdminLayout() {
           <div className="w-10 h-10 rounded-full overflow-hidden bg-white/5 border border-white/10 shrink-0">
             <img src={logoImage} alt="Logo" className="w-full h-full object-cover scale-110" />
           </div>
-          <span className="font-heading font-bold text-foreground truncate">Akola Sports Arena <span className="text-primary text-xs">Admin</span></span>
+          <span className="font-heading font-bold text-foreground truncate">Akola Sports Arena <span className="text-primary text-xs">{isAdmin ? "Admin" : "Staff"}</span></span>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto text-muted-foreground shrink-0"><X size={20} /></button>
         </div>
         <nav className="p-4 space-y-1 flex-1 overflow-y-auto">
@@ -66,7 +94,7 @@ export default function AdminLayout() {
         <header className="h-16 border-b border-border flex items-center px-4 lg:px-8 gap-4">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-muted-foreground"><Menu size={20} /></button>
           <h2 className="font-heading font-semibold text-foreground">
-            {sidebarLinks.find((l) => l.path === location.pathname)?.name || "Dashboard"}
+            {allSidebarLinks.find((l) => l.path === location.pathname)?.name || "Dashboard"}
           </h2>
           <button
             onClick={toggleTheme}
@@ -77,7 +105,16 @@ export default function AdminLayout() {
           </button>
         </header>
         <main className="flex-1 p-4 lg:p-8 overflow-auto">
-          <Outlet />
+          {isBlocked ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Shield className="w-12 h-12 text-destructive mb-4" />
+              <h3 className="font-heading text-xl font-bold text-foreground mb-2">Access Restricted</h3>
+              <p className="text-muted-foreground text-sm max-w-md">You do not have permission to access this page. Contact your admin to request access.</p>
+              <Button variant="outline" className="mt-4" onClick={() => navigate("/admin")}>Go to Dashboard</Button>
+            </div>
+          ) : (
+            <Outlet />
+          )}
         </main>
       </div>
     </div>
