@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
     }
 
     const result = await pool.query(
-      'SELECT * FROM testimonials WHERE status = $1 ORDER BY rating DESC, is_featured DESC, created_at DESC LIMIT 12',
+      'SELECT * FROM (SELECT * FROM testimonials WHERE status = $1 ORDER BY rating DESC, is_featured DESC, created_at DESC LIMIT 12) AS top_reviews ORDER BY RANDOM()',
       ['approved']
     );
 
