@@ -122,8 +122,8 @@ server.listen(PORT, async () => {
     await pool.query(`
       UPDATE turfs 
       SET physical_resource_id = 1 
-      WHERE (facility_type ILIKE 'cricket' OR facility_type ILIKE 'football')
-      AND physical_resource_id IS NULL
+      WHERE (facility_type ILIKE '%cricket%' OR facility_type ILIKE '%football%')
+      AND (physical_resource_id IS NULL OR physical_resource_id != 1)
     `);
 
     // Ensure at least one setting row exists
