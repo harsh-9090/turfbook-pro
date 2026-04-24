@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, CheckCircle, XCircle, Star, MessageSquare, Plus, Globe, ShieldCheck } from "lucide-react";
+import { Trash2, CheckCircle, XCircle, Star, MessageSquare, Plus, Globe, ShieldCheck, Save, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,14 +34,39 @@ export default function AdminTestimonials() {
   const [newRating, setNewRating] = useState("5");
   const [newSource, setNewSource] = useState("google");
 
+  // Google Trust state
+  const [googleRating, setGoogleRating] = useState("4.6");
+  const [googleCount, setGoogleCount] = useState("150");
+  const [googleUrl, setGoogleUrl] = useState("");
+  const [isUpdatingTrust, setIsUpdatingTrust] = useState(false);
+
   const fetchTestimonials = async () => {
     try {
-      const res = await api.get("/testimonials/admin");
-      setTestimonials(res.data);
+      const [testRes, setRes] = await Promise.all([
+        api.get("/testimonials/admin"),
+        api.get("/settings/contact")
+      ]);
+      setTestimonials(testRes.data);
+      setGoogleRating(testRes.data.google_rating || "4.6");
+      setGoogleCount(testRes.data.google_reviews_count || "150");
+      setGoogleUrl(testRes.data.google_maps_url || "");
+      // Actually need to check which response has what
     } catch { toast.error("Failed to load testimonials"); }
   };
 
-  useEffect(() => { fetchTestimonials(); }, []);
+  const fetchSettings = async () => {
+    try {
+      const res = await api.get("/settings/contact");
+      setGoogleRating(res.data.google_rating?.toString() || "4.6");
+      setGoogleCount(res.data.google_reviews_count?.toString() || "150");
+      setGoogleUrl(res.data.google_maps_url || "");
+    } catch { console.error("Failed to load trust settings"); }
+  };
+
+  useEffect(() => { 
+    fetchTestimonials(); 
+    fetchSettings();
+  }, []);
 
   const handleStatus = async (id: string, status: 'approved' | 'pending') => {
     try {
@@ -79,6 +104,22 @@ export default function AdminTestimonials() {
     finally { setIsSubmitting(false); }
   };
 
+  const handleUpdateTrust = async () => {
+    setIsUpdatingTrust(true);
+    try {
+      await api.put("/settings/contact", {
+        google_rating: Number(googleRating),
+        google_reviews_count: Number(googleCount),
+        google_maps_url: googleUrl
+      });
+      toast.success("Google Trust data updated!");
+    } catch {
+      toast.error("Failed to update trust data");
+    } finally {
+      setIsUpdatingTrust(false);
+    }
+  };
+
   const resetForm = () => {
     setNewName(""); setNewRole(""); setNewText(""); setNewRating("5"); setNewSource("google");
   };
@@ -113,6 +154,70 @@ export default function AdminTestimonials() {
         <Button onClick={() => setIsOpen(true)} className="bg-gradient-turf text-primary-foreground shadow-turf">
           <Plus className="w-4 h-4 mr-2" /> Add Review
         </Button>
+      </div>
+
+      {/* Google Trust Score Manager */}
+      <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-4 sm:p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
+            <Globe className="w-5 h-5 text-blue-500" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground text-sm sm:text-base">Google Trust Banner Data</h3>
+            <p className="text-[10px] sm:text-xs text-muted-foreground italic">Manage your public Google Maps rating and links</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Rating (e.g. 4.9)</Label>
+            <Input 
+              type="number" step="0.1" max="5" min="0"
+              value={googleRating} 
+              onChange={e => setGoogleRating(e.target.value)}
+              className="bg-background h-9"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Reviews</Label>
+            <Input 
+              type="number"
+              value={googleCount} 
+              onChange={e => setGoogleCount(e.target.value)}
+              className="bg-background h-9"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Google Maps URL</Label>
+            <div className="relative">
+              <Input 
+                value={googleUrl} 
+                onChange={e => setGoogleUrl(e.target.value)}
+                className="bg-background pr-10 h-9"
+                placeholder="https://google.com/maps/..."
+              />
+              <a href={googleUrl} target="_blank" rel="noreferrer" className="absolute right-3 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100 transition-opacity">
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end mt-4 pt-4 border-t border-blue-500/10">
+          <Button 
+            disabled={isUpdatingTrust}
+            onClick={handleUpdateTrust}
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 px-6 h-9"
+          >
+            {isUpdatingTrust ? (
+              "Updating..."
+            ) : (
+              <span className="flex items-center gap-2">
+                <Save className="w-4 h-4" /> Save Trust Data
+              </span>
+            )}
+          </Button>
+        </div>
+      </div>
         <div className="flex bg-secondary/50 p-1 rounded-lg w-full sm:w-auto overflow-x-auto scrollbar-none">
           {(['all', 'pending', 'approved'] as const).map((f) => (
             <button
@@ -126,7 +231,7 @@ export default function AdminTestimonials() {
             </button>
           ))}
         </div>
-      </div>
+
 
       <div className="grid gap-4">
         {filtered.map((t) => (

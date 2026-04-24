@@ -24,8 +24,8 @@ export default function TestimonialsSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const directionRef = useRef<number>(1);
+  const [settings, setSettings] = useState<any>(null);
 
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
@@ -33,10 +33,15 @@ export default function TestimonialsSection() {
   const [rating, setRating] = useState(5);
 
   useEffect(() => {
-    api.get("/testimonials")
-      .then(res => setTestimonials(res.data))
-      .catch(() => { })
-      .finally(() => setLoading(false));
+    Promise.all([
+      api.get("/testimonials"),
+      api.get("/settings/contact")
+    ]).then(([testRes, setRes]) => {
+      setTestimonials(testRes.data);
+      setSettings(setRes.data);
+    })
+    .catch(() => { })
+    .finally(() => setLoading(false));
   }, []);
 
   // Triple items for seamless loop
@@ -235,16 +240,20 @@ export default function TestimonialsSection() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-bold text-foreground">4.6 / 5</span>
+                <span className="text-xl font-bold text-foreground">
+                  {settings?.google_rating || "4.6"} / 5
+                </span>
                 <div className="flex text-accent">
-                  {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-accent" />)}
+                  {Array.from({ length: 5 }).map((_, s) => (
+                    <Star key={s} className={`w-3.5 h-3.5 ${s < Math.round(Number(settings?.google_rating || 4.6)) ? "fill-accent" : "text-muted-foreground/30"}`} />
+                  ))}
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground italic">Based on Google Reviews</p>
+              <p className="text-sm text-muted-foreground italic">Based on {settings?.google_reviews_count || "150"}+ Google Reviews</p>
             </div>
           </div>
           <a
-            href="https://www.google.com/search?q=Akola+Sports+Arena+reviews"
+            href={settings?.google_maps_url || "https://www.google.com/search?q=Akola+Sports+Arena+reviews"}
             target="_blank"
             rel="noopener noreferrer"
           >

@@ -21,7 +21,8 @@ router.get('/contact', async (req, res) => {
       return res.json({ 
         address: '', phone: '', email: '', working_hours: '', 
         facebook_url: '', instagram_url: '', twitter_url: '', map_embed_url: '',
-        gateway_percent: 2.00, gst_percent: 18.00
+        gateway_percent: 2.00, gst_percent: 18.00,
+        google_rating: 4.6, google_reviews_count: 150, google_maps_url: 'https://www.google.com/search?q=Akola+Sports+Arena+reviews'
       });
     }
     res.json(result.rows[0]);
@@ -36,7 +37,8 @@ router.put('/contact', authMiddleware, async (req, res) => {
   const { 
     address, phone, email, working_hours, 
     facebook_url, instagram_url, twitter_url, map_embed_url,
-    gateway_percent, gst_percent
+    gateway_percent, gst_percent,
+    google_rating, google_reviews_count, google_maps_url
   } = req.body;
 
   try {
@@ -52,6 +54,9 @@ router.put('/contact', authMiddleware, async (req, res) => {
           map_embed_url = COALESCE($8, map_embed_url),
           gateway_percent = COALESCE($9, gateway_percent),
           gst_percent = COALESCE($10, gst_percent),
+          google_rating = COALESCE($11, google_rating),
+          google_reviews_count = COALESCE($12, google_reviews_count),
+          google_maps_url = COALESCE($13, google_maps_url),
           updated_at = NOW()
       WHERE id = 1
       RETURNING *
@@ -59,7 +64,8 @@ router.put('/contact', authMiddleware, async (req, res) => {
     const result = await pool.query(query, [
       address, phone, email, working_hours, 
       facebook_url, instagram_url, twitter_url, map_embed_url,
-      gateway_percent, gst_percent
+      gateway_percent, gst_percent,
+      google_rating, google_reviews_count, google_maps_url
     ]);
     
     await cache.del('site:settings'); // Invalidate settings cache

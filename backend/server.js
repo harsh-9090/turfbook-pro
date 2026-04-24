@@ -111,6 +111,9 @@ server.listen(PORT, async () => {
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pin_hash TEXT`);
     await pool.query(`ALTER TABLE gallery_images ADD COLUMN IF NOT EXISTS resource_type TEXT DEFAULT 'image'`);
     await pool.query(`ALTER TABLE testimonials ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'internal'`);
+    await pool.query(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS google_rating NUMERIC(2,1) DEFAULT 4.6`);
+    await pool.query(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS google_reviews_count INTEGER DEFAULT 150`);
+    await pool.query(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS google_maps_url TEXT DEFAULT 'https://www.google.com/search?q=Akola+Sports+Arena+reviews'`);
     // Ensure at least one setting row exists
     await pool.query(`INSERT INTO site_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
     
