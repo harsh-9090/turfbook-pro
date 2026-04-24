@@ -18,7 +18,11 @@ router.get('/contact', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM site_settings WHERE id = 1');
     if (result.rows.length === 0) {
-      return res.json({ address: '', phone: '', email: '', working_hours: '', facebook_url: '', instagram_url: '', twitter_url: '', map_embed_url: '' });
+      return res.json({ 
+        address: '', phone: '', email: '', working_hours: '', 
+        facebook_url: '', instagram_url: '', twitter_url: '', map_embed_url: '',
+        gateway_percent: 2.00, gst_percent: 18.00
+      });
     }
     res.json(result.rows[0]);
   } catch (err) {
@@ -29,21 +33,40 @@ router.get('/contact', async (req, res) => {
 
 // Update site settings (Admin only)
 router.put('/contact', authMiddleware, async (req, res) => {
-  const { address, phone, email, working_hours, facebook_url, instagram_url, twitter_url, map_embed_url } = req.body;
+  const { 
+    address, phone, email, working_hours, 
+    facebook_url, instagram_url, twitter_url, map_embed_url,
+    gateway_percent, gst_percent
+  } = req.body;
+
   try {
     const query = `
       UPDATE site_settings 
-      SET address = $1, phone = $2, email = $3, working_hours = $4, 
-          facebook_url = $5, instagram_url = $6, twitter_url = $7,
-          map_embed_url = $8, updated_at = NOW()
+      SET address = COALESCE($1, address), 
+          phone = COALESCE($2, phone), 
+          email = COALESCE($3, email), 
+          working_hours = COALESCE($4, working_hours), 
+          facebook_url = COALESCE($5, facebook_url), 
+          instagram_url = COALESCE($6, instagram_url), 
+          twitter_url = COALESCE($7, twitter_url),
+          map_embed_url = COALESCE($8, map_embed_url),
+          gateway_percent = COALESCE($9, gateway_percent),
+          gst_percent = COALESCE($10, gst_percent),
+          updated_at = NOW()
       WHERE id = 1
       RETURNING *
     `;
-    const result = await pool.query(query, [address, phone, email, working_hours, facebook_url, instagram_url, twitter_url, map_embed_url || '']);
-    await logAction(req.user.id, 'UPDATE_CONTACT_SETTINGS', 'Updated website contact information');
+    const result = await pool.query(query, [
+      address, phone, email, working_hours, 
+      facebook_url, instagram_url, twitter_url, map_embed_url,
+      gateway_percent, gst_percent
+    ]);
+    
+    await cache.del('site:settings'); // Invalidate settings cache
+    await logAction(req.user.id, 'UPDATE_CONTACT_SETTINGS', 'Updated website contact and financial settings');
     res.json({ success: true, data: result.rows[0] });
   } catch (err) {
-    console.error('Error updating contact settings:', err);
+    console.error('Error updating site settings:', err);
     res.status(500).json({ error: 'Failed to update settings' });
   }
 });

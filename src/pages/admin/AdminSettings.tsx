@@ -16,11 +16,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-type SettingsTab = "account" | "website" | "system";
+type SettingsTab = "account" | "website" | "financials" | "system";
 
 const tabs: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
   { id: "account", label: "Account", icon: <User className="w-4 h-4" /> },
   { id: "website", label: "Website", icon: <Globe className="w-4 h-4" /> },
+  { id: "financials", label: "Financials", icon: <ShieldCheck className="w-4 h-4" /> },
   { id: "system", label: "System", icon: <ShieldAlert className="w-4 h-4" /> },
 ];
 
@@ -45,6 +46,11 @@ export default function AdminSettings() {
   const [contactInstagram, setContactInstagram] = useState("");
   const [contactTwitter, setContactTwitter] = useState("");
   const [contactMapUrl, setContactMapUrl] = useState("");
+  
+  // Financial Settings
+  const [gatewayPercent, setGatewayPercent] = useState(2.0);
+  const [gstPercent, setGstPercent] = useState(18.0);
+  
   const [savingContact, setSavingContact] = useState(false);
 
   useEffect(() => {
@@ -67,6 +73,8 @@ export default function AdminSettings() {
       setContactInstagram(res.data.instagram_url || "");
       setContactTwitter(res.data.twitter_url || "");
       setContactMapUrl(res.data.map_embed_url || "");
+      setGatewayPercent(Number(res.data.gateway_percent) || 2.0);
+      setGstPercent(Number(res.data.gst_percent) || 18.0);
     }).catch(() => {});
   }, []);
 
@@ -155,9 +163,11 @@ export default function AdminSettings() {
         working_hours: contactHours, facebook_url: contactFacebook,
         instagram_url: contactInstagram, twitter_url: contactTwitter,
         map_embed_url: contactMapUrl,
+        gateway_percent: gatewayPercent,
+        gst_percent: gstPercent
       });
-      toast.success("Contact information updated!");
-    } catch { toast.error("Failed to update contact information"); }
+      toast.success("Settings updated!");
+    } catch { toast.error("Failed to update settings"); }
     finally { setSavingContact(false); }
   };
 
@@ -379,6 +389,71 @@ export default function AdminSettings() {
                   <div className="flex justify-end">
                     <Button type="submit" disabled={savingContact} className="bg-primary/10 text-primary hover:bg-primary hover:text-white border-primary/20 transition-all font-bold">
                       {savingContact ? "Saving..." : "Save Contact Info"}
+                    </Button>
+                  </div>
+                </form>
+              </section>
+            </div>
+          )}
+ 
+          {/* ============ FINANCIALS TAB ============ */}
+          {activeTab === "financials" && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <section className="bg-card border border-border rounded-2xl p-6 space-y-5">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                  <h3 className="font-heading font-bold text-lg">Financial Configuration</h3>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Configure the additional fees charged to users during checkout to cover payment gateway costs and taxes.
+                </p>
+ 
+                <form onSubmit={handleSaveContact} className="space-y-6">
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Gateway Charge (%)</label>
+                      <div className="relative">
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          value={gatewayPercent} 
+                          onChange={(e) => setGatewayPercent(Number(e.target.value))} 
+                          className="bg-background font-bold text-lg" 
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">%</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground italic">Usually 2.0% for most payment gateways.</p>
+                    </div>
+ 
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">GST on Charge (%)</label>
+                      <div className="relative">
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          value={gstPercent} 
+                          onChange={(e) => setGstPercent(Number(e.target.value))} 
+                          className="bg-background font-bold text-lg" 
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">%</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground italic">Standard GST is 18.0% in India.</p>
+                    </div>
+                  </div>
+ 
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-foreground">Total Platform Fee</p>
+                      <p className="text-[11px] text-muted-foreground">Effective rate applied to user bookings</p>
+                    </div>
+                    <div className="text-3xl font-black text-primary">
+                      {(gatewayPercent * (1 + gstPercent / 100)).toFixed(2)}%
+                    </div>
+                  </div>
+ 
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={savingContact} className="bg-primary hover:bg-primary/90 text-white transition-all font-bold px-8">
+                      {savingContact ? "Saving..." : "Save Financial Settings"}
                     </Button>
                   </div>
                 </form>

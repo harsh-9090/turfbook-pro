@@ -46,6 +46,19 @@ export default function BookingPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feeSettings, setFeeSettings] = useState({ gateway: 2.0, gst: 18.0 });
+ 
+  // Fetch settings for dynamic fee calculation
+  useEffect(() => {
+    api.get('/settings/contact').then(res => {
+      setFeeSettings({
+        gateway: Number(res.data.gateway_percent) || 2.0,
+        gst: Number(res.data.gst_percent) || 18.0
+      });
+    }).catch(err => console.error("Failed to fetch fee settings", err));
+  }, []);
+ 
+  const effectiveRate = (feeSettings.gateway / 100) * (1 + feeSettings.gst / 100);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -470,12 +483,12 @@ export default function BookingPage() {
                       <span className="text-foreground font-medium">₹{selectedSlotGroup?.price}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Platform Fee (2.36%)</span>
-                      <span className="text-foreground font-medium">₹{(selectedSlotGroup?.price * 0.0236).toFixed(2)}</span>
+                      <span className="text-muted-foreground">Platform Fee ({(feeSettings.gateway * (1 + feeSettings.gst / 100)).toFixed(2)}%)</span>
+                      <span className="text-foreground font-medium">₹{(selectedSlotGroup?.price * effectiveRate).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-baseline pt-2 border-t border-border/50">
                       <span className="font-semibold text-foreground">Total Payable</span>
-                      <span className="font-heading text-xl font-bold text-primary">₹{(selectedSlotGroup?.price * 1.0236).toFixed(2)}</span>
+                      <span className="font-heading text-xl font-bold text-primary">₹{(selectedSlotGroup?.price * (1 + effectiveRate)).toFixed(2)}</span>
                     </div>
  
                     {facilityData?.min_booking_amount > 0 && facilityData.min_booking_amount < selectedSlotGroup.price && (
@@ -489,7 +502,7 @@ export default function BookingPage() {
                               : "border-border bg-transparent text-muted-foreground hover:border-border/80"
                               }`}>
                             <span className="text-[10px] font-bold uppercase mb-1">Full Payment</span>
-                            <span className="font-bold text-lg">₹{(selectedSlotGroup.price * 1.0236).toFixed(2)}</span>
+                            <span className="font-bold text-lg">₹{(selectedSlotGroup.price * (1 + effectiveRate)).toFixed(2)}</span>
                           </button>
                           <button
                             onClick={() => setIsPartialPayment(true)}
@@ -498,7 +511,7 @@ export default function BookingPage() {
                               : "border-border bg-transparent text-muted-foreground hover:border-border/80"
                               }`}>
                             <span className="text-[10px] font-bold uppercase mb-1">Pay Deposit</span>
-                            <span className="font-bold text-lg">₹{(facilityData.min_booking_amount * 1.0236).toFixed(2)}</span>
+                            <span className="font-bold text-lg">₹{(facilityData.min_booking_amount * (1 + effectiveRate)).toFixed(2)}</span>
                           </button>
                         </div>
                         <p className="text-[10px] text-muted-foreground text-center italic">

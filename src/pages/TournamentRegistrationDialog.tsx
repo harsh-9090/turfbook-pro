@@ -27,6 +27,21 @@ export default function TournamentRegistrationDialog({ tournament, isOpen, onClo
   const [captainName, setCaptainName] = useState("");
   const [phone, setPhone] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [feeSettings, setFeeSettings] = useState({ gateway: 2.0, gst: 18.0 });
+ 
+  // Fetch settings for dynamic fee calculation
+  useEffect(() => {
+    if (isOpen) {
+      api.get('/settings/contact').then(res => {
+        setFeeSettings({
+          gateway: Number(res.data.gateway_percent) || 2.0,
+          gst: Number(res.data.gst_percent) || 18.0
+        });
+      }).catch(err => console.error("Failed to fetch fee settings", err));
+    }
+  }, [isOpen]);
+ 
+  const effectiveRate = (feeSettings.gateway / 100) * (1 + feeSettings.gst / 100);
   const [isSuccess, setIsSuccess] = useState(false);
 
   // When Razorpay is active (isProcessing), we must prevent Radix UI from 
@@ -189,15 +204,15 @@ export default function TournamentRegistrationDialog({ tournament, isOpen, onClo
               <span className="text-foreground font-medium">₹{tournament.entry_fee}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Platform Fee (2.36%)</span>
-              <span className="text-foreground font-medium">₹{(tournament.entry_fee * 0.0236).toFixed(2)}</span>
+              <span className="text-muted-foreground">Platform Fee ({(feeSettings.gateway * (1 + feeSettings.gst / 100)).toFixed(2)}%)</span>
+              <span className="text-foreground font-medium">₹{(tournament.entry_fee * effectiveRate).toFixed(2)}</span>
             </div>
             <div className="pt-2 border-t border-border/50 flex justify-between items-center">
               <div className="space-y-0.5">
                 <p className="text-sm font-bold text-foreground">Total Payable</p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> Safe checkout</p>
               </div>
-              <div className="text-2xl font-black text-emerald-500">₹{(tournament.entry_fee * 1.0236).toFixed(2)}</div>
+              <div className="text-2xl font-black text-emerald-500">₹{(tournament.entry_fee * (1 + effectiveRate)).toFixed(2)}</div>
             </div>
           </div>
 

@@ -12,11 +12,33 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-const PLATFORM_FEE_RATE = 0.0236; // 2% gateway + 18% GST (0.36%)
+const PLATFORM_FEE_RATE = 0.0236; // Fallback default (2% + 18% GST)
 
-const calculateTotal = (amount) => {
-  const fee = Math.round(amount * PLATFORM_FEE_RATE * 100) / 100;
-  return { fee, total: amount + fee };
+const getEffectiveRate = async () => {
+  try {
+    const cached = await cache.get('site:settings');
+    let settings;
+    if (cached) {
+      settings = cached;
+    } else {
+      const result = await pool.query('SELECT gateway_percent, gst_percent FROM site_settings WHERE id = 1');
+      settings = result.rows[0] || { gateway_percent: 2.0, gst_percent: 18.0 };
+      await cache.set('site:settings', settings, 3600); // Cache for 1 hour
+    }
+    
+    const gateway = Number(settings.gateway_percent) / 100;
+    const gst = Number(settings.gst_percent) / 100;
+    return gateway * (1 + gst);
+  } catch (err) {
+    console.error('Error fetching dynamic fee settings:', err);
+    return PLATFORM_FEE_RATE;
+  }
+};
+
+const calculateTotal = async (amount) => {
+  const rate = await getEffectiveRate();
+  const fee = Math.round(amount * rate * 100) / 100;
+  return { fee, total: amount + fee, rate };
 };
 
 // Create Order
@@ -28,7 +50,7 @@ router.post('/create-order', paymentLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Amount and booking_id are required' });
     }
 
-    const { fee, total } = calculateTotal(amount);
+    const { fee, total } = await calculateTotal(amount);
 
     const options = {
       amount: Math.round(total * 100), // Total including fee in paise
@@ -121,10 +143,8 @@ router.post('/verify', paymentLimiter, async (req, res) => {
         );
 
         // Record the payment in the payments table
-        const { fee } = calculateTotal(amountPaid / (1 + PLATFORM_FEE_RATE)); // Reverse calculate the internal fee part
-        // Actually, better to just store the known fee if we can, but since order creation and verify are decoupled, 
-        // we recalculate the fee portion from the total amount paid.
-        const baseAmount = Math.round((amountPaid / (1 + PLATFORM_FEE_RATE)) * 100) / 100;
+        const rate = await getEffectiveRate();
+        const baseAmount = Math.round((amountPaid / (1 + rate)) * 100) / 100;
         const platformFee = Math.round((amountPaid - baseAmount) * 100) / 100;
 
         await client.query(
@@ -167,7 +187,7 @@ router.post('/tournament/create-order', paymentLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Amount and registration_id are required' });
     }
 
-    const { total } = calculateTotal(amount);
+    const { total } = await calculateTotal(amount);
 
     const options = {
       amount: Math.round(total * 100), 
@@ -205,7 +225,8 @@ router.post('/tournament/verify', paymentLimiter, async (req, res) => {
     if (expectedSignature === razorpay_signature) {
       const rzpOrder = await razorpay.orders.fetch(razorpay_order_id);
       const amountPaid = rzpOrder.amount / 100;
-      const baseAmount = Math.round((amountPaid / (1 + PLATFORM_FEE_RATE)) * 100) / 100;
+      const rate = await getEffectiveRate();
+      const baseAmount = Math.round((amountPaid / (1 + rate)) * 100) / 100;
       const platformFee = Math.round((amountPaid - baseAmount) * 100) / 100;
 
       await pool.query(
