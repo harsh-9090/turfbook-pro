@@ -8,23 +8,45 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import api from "@/lib/api";
 
-const ALL_TABS = [
-  { path: "/admin", label: "Dashboard" },
-  { path: "/admin/calendar", label: "Calendar" },
-  { path: "/admin/bookings", label: "Bookings" },
-  { path: "/admin/slots", label: "Daily Slots" },
-  { path: "/admin/tables", label: "Live Tables" },
-  { path: "/admin/schedules", label: "Weekly Schedule" },
-  { path: "/admin/facilities", label: "Sports Events" },
-  { path: "/admin/tournaments", label: "Tournaments" },
-  { path: "/admin/pricing", label: "Pricing Plans" },
-  { path: "/admin/gallery", label: "Gallery" },
-  { path: "/admin/testimonials", label: "Testimonials" },
-  { path: "/admin/ads", label: "Ad Studio" },
-  { path: "/admin/analytics", label: "Analytics" },
-  { path: "/admin/audit-logs", label: "Audit Logs" },
-  { path: "/admin/settings", label: "Settings Hub" },
+const PERMISSION_GROUPS = [
+  {
+    category: "Overview",
+    tabs: [
+      { path: "/admin", label: "Dashboard" },
+      { path: "/admin/analytics", label: "Analytics" },
+    ]
+  },
+  {
+    category: "Management",
+    tabs: [
+      { path: "/admin/calendar", label: "Calendar" },
+      { path: "/admin/bookings", label: "Bookings" },
+      { path: "/admin/slots", label: "Daily Slots" },
+      { path: "/admin/tables", label: "Live Tables" },
+      { path: "/admin/schedules", label: "Weekly Schedule" },
+      { path: "/admin/pricing", label: "Pricing Plans" },
+      { path: "/admin/facilities", label: "Sports Events" },
+      { path: "/admin/tournaments", label: "Tournaments" },
+    ]
+  },
+  {
+    category: "Marketing",
+    tabs: [
+      { path: "/admin/gallery", label: "Gallery" },
+      { path: "/admin/testimonials", label: "Testimonials" },
+      { path: "/admin/ads", label: "Ad Studio" },
+    ]
+  },
+  {
+    category: "System",
+    tabs: [
+      { path: "/admin/audit-logs", label: "Audit Logs" },
+      { path: "/admin/settings", label: "Settings Hub" },
+    ]
+  }
 ];
+
+const ALL_TABS = PERMISSION_GROUPS.flatMap(g => g.tabs);
 
 interface Staff {
   id: string;
@@ -204,33 +226,64 @@ export default function AdminStaff() {
               </div>
             </div>
 
-            {/* Tab Permissions */}
-            <div className="space-y-2">
-              <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Tab Access Permissions</Label>
-              <p className="text-[10px] text-muted-foreground">Select which dashboard tabs this staff member can access.</p>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {ALL_TABS.map(tab => {
-                  const isSelected = selectedTabs.includes(tab.path);
-                  const isDashboard = tab.path === "/admin";
+            {/* Tab Permissions Grouped */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Tab Access Permissions</Label>
+              </div>
+              <div className="space-y-6">
+                {PERMISSION_GROUPS.map(group => {
+                  const categoryTabs = group.tabs.map(t => t.path);
+                  const allSelected = categoryTabs.every(t => selectedTabs.includes(t));
+                  const isDashboardGroup = group.category === "Overview";
+
                   return (
-                    <button key={tab.path} type="button"
-                      onClick={() => toggleTab(tab.path)}
-                      disabled={isDashboard}
-                      className={`text-left px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
-                        isDashboard ? "bg-primary/10 border-primary/30 text-primary cursor-default" :
-                        isSelected ? "bg-primary/10 border-primary/40 text-primary" :
-                        "bg-card border-border text-muted-foreground hover:border-primary/20"
-                      }`}>
-                      <span className="flex items-center gap-2">
-                        <span className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 ${
-                          isSelected || isDashboard ? "bg-primary border-primary" : "border-muted-foreground/40"
-                        }`}>
-                          {(isSelected || isDashboard) && <span className="text-primary-foreground text-[8px] font-bold">✓</span>}
-                        </span>
-                        {tab.label}
-                        {isDashboard && <span className="text-[9px] text-muted-foreground ml-auto">(always)</span>}
-                      </span>
-                    </button>
+                    <div key={group.category} className="space-y-3 p-3 bg-muted/30 rounded-xl border border-border/50">
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-[10px] font-black uppercase text-primary/70 tracking-widest">{group.category}</span>
+                        {!isDashboardGroup && (
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              if (allSelected) {
+                                setSelectedTabs(prev => prev.filter(t => !categoryTabs.includes(t) || t === "/admin"));
+                              } else {
+                                setSelectedTabs(prev => [...new Set([...prev, ...categoryTabs])]);
+                              }
+                            }}
+                            className="text-[9px] font-bold text-primary hover:underline"
+                          >
+                            {allSelected ? "Deselect All" : "Select All"}
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {group.tabs.map(tab => {
+                          const isSelected = selectedTabs.includes(tab.path);
+                          const isDashboard = tab.path === "/admin";
+                          return (
+                            <button key={tab.path} type="button"
+                              onClick={() => toggleTab(tab.path)}
+                              disabled={isDashboard}
+                              className={`text-left px-3 py-2.5 rounded-lg border text-[11px] font-semibold transition-all group ${
+                                isDashboard ? "bg-primary/10 border-primary/30 text-primary cursor-default" :
+                                isSelected ? "bg-primary/20 border-primary/40 text-primary shadow-sm" :
+                                "bg-card border-border text-muted-foreground hover:border-primary/20 hover:bg-secondary/50"
+                              }`}>
+                              <span className="flex items-center gap-2">
+                                <span className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                                  isSelected || isDashboard ? "bg-primary border-primary" : "border-muted-foreground/30 bg-background"
+                                }`}>
+                                  {(isSelected || isDashboard) && <span className="text-primary-foreground text-[8px] font-bold">✓</span>}
+                                </span>
+                                {tab.label}
+                                {isDashboard && <span className="text-[8px] opacity-60 ml-auto">Fixed</span>}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
