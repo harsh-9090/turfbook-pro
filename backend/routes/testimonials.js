@@ -59,9 +59,9 @@ router.post('/', reviewLimiter, async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO testimonials (name, role, text, rating, status)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [name, role || '', text, Number(rating), 'pending']
+      `INSERT INTO testimonials (name, role, text, rating, status, source)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [name, role || '', text, Number(rating), 'pending', 'internal']
     );
 
     await cache.del('testimonials:admin');
@@ -121,6 +121,25 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Admin: Add a review manually (e.g. from Google)
+router.post('/admin', authMiddleware, async (req, res) => {
+  try {
+    const { name, role, text, rating, status, source } = req.body;
+    const result = await pool.query(
+      `INSERT INTO testimonials (name, role, text, rating, status, source)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [name, role || '', text, Number(rating), status || 'approved', source || 'google']
+    );
+
+    await cache.del('testimonials:approved');
+    await cache.del('testimonials:admin');
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error: ' + err.message });
   }
 });
 

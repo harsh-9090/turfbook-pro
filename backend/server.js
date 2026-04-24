@@ -110,6 +110,7 @@ server.listen(PORT, async () => {
     // Site settings expansion
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pin_hash TEXT`);
     await pool.query(`ALTER TABLE gallery_images ADD COLUMN IF NOT EXISTS resource_type TEXT DEFAULT 'image'`);
+    await pool.query(`ALTER TABLE testimonials ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'internal'`);
     // Ensure at least one setting row exists
     await pool.query(`INSERT INTO site_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
     

@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { Trash2, CheckCircle, XCircle, Star, MessageSquare } from "lucide-react";
+import { Trash2, CheckCircle, XCircle, Star, MessageSquare, Plus, Globe, ShieldCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -14,11 +18,21 @@ interface Testimonial {
   status: 'pending' | 'approved';
   is_featured: boolean;
   created_at: string;
+  source: 'internal' | 'google';
 }
 
 export default function AdminTestimonials() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all');
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form state
+  const [newName, setNewName] = useState("");
+  const [newRole, setNewRole] = useState("");
+  const [newText, setNewText] = useState("");
+  const [newRating, setNewRating] = useState("5");
+  const [newSource, setNewSource] = useState("google");
 
   const fetchTestimonials = async () => {
     try {
@@ -43,6 +57,30 @@ export default function AdminTestimonials() {
       toast.success("Featured status toggled");
       fetchTestimonials();
     } catch { toast.error("Failed to toggle feature status"); }
+  };
+
+  const handleAddReview = async () => {
+    if (!newName || !newText) return toast.error("Please fill Name and Review text");
+    setIsSubmitting(true);
+    try {
+      await api.post("/testimonials/admin", {
+        name: newName,
+        role: newRole,
+        text: newText,
+        rating: Number(newRating),
+        source: newSource,
+        status: 'approved'
+      });
+      toast.success("Review added successfully!");
+      setIsOpen(false);
+      resetForm();
+      fetchTestimonials();
+    } catch { toast.error("Failed to add review"); }
+    finally { setIsSubmitting(false); }
+  };
+
+  const resetForm = () => {
+    setNewName(""); setNewRole(""); setNewText(""); setNewRating("5"); setNewSource("google");
   };
 
   const handleDelete = (id: string) => {
@@ -70,8 +108,11 @@ export default function AdminTestimonials() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="font-heading text-xl font-bold text-foreground">Testimonials Management</h2>
-          <p className="text-sm text-muted-foreground">Approve or feature player reviews for the landing page</p>
+          <p className="text-sm text-muted-foreground">Approve internal reviews or sync Google reviews</p>
         </div>
+        <Button onClick={() => setIsOpen(true)} className="bg-gradient-turf text-primary-foreground shadow-turf">
+          <Plus className="w-4 h-4 mr-2" /> Add Review
+        </Button>
         <div className="flex bg-secondary/50 p-1 rounded-lg w-full sm:w-auto overflow-x-auto scrollbar-none">
           {(['all', 'pending', 'approved'] as const).map((f) => (
             <button
@@ -107,7 +148,17 @@ export default function AdminTestimonials() {
                       </Badge>
                     )}
                   </h4>
-                  <p className="text-xs text-muted-foreground">{t.role || "Player"} • {new Date(t.created_at).toLocaleDateString()}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t.role || "Player"} • {new Date(t.created_at).toLocaleDateString()}
+                    <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase transition-colors inline-flex items-center gap-1 ${
+                      t.source === 'google' 
+                        ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' 
+                        : 'bg-green-500/10 text-green-500 border border-green-500/20'
+                    }`}>
+                      {t.source === 'google' ? <Globe className="w-2 h-2" /> : <ShieldCheck className="w-2 h-2" />}
+                      {t.source || 'internal'}
+                    </span>
+                  </p>
                 </div>
                 <div className="flex items-center gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -148,6 +199,58 @@ export default function AdminTestimonials() {
           </div>
         )}
       </div>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader><DialogTitle>Add Manual Review</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Name *</Label>
+                <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Rahul S." />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Role / Sport</Label>
+                <Input value={newRole} onChange={e => setNewRole(e.target.value)} placeholder="e.g. Cricket Player" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Source</Label>
+              <Select value={newSource} onValueChange={setNewSource}>
+                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="internal">Direct Website</SelectItem>
+                  <SelectItem value="google">Google Review</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Star Rating</Label>
+              <Select value={newRating} onValueChange={setNewRating}>
+                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[5,4,3,2,1].map(s => <SelectItem key={s} value={s.toString()}>{s} Stars</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Review Text *</Label>
+              <textarea 
+                value={newText} 
+                onChange={e => setNewText(e.target.value)} 
+                className="w-full min-h-[100px] bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+                placeholder="Paste the Google review here..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddReview} disabled={isSubmitting} className="bg-gradient-turf text-primary-foreground shadow-turf">
+              {isSubmitting ? "Adding..." : "Add Approved Review"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
