@@ -24,6 +24,15 @@ router.get('/', async (req, res) => {
       SELECT s.*, 
         CASE 
           WHEN b.id IS NOT NULL THEN false 
+          WHEN t.physical_resource_id IS NOT NULL AND EXISTS (
+            SELECT 1 FROM slots s2
+            JOIN bookings b2 ON b2.slot_id = s2.id AND b2.status != 'cancelled'
+            JOIN turfs t2 ON s2.turf_id = t2.id
+            WHERE t2.physical_resource_id = t.physical_resource_id
+            AND s2.date = s.date
+            AND s2.start_time = s.start_time
+            AND s2.id != s.id
+          ) THEN false
           WHEN EXISTS (
             SELECT 1 FROM table_sessions ts 
             WHERE ts.turf_id = s.turf_id 
@@ -37,6 +46,15 @@ router.get('/', async (req, res) => {
         u.name as user_name, u.phone, b.payment_status,
         CASE 
           WHEN b.id IS NOT NULL THEN true 
+          WHEN t.physical_resource_id IS NOT NULL AND EXISTS (
+            SELECT 1 FROM slots s2
+            JOIN bookings b2 ON b2.slot_id = s2.id AND b2.status != 'cancelled'
+            JOIN turfs t2 ON s2.turf_id = t2.id
+            WHERE t2.physical_resource_id = t.physical_resource_id
+            AND s2.date = s.date
+            AND s2.start_time = s.start_time
+            AND s2.id != s.id
+          ) THEN true
           WHEN EXISTS (
             SELECT 1 FROM table_sessions ts 
             WHERE ts.turf_id = s.turf_id 

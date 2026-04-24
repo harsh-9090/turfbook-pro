@@ -114,6 +114,18 @@ server.listen(PORT, async () => {
     await pool.query(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS google_rating NUMERIC(2,1) DEFAULT 4.6`);
     await pool.query(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS google_reviews_count INTEGER DEFAULT 150`);
     await pool.query(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS google_maps_url TEXT DEFAULT 'https://www.google.com/search?q=Akola+Sports+Arena+reviews'`);
+    
+    // Shared Resource Management
+    await pool.query(`ALTER TABLE turfs ADD COLUMN IF NOT EXISTS physical_resource_id INTEGER`);
+    
+    // Auto-map existing Cricket and Football to shared resource ID 1 if they exist
+    await pool.query(`
+      UPDATE turfs 
+      SET physical_resource_id = 1 
+      WHERE (facility_type ILIKE 'cricket' OR facility_type ILIKE 'football')
+      AND physical_resource_id IS NULL
+    `);
+
     // Ensure at least one setting row exists
     await pool.query(`INSERT INTO site_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
     

@@ -14,9 +14,22 @@ router.post('/', bookingLimiter, async (req, res) => {
     const slotResult = await pool.query('SELECT * FROM slots WHERE id = $1 AND is_available = true', [slot_id]);
     if (slotResult.rows.length === 0) return res.status(400).json({ error: 'Slot not available' });
 
-    // Ensure slot doesn't already have an active booking
-    const activeBookingResult = await pool.query("SELECT id FROM bookings WHERE slot_id = $1 AND status != 'cancelled'", [slot_id]);
-    if (activeBookingResult.rows.length > 0) return res.status(400).json({ error: 'Slot is already booked by another user' });
+    // Ensure slot doesn't already have an active booking (considering shared physical resources)
+    const activeBookingResult = await pool.query(`
+      SELECT b.id FROM bookings b
+      JOIN slots s_check ON b.slot_id = s_check.id
+      JOIN turfs t_check ON s_check.turf_id = t_check.id
+      JOIN slots s_orig ON s_orig.id = $1
+      JOIN turfs t_orig ON s_orig.turf_id = t_orig.id
+      WHERE b.status != 'cancelled'
+      AND s_check.date = s_orig.date
+      AND s_check.start_time = s_orig.start_time
+      AND (
+        s_check.id = s_orig.id 
+        OR (t_orig.physical_resource_id IS NOT NULL AND t_orig.physical_resource_id = t_check.physical_resource_id)
+      )
+    `, [slot_id]);
+    if (activeBookingResult.rows.length > 0) return res.status(400).json({ error: 'This time slot is already booked on this physical turf' });
 
     const slot = slotResult.rows[0];
 
@@ -25,14 +38,22 @@ router.post('/', bookingLimiter, async (req, res) => {
     const facilityType = turfResult.rows[0].facility_type;
 
     const overlayTournament = await pool.query(`
-      SELECT id FROM tournaments 
-      WHERE is_active = true 
-      AND sport_type ILIKE $1 
-      AND start_date::DATE <= $2::DATE 
-      AND end_date::DATE >= $2::DATE
-    `, [facilityType, slot.date]);
-
-    if (overlayTournament.rows.length > 0) return res.status(400).json({ error: 'Turf is closed due to an active tournament on this date' });
+      SELECT trn.id FROM tournaments trn
+      JOIN turfs tf_orig ON tf_orig.id = $1
+      WHERE trn.is_active = true 
+      AND (
+        trn.sport_type ILIKE tf_orig.facility_type
+        OR EXISTS (
+          SELECT 1 FROM turfs tf_shared 
+          WHERE tf_shared.physical_resource_id = tf_orig.physical_resource_id
+          AND tf_shared.facility_type ILIKE trn.sport_type
+          AND tf_orig.physical_resource_id IS NOT NULL
+        )
+      )
+      AND trn.start_date::DATE <= $2::DATE 
+      AND trn.end_date::DATE >= $2::DATE
+    `, [slot.turf_id, slot.date]);
+    if (overlayTournament.rows.length > 0) return res.status(400).json({ error: 'This turf is currently reserved for a tournament event' });
 
 
     // Create or find user
