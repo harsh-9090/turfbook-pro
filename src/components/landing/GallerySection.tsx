@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "@/lib/api";
 
 interface GalleryImage {
@@ -12,6 +13,27 @@ interface GalleryImage {
 export default function GallerySection() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  const showNext = useCallback(() => {
+    setSelectedIndex(prev => (prev !== null ? (prev + 1) % images.length : null));
+  }, [images.length]);
+
+  const showPrev = useCallback(() => {
+    setSelectedIndex(prev => (prev !== null ? (prev - 1 + images.length) % images.length : null));
+  }, [images.length]);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (selectedIndex === null) return;
+    if (e.key === "ArrowRight") showNext();
+    if (e.key === "ArrowLeft") showPrev();
+    if (e.key === "Escape") setSelectedIndex(null);
+  }, [selectedIndex, showNext, showPrev]);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   useEffect(() => {
     api.get("/gallery")
@@ -65,13 +87,66 @@ export default function GallerySection() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
-              className={`overflow-hidden rounded-2xl ${img.span_type === 'large' ? 'md:col-span-2 md:row-span-2' : ''}`}
+              className={`overflow-hidden rounded-2xl cursor-zoom-in ${img.span_type === 'large' ? 'md:col-span-2 md:row-span-2' : ''}`}
+              onClick={() => setSelectedIndex(i)}
             >
               <img src={img.cloudinary_url} alt={img.alt_text} loading="lazy"
                 className="w-full h-full object-cover min-h-[160px] hover:scale-105 transition-transform duration-500" />
             </motion.div>
           ))}
         </div>
+
+        <AnimatePresence>
+          {selectedIndex !== null && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 backdrop-blur-xl p-4 md:p-10"
+            >
+              <button 
+                onClick={() => setSelectedIndex(null)}
+                className="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-[110]"
+              >
+                <X size={24} />
+              </button>
+
+              <button 
+                onClick={(e) => { e.stopPropagation(); showPrev(); }}
+                className="absolute left-4 md:left-10 top-1/2 -translate-y-1/2 p-4 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all z-[110] active:scale-90"
+              >
+                <ChevronLeft size={32} />
+              </button>
+
+              <button 
+                onClick={(e) => { e.stopPropagation(); showNext(); }}
+                className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 p-4 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all z-[110] active:scale-90"
+              >
+                <ChevronRight size={32} />
+              </button>
+
+              <motion.div
+                key={selectedIndex}
+                initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.9, x: -20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <img 
+                  src={images[selectedIndex].cloudinary_url} 
+                  alt={images[selectedIndex].alt_text}
+                  className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+                />
+                
+                <div className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 text-white/50 text-sm font-medium">
+                  {selectedIndex + 1} / {images.length}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );
