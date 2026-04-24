@@ -25,6 +25,7 @@ import AdminTournaments from "./pages/admin/AdminTournaments";
 import AdminAdStudio from "./pages/admin/AdminAdStudio";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminStaff from "./pages/admin/AdminStaff";
+import StaffLogin from "./pages/StaffLogin";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/book" element={<BookingPage />} />
             <Route path="/tournaments/:id" element={<TournamentDetails />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/staff-login" element={<StaffLogin />} />
             <Route
               path="/admin"
               element={

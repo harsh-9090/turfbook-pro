@@ -129,6 +129,17 @@ export default function AdminLogin() {
               Default: {loginMode === "password" ? "admin123" : "PIN 1234"}
             </p> */}
           </form>
+ 
+          <div className="mt-8 pt-6 border-t border-border/50 text-center">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black mb-3 italic">Are you a staff member?</p>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/admin/staff-login")}
+              className="w-full border-primary/20 hover:bg-primary/5 text-primary text-xs font-bold gap-2"
+            >
+              <ArrowRightLeft size={14} /> Switch to Staff Entry
+            </Button>
+          </div>
         </div>
       </motion.div>
     </div>

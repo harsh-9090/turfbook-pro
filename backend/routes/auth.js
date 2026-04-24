@@ -16,6 +16,16 @@ async function logAction(adminId, action, details) {
   }
 }
 
+// GET /profiles - Public list of staff for PIN login selection
+router.get('/staff-profiles', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, name FROM users WHERE role = $1 ORDER BY name ASC', ['staff']);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -131,6 +141,30 @@ router.put('/pin', authMiddleware, async (req, res) => {
 
     await logAction(req.user.id, 'CHANGE_PIN', '4-digit PIN updated successfully');
     res.json({ message: 'PIN updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Staff Login via PIN (Selection flow)
+router.post('/login-staff-pin', loginLimiter, async (req, res) => {
+  try {
+    const { id, pin } = req.body;
+    if (!id || !pin) return res.status(400).json({ error: 'Staff ID and PIN required' });
+
+    const result = await pool.query('SELECT * FROM users WHERE id = $1 AND role = $2', [id, 'staff']);
+    const user = result.rows[0];
+    if (!user || !user.pin_hash) return res.status(401).json({ error: 'Invalid staff member or PIN not set' });
+
+    const valid = await bcrypt.compare(pin, user.pin_hash);
+    if (!valid) return res.status(401).json({ error: 'Invalid PIN' });
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role, allowed_tabs: user.allowed_tabs || [], token_version: user.token_version }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '24h' }
+    );
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, allowed_tabs: user.allowed_tabs || [] } });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }

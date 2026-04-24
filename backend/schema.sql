@@ -13,8 +13,10 @@ CREATE TABLE users (
   email VARCHAR(255) UNIQUE,
   phone VARCHAR(20) NOT NULL,
   password_hash VARCHAR(255),
-  role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'admin')),
-  created_at TIMESTAMP DEFAULT NOW()
+  role TEXT CHECK (role IN ('user', 'admin', 'staff')) NOT NULL DEFAULT 'user',
+  allowed_tabs TEXT[] DEFAULT '{}',
+  pin_hash TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Turfs table

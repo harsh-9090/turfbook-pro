@@ -65,6 +65,7 @@ export default function AdminStaff() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [pin, setPin] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [selectedTabs, setSelectedTabs] = useState<string[]>([]);
 
@@ -79,7 +80,7 @@ export default function AdminStaff() {
 
   const openAdd = () => {
     setEditingStaff(null);
-    setName(""); setEmail(""); setPhone(""); setPassword("");
+    setName(""); setEmail(""); setPhone(""); setPassword(""); setPin("");
     setSelectedTabs(["/admin"]);
     setIsDialogOpen(true);
   };
@@ -90,6 +91,7 @@ export default function AdminStaff() {
     setEmail(s.email);
     setPhone(s.phone);
     setPassword("");
+    setPin("");
     setSelectedTabs(s.allowed_tabs || []);
     setIsDialogOpen(true);
   };
@@ -109,11 +111,14 @@ export default function AdminStaff() {
       if (editingStaff) {
         await api.patch(`/staff/${editingStaff.id}`, {
           name, email, phone, allowed_tabs: selectedTabs,
-          ...(password ? { password } : {})
+          ...(password ? { password } : {}),
+          ...(pin ? { pin } : {})
         });
         toast.success("Staff updated!");
       } else {
-        await api.post("/staff", { name, email, phone, password, allowed_tabs: selectedTabs });
+        if (!pin) return toast.error("PIN is required for new staff");
+        if (!/^\d{6}$/.test(pin)) return toast.error("PIN must be 6 digits");
+        await api.post("/staff", { name, email, phone, password, pin, allowed_tabs: selectedTabs });
         toast.success("Staff account created!");
       }
       setIsDialogOpen(false);
@@ -160,6 +165,11 @@ export default function AdminStaff() {
                 <Shield className="w-5 h-5 text-primary" />
               </div>
               <div className="flex gap-1">
+                {(s as any).has_pin && (
+                  <Badge variant="outline" className="h-8 px-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[9px] uppercase font-black tracking-tighter">
+                    PIN Active
+                  </Badge>
+                )}
                 <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => openEdit(s)}>
                   <Edit3 className="w-4 h-4" />
                 </Button>
@@ -214,15 +224,28 @@ export default function AdminStaff() {
               <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Email</Label>
               <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="staff@email.com" type="email" />
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                {editingStaff ? "New Password (leave blank to keep)" : "Password"}
-              </Label>
-              <div className="relative">
-                <Input value={password} onChange={e => setPassword(e.target.value)} placeholder={editingStaff ? "••••••••" : "Create password"} type={showPassword ? "text" : "password"} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                  {editingStaff ? "New Password (Optional)" : "Password"}
+                </Label>
+                <div className="relative">
+                  <Input value={password} onChange={e => setPassword(e.target.value)} placeholder={editingStaff ? "••••••••" : "Create password"} type={showPassword ? "text" : "password"} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                  {editingStaff ? "New 6-Digit PIN (Optional)" : "6-Digit PIN"}
+                </Label>
+                <Input 
+                  value={pin} 
+                  onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))} 
+                  placeholder={editingStaff ? "••••••" : "123456"} 
+                  maxLength={6}
+                />
               </div>
             </div>
 

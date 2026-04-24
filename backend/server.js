@@ -108,8 +108,7 @@ server.listen(PORT, async () => {
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS allowed_tabs TEXT[] DEFAULT '{}'`);
     await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS platform_fee DECIMAL(10, 2) DEFAULT 0.00`);
     // Site settings expansion
-    await pool.query(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS gateway_percent DECIMAL(5, 2) DEFAULT 2.00`);
-    await pool.query(`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS gst_percent DECIMAL(5, 2) DEFAULT 18.00`);
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pin_hash TEXT`);
     // Ensure at least one setting row exists
     await pool.query(`INSERT INTO site_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
     
