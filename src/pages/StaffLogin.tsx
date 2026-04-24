@@ -93,21 +93,21 @@ export default function StaffLogin() {
                 <p className="text-sm text-muted-foreground mt-1">Select your profile to continue</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pb-8">
+              <div className="flex flex-wrap justify-center gap-4 pb-8">
                 {profiles.map((profile) => (
                   <button
                     key={profile.id}
                     onClick={() => setSelectedProfile(profile)}
-                    className="flex flex-col items-center justify-center p-6 rounded-2xl bg-card border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 group shadow-sm active:scale-95"
+                    className="flex flex-col items-center justify-center p-6 w-[160px] rounded-2xl bg-card border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 group shadow-sm active:scale-95"
                   >
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <span className="font-bold text-lg">{profile.name.charAt(0)}</span>
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+                      <span className="font-bold text-xl">{profile.name.charAt(0)}</span>
                     </div>
-                    <span className="font-heading font-medium text-sm text-foreground">{profile.name}</span>
+                    <span className="font-heading font-bold text-sm text-foreground group-hover:text-primary transition-colors">{profile.name}</span>
                   </button>
                 ))}
                 {profiles.length === 0 && (
-                  <div className="col-span-2 text-center py-8 text-muted-foreground italic border border-dashed rounded-2xl border-border/50">
+                  <div className="w-full text-center py-8 text-muted-foreground italic border border-dashed rounded-2xl border-border/50">
                     No staff profiles found.
                   </div>
                 )}
