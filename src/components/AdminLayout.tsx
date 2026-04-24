@@ -5,24 +5,47 @@ import { LayoutDashboard, Calendar, CalendarDays, Settings, LogOut, BarChart3, M
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 
-const allSidebarLinks = [
-  { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
-  { name: "Calendar", path: "/admin/calendar", icon: CalendarDays },
-  { name: "Bookings", path: "/admin/bookings", icon: Calendar },
-  { name: "Daily Slots", path: "/admin/slots", icon: Settings },
-  { name: "Live Tables", path: "/admin/tables", icon: Timer },
-  { name: "Weekly Schedule", path: "/admin/schedules", icon: Clock },
-  { name: "Sports Events", path: "/admin/facilities", icon: Layers },
-  { name: "Tournaments", path: "/admin/tournaments", icon: Trophy },
-  { name: "Pricing Plans", path: "/admin/pricing", icon: DollarSign },
-  { name: "Gallery", path: "/admin/gallery", icon: LucideImage },
-  { name: "Testimonials", path: "/admin/testimonials", icon: MessageSquare },
-  { name: "Ad Studio", path: "/admin/ads", icon: Megaphone },
-  { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
-  { name: "Audit Logs", path: "/admin/audit-logs", icon: Shield },
-  { name: "Staff Management", path: "/admin/staff", icon: Users, adminOnly: true },
-  { name: "Settings Hub", path: "/admin/settings", icon: Settings },
+const sidebarGroups = [
+  {
+    title: "Overview",
+    links: [
+      { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
+      { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
+    ]
+  },
+  {
+    title: "Management",
+    links: [
+      { name: "Calendar", path: "/admin/calendar", icon: CalendarDays },
+      { name: "Bookings", path: "/admin/bookings", icon: Calendar },
+      { name: "Daily Slots", path: "/admin/slots", icon: Settings },
+      { name: "Live Tables", path: "/admin/tables", icon: Timer },
+      { name: "Weekly Schedule", path: "/admin/schedules", icon: Clock },
+      { name: "Pricing Plans", path: "/admin/pricing", icon: DollarSign },
+      { name: "Sports Events", path: "/admin/facilities", icon: Layers },
+      { name: "Tournaments", path: "/admin/tournaments", icon: Trophy },
+    ]
+  },
+  {
+    title: "Marketing",
+    links: [
+      { name: "Gallery", path: "/admin/gallery", icon: LucideImage },
+      { name: "Testimonials", path: "/admin/testimonials", icon: MessageSquare },
+      { name: "Ad Studio", path: "/admin/ads", icon: Megaphone },
+    ]
+  },
+  {
+    title: "System",
+    links: [
+      { name: "Audit Logs", path: "/admin/audit-logs", icon: Shield },
+      { name: "Staff Management", path: "/admin/staff", icon: Users, adminOnly: true },
+      { name: "Settings Hub", path: "/admin/settings", icon: Settings },
+    ]
+  }
 ];
+
+// Flat list for layout titles and permission checks
+const allSidebarLinks = sidebarGroups.flatMap(g => g.links);
 
 function parseJwt(token: string): any {
   try {
@@ -72,14 +95,40 @@ export default function AdminLayout() {
           <span className="font-heading font-bold text-foreground truncate">Akola Sports Arena <span className="text-primary text-xs">{isAdmin ? "Admin" : "Staff"}</span></span>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto text-muted-foreground shrink-0"><X size={20} /></button>
         </div>
-        <nav className="p-4 space-y-1 flex-1 overflow-y-auto">
-          {sidebarLinks.map((link) => (
-            <Link key={link.path} to={link.path} onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === link.path ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}>
-              <link.icon className="w-4 h-4" />{link.name}
-            </Link>
-          ))}
+        <nav className="p-4 space-y-6 flex-1 overflow-y-auto scrollbar-thin">
+          {sidebarGroups.map((group) => {
+            const filteredLinks = group.links.filter(link =>
+              isAdmin || 
+              link.path === "/admin" || 
+              (!link.adminOnly && allowedTabs.includes(link.path))
+            );
+
+            if (filteredLinks.length === 0) return null;
+
+            return (
+              <div key={group.title} className="space-y-1">
+                <h4 className="px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 opacity-50">
+                  {group.title}
+                </h4>
+                {filteredLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 group ${location.pathname === link.path
+                      ? "bg-primary/10 text-primary shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+                      }`}
+                  >
+                    <link.icon className={`w-4 h-4 transition-transform duration-200 ${
+                      location.pathname === link.path ? "scale-110" : "group-hover:scale-110"
+                    }`} />
+                    <span>{link.name}</span>
+                  </Link>
+                ))}
+              </div>
+            )
+          })}
         </nav>
         <div className="p-4 border-t border-border/50">
           <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-muted-foreground hover:text-destructive">
