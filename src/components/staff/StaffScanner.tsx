@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import { ShieldCheck, XCircle, AlertCircle, RefreshCcw, User, Clock, Wallet, ArrowRightCircle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,27 +7,48 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { formatTime12Hour, cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 export default function StaffScanner() {
   const [scanResult, setScanResult] = useState<any>(null);
   const [isScanning, setIsScanning] = useState(true);
   const [loading, setLoading] = useState(false);
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const qrCodeInstance = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
-    if (isScanning && !scannerRef.current) {
-      scannerRef.current = new Html5QrcodeScanner(
-        "reader",
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        /* verbose= */ false
-      );
-      scannerRef.current.render(onScanSuccess, onScanFailure);
-    }
+    const startScanner = async () => {
+      if (!isScanning) return;
+      
+      try {
+        // Ensure reader element exists
+        const readerElement = document.getElementById("reader");
+        if (!readerElement) return;
+
+        const instance = new Html5Qrcode("reader");
+        qrCodeInstance.current = instance;
+        
+        await instance.start(
+          { facingMode: "environment" },
+          {
+            fps: 15,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+          },
+          onScanSuccess,
+          onScanFailure
+        );
+      } catch (err) {
+        console.error("Scanner failed to start", err);
+      }
+    };
+
+    startScanner();
 
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(err => console.error("Scanner cleanup failed", err));
-        scannerRef.current = null;
+      if (qrCodeInstance.current && qrCodeInstance.current.isScanning) {
+        qrCodeInstance.current.stop().then(() => {
+          qrCodeInstance.current = null;
+        }).catch(err => console.error("Scanner stop failure", err));
       }
     };
   }, [isScanning]);
@@ -35,9 +56,13 @@ export default function StaffScanner() {
   async function onScanSuccess(decodedText: string) {
     if (loading) return;
     setLoading(true);
-    // Pause scanning after success
-    if (scannerRef.current) {
-      scannerRef.current.pause();
+
+    if (qrCodeInstance.current && qrCodeInstance.current.isScanning) {
+      try {
+        await qrCodeInstance.current.stop();
+      } catch (err) {
+        console.error("Stop error", err);
+      }
     }
 
     try {
@@ -46,14 +71,14 @@ export default function StaffScanner() {
       setIsScanning(false);
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Invalid or Expired QR");
-      if (scannerRef.current) scannerRef.current.resume();
+      setIsScanning(true);
     } finally {
       setLoading(false);
     }
   }
 
   function onScanFailure(error: any) {
-    // Silently continue scanning
+    // Silently continue
   }
 
   const handleCheckIn = async () => {
@@ -76,7 +101,6 @@ export default function StaffScanner() {
     try {
       const res = await api.post(`/bookings/${scanResult.booking.id}/extend`);
       toast.success(res.data.message || "Booking Extended!");
-      // Optionally refresh scan result or reset
       resetScanner();
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Extension failed: Next slot might be booked.");
@@ -102,13 +126,29 @@ export default function StaffScanner() {
       </div>
 
       {isScanning ? (
-        <Card className="overflow-hidden border-2 border-primary/20 shadow-xl bg-black">
+        <Card className="overflow-hidden border-2 border-primary/20 shadow-2xl bg-black relative">
           <CardContent className="p-0">
              <div id="reader" className="w-full aspect-square" />
+             
+             {/* Custom Scanning Overlay */}
+             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="w-[250px] h-[250px] border-2 border-primary rounded-3xl relative">
+                   <div className="absolute -top-2 -left-2 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-xl" />
+                   <div className="absolute -top-2 -right-2 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-xl" />
+                   <div className="absolute -bottom-2 -left-2 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-xl" />
+                   <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-xl" />
+                   
+                   <motion.div 
+                     animate={{ top: ['10%', '90%', '10%'] }}
+                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                     className="absolute left-2 right-2 h-1 bg-primary shadow-[0_0_15px_rgba(16,185,129,0.8)]" 
+                   />
+                </div>
+             </div>
           </CardContent>
-          <div className="p-4 bg-primary/5 flex items-center justify-center gap-2">
+          <div className="p-4 bg-primary/5 border-t border-white/5 flex items-center justify-center gap-2">
              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-             <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Point camera at player pass</span>
+             <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Scanning live...</span>
           </div>
         </Card>
       ) : scanResult && (
@@ -147,36 +187,36 @@ export default function StaffScanner() {
 
                 <div className="grid grid-cols-2 gap-6 pt-6 border-t border-border/50">
                    <div className="space-y-4">
-                      <div className="flex items-start gap-3">
-                         <User className="w-4 h-4 text-primary mt-1" />
-                         <div>
+                      <div className="flex items-start gap-1 sm:gap-3">
+                         <User className="w-4 h-4 text-primary mt-1 shrink-0" />
+                         <div className="min-w-0">
                             <p className="text-[10px] font-bold uppercase text-muted-foreground">Customer</p>
-                            <p className="font-bold">{scanResult.booking.customer_name}</p>
+                            <p className="font-bold truncate">{scanResult.booking.customer_name}</p>
                             <p className="text-xs text-muted-foreground">{scanResult.booking.phone}</p>
                          </div>
                       </div>
-                      <div className="flex items-start gap-3">
-                         <MapPin className="w-4 h-4 text-primary mt-1" />
-                         <div>
+                      <div className="flex items-start gap-1 sm:gap-3">
+                         <MapPin className="w-4 h-4 text-primary mt-1 shrink-0" />
+                         <div className="min-w-0">
                             <p className="text-[10px] font-bold uppercase text-muted-foreground">Venue</p>
-                            <p className="font-bold">{scanResult.booking.facility_name} {scanResult.booking.table_number > 0 ? `#${scanResult.booking.table_number}` : ''}</p>
+                            <p className="font-bold truncate">{scanResult.booking.facility_name} {scanResult.booking.table_number > 0 ? `#${scanResult.booking.table_number}` : ''}</p>
                          </div>
                       </div>
                    </div>
                    <div className="space-y-4">
-                      <div className="flex items-start gap-3">
-                         <Clock className="w-4 h-4 text-primary mt-1" />
-                         <div>
+                      <div className="flex items-start gap-1 sm:gap-3">
+                         <Clock className="w-4 h-4 text-primary mt-1 shrink-0" />
+                         <div className="min-w-0">
                             <p className="text-[10px] font-bold uppercase text-muted-foreground">Timing</p>
-                            <p className="font-bold">{formatTime12Hour(scanResult.booking.start_time)} - {formatTime12Hour(scanResult.booking.end_time)}</p>
+                            <p className="font-bold whitespace-nowrap text-xs sm:text-sm">{formatTime12Hour(scanResult.booking.start_time)} - {formatTime12Hour(scanResult.booking.end_time)}</p>
                          </div>
                       </div>
-                      <div className="flex items-start gap-3">
-                         <Wallet className="w-4 h-4 text-primary mt-1" />
-                         <div>
+                      <div className="flex items-start gap-1 sm:gap-3">
+                         <Wallet className="w-4 h-4 text-primary mt-1 shrink-0" />
+                         <div className="min-w-0">
                             <p className="text-[10px] font-bold uppercase text-muted-foreground">Payment</p>
-                            <Badge variant={scanResult.booking.payment_status === 'paid' ? 'default' : 'destructive'} className="mt-1">
-                               {scanResult.booking.payment_status === 'paid' ? 'Full Paid' : `Pending ₹${scanResult.booking.remaining_amount}`}
+                            <Badge variant={scanResult.booking.payment_status === 'paid' ? 'default' : 'destructive'} className="mt-1 text-[10px] px-1 py-0 h-auto">
+                               {scanResult.booking.payment_status === 'paid' ? 'Full' : `Pending ₹${scanResult.booking.remaining_amount}`}
                             </Badge>
                          </div>
                       </div>
@@ -197,7 +237,7 @@ export default function StaffScanner() {
                  </p>
               )}
               {!scanResult.timing.isExpired && (
-                 <Button variant="secondary" onClick={handleExtend} className="h-12">
+                 <Button variant="secondary" onClick={handleExtend} disabled={loading} className="h-12 font-bold">
                      Extend Booking (+1 Hour)
                  </Button>
               )}
