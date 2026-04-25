@@ -261,7 +261,7 @@ export default function BookingPage() {
             });
 
             if (verifyRes.data.success) {
-              setConfirmedBooking(verifyRes.data.booking || { id: bookingId, qr_token: 'fetching...' });
+              setConfirmedBooking(verifyRes.data.booking);
               // Trigger confetti
               confetti({
                 particleCount: 150,
@@ -582,13 +582,20 @@ export default function BookingPage() {
                         </div>
                       </div>
 
-                      <div className="bg-white p-4 rounded-2xl inline-block mb-6 shadow-inner ring-1 ring-black/5">
-                        <QRCodeSVG 
-                          value={confirmedBooking?.qr_token || "pending"} 
-                          size={160}
-                          level="H"
-                          includeMargin={false}
-                        />
+                      <div className="bg-white p-4 rounded-2xl inline-block mb-6 shadow-inner ring-1 ring-black/5 min-w-[192px] min-h-[192px] flex items-center justify-center">
+                        {confirmedBooking?.qr_token ? (
+                          <QRCodeSVG 
+                            value={confirmedBooking.qr_token} 
+                            size={160}
+                            level="H"
+                            includeMargin={false}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-2">
+                             <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Generating Pass...</p>
+                          </div>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 text-left border-t border-dashed border-border pt-6 mt-2">

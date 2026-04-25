@@ -160,9 +160,16 @@ router.post('/verify', paymentLimiter, async (req, res) => {
         await cache.del('admin:stats');
         await cache.del('analytics:dashboard');
         
+        // Fetch the updated booking with everything (including qr_token)
+        const updatedBookingResult = await client.query('SELECT * FROM bookings WHERE id = $1', [booking_id]);
+        
         req.app.get('io').emit('booking_updated');
         
-        res.json({ success: true, message: 'Payment verified and booking confirmed' });
+        res.json({ 
+          success: true, 
+          message: 'Payment verified and booking confirmed',
+          booking: updatedBookingResult.rows[0]
+        });
       } catch (e) {
         await client.query('ROLLBACK');
         throw e;

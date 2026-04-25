@@ -266,6 +266,13 @@ router.get('/my-bookings/:phone', async (req, res) => {
 router.get('/verify-qr/:token', async (req, res) => {
   try {
     const { token } = req.params;
+
+    // Validate UUID format before querying to avoid "invalid syntax for type uuid" error
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(token)) {
+      return res.status(400).json({ error: 'Invalid or Malformed QR Token' });
+    }
+
     const result = await pool.query(`
       SELECT b.id, b.status, b.payment_status, b.paid_amount, b.remaining_amount, b.checked_in_at,
         s.date, s.start_time, s.end_time, s.price as total_amount, s.table_number,
