@@ -147,17 +147,41 @@ router.post('/', authMiddleware, async (req, res) => {
   }
 });
 
-// Admin: Update table count
+// Admin: Update table count with Safety Lock
 router.patch('/:id/tables', authMiddleware, async (req, res) => {
   try {
     const { table_count } = req.body;
+    const { id } = req.params;
     if (!table_count || table_count < 1) return res.status(400).json({ error: 'table_count must be at least 1' });
-    const result = await pool.query('UPDATE turfs SET table_count = $1 WHERE id = $2 RETURNING *', [table_count, req.params.id]);
 
+    // SAFETY LOCK: Check if there are any active future bookings on tables that would be removed
+    const conflictRes = await pool.query(`
+      SELECT b.id, s.date, s.start_time, s.table_number
+      FROM bookings b
+      JOIN slots s ON b.slot_id = s.id
+      WHERE s.turf_id = $1 
+      AND s.table_number > $2 
+      AND s.date >= CURRENT_DATE 
+      AND b.status != 'cancelled'
+    `, [id, table_count]);
+
+    if (conflictRes.rows.length > 0) {
+      const first = conflictRes.rows[0];
+      return res.status(400).json({ 
+        error: `Cannot reduce tables to ${table_count}. Table #${first.table_number} already has an active booking on ${first.date.toLocaleDateString()}.` 
+      });
+    }
+
+    const result = await pool.query('UPDATE turfs SET table_count = $1 WHERE id = $2 RETURNING *', [table_count, id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Facility not found' });
+
+    // Invalidate caches
     await cache.del('facilities:all');
     await cache.delPattern('facilities:tables:*');
+    await cache.delPattern('slots:*');
 
     req.app.get('io').emit('facility_updated');
+    req.app.get('io').emit('slot_updated');
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Server error: ' + err.message });
