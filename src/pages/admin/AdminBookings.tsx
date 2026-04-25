@@ -2,22 +2,26 @@ import { useState, useEffect } from "react";
 import { getFacilityLabel } from "@/lib/mock-data";
 import api from "@/lib/api";
 import { useSocket } from "@/hooks/useSocket";
-import { format } from "date-fns";
+import { format, parse, isAfter, isSameDay, startOfDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, XCircle, Plus, CheckCircle2, IndianRupee, Smartphone, Wallet, Banknote } from "lucide-react";
+import { Search, XCircle, Plus, CheckCircle2, IndianRupee, Smartphone, Wallet, Banknote, ArrowUp, ArrowDown, Filter } from "lucide-react";
 import { formatTime12Hour } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { parse, isAfter } from "date-fns";
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [facilityFilter, setFacilityFilter] = useState<string>("all");
   const [facilityTypes, setFacilityTypes] = useState<string[]>([]);
+  
+  // Advanced Filters
+  const [timelineFilter, setTimelineFilter] = useState<'all' | 'today' | 'upcoming' | 'past'>('all');
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'pending'>('all');
+  const [sortConfig, setSortConfig] = useState<{ key: 'date' | 'amount' | 'customer'; direction: 'asc' | 'desc' | null }>({ key: 'date', direction: 'desc' });
 
   useEffect(() => {
     api.get('/facilities').then(res => {
@@ -94,12 +98,9 @@ export default function AdminBookings() {
         get status() {
           if (this.rawStatus === 'cancelled') return 'cancelled';
           try {
-            // Correctly parse the 12-hour time format (h:mm a) to determine completion
             const slotEnd = parse(`${this.date} ${this.endTime}`, 'yyyy-MM-dd h:mm a', new Date());
             if (isAfter(new Date(), slotEnd)) return 'completed';
-          } catch (e) {
-            console.error("Status check failed:", e);
-          }
+          } catch (e) {}
           return this.rawStatus;
         }
       }));
@@ -115,11 +116,54 @@ export default function AdminBookings() {
 
   useSocket('booking_updated', fetchBookings);
 
-  const filtered = bookings.filter((b) => {
-    const matchesSearch = b.customerName.toLowerCase().includes(search.toLowerCase()) || b.id.toLowerCase().includes(search.toLowerCase()) || b.date.includes(search);
-    const matchesFacility = facilityFilter === "all" || b.facility === facilityFilter;
-    return matchesSearch && matchesFacility;
-  });
+  const handleSort = (key: 'date' | 'amount' | 'customer') => {
+    setSortConfig(current => ({
+      key,
+      direction: current.key === key ? (current.direction === 'asc' ? 'desc' : 'asc') : 'desc'
+    }));
+  };
+
+  const filtered = bookings
+    .filter((b) => {
+      const matchesSearch = b.customerName.toLowerCase().includes(search.toLowerCase()) || 
+                           b.id.toLowerCase().includes(search.toLowerCase()) || 
+                           b.phone.includes(search);
+      
+      const matchesFacility = facilityFilter === "all" || b.facility === facilityFilter;
+      
+      const bDate = startOfDay(new Date(b.date));
+      const today = startOfDay(new Date());
+      
+      const matchesTimeline = timelineFilter === 'all' || 
+                             (timelineFilter === 'today' && isSameDay(bDate, today)) ||
+                             (timelineFilter === 'upcoming' && isAfter(bDate, today)) ||
+                             (timelineFilter === 'past' && b.status === "completed");
+
+      const matchesPayment = paymentFilter === 'all' || b.paymentStatus === paymentFilter;
+
+      return matchesSearch && matchesFacility && matchesTimeline && matchesPayment;
+    })
+    .sort((a, b) => {
+      if (!sortConfig.direction) return 0;
+      
+      let valA, valB;
+      if (sortConfig.key === 'date') {
+        const timeA = parse(`${a.date} ${a.startTime}`, 'yyyy-MM-dd h:mm a', new Date());
+        const timeB = parse(`${b.date} ${b.startTime}`, 'yyyy-MM-dd h:mm a', new Date());
+        valA = timeA.getTime();
+        valB = timeB.getTime();
+      } else if (sortConfig.key === 'amount') {
+        valA = a.amount;
+        valB = b.amount;
+      } else {
+        valA = a.customerName.toLowerCase();
+        valB = b.customerName.toLowerCase();
+      }
+
+      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
 
   const handleCancel = async (id: string) => {
     try {
@@ -147,38 +191,81 @@ export default function AdminBookings() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between gap-3">
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row justify-between gap-3">
           <div className="relative flex-1 sm:w-64 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, ID, date..." className="pl-10 bg-card border-border" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, phone, ID..." className="pl-10 bg-card border-border" />
           </div>
-          <div className="flex overflow-x-auto flex-nowrap gap-2 pb-1 scrollbar-hide">
-            {["all", ...facilityTypes].map((f) => (
-              <Button key={f} size="sm" variant={facilityFilter === f ? "default" : "outline"}
-                onClick={() => setFacilityFilter(f)}
-                className={facilityFilter === f ? "bg-gradient-turf text-primary-foreground" : ""}>
-                {f === "all" ? "All" : getFacilityLabel(f)}
+          <Button onClick={() => setShowModal(true)} className="bg-gradient-turf text-primary-foreground shadow-turf shrink-0">
+            <Plus className="w-4 h-4 mr-2" /> Book Slot
+          </Button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 text-sm bg-card/50 p-2 rounded-xl border border-border/50">
+          <div className="flex items-center gap-2 px-2 border-r border-border/50 mr-2">
+            <Filter className="w-4 h-4 text-primary" />
+            <span className="font-bold uppercase text-[10px] tracking-wider text-muted-foreground">Filters</span>
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground mr-1">Timeline:</span>
+            {['all', 'today', 'upcoming', 'past'].map((t: any) => (
+              <Button key={t} size="sm" variant={timelineFilter === t ? "secondary" : "ghost"}
+                onClick={() => setTimelineFilter(t)} className="h-7 px-3 capitalize text-xs">
+                {t}
               </Button>
             ))}
           </div>
+
+          <div className="w-[1px] h-4 bg-border/50" />
+
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground mr-1">Payment:</span>
+            {['all', 'paid', 'pending'].map((p: any) => (
+              <Button key={p} size="sm" variant={paymentFilter === p ? "secondary" : "ghost"}
+                onClick={() => setPaymentFilter(p)} className="h-7 px-3 capitalize text-xs">
+                {p}
+              </Button>
+            ))}
+          </div>
+
+          <div className="w-[1px] h-4 bg-border/50" />
+
+          <div className="flex items-center gap-1 flex-1 overflow-x-auto whitespace-nowrap scrollbar-hide">
+             <span className="text-muted-foreground mr-1">Facility:</span>
+             {["all", ...facilityTypes].map((f) => (
+                <Button key={f} size="sm" variant={facilityFilter === f ? "secondary" : "ghost"}
+                  onClick={() => setFacilityFilter(f)} className="h-7 px-3 text-xs">
+                  {f === "all" ? "All" : getFacilityLabel(f)}
+                </Button>
+              ))}
+          </div>
         </div>
-        <Button onClick={() => setShowModal(true)} className="bg-gradient-turf text-primary-foreground shadow-turf shrink-0">
-          <Plus className="w-4 h-4 mr-2" /> Book Slot
-        </Button>
       </div>
 
       <div className="hidden lg:block rounded-xl bg-card border border-border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border">
+            <tr className="border-b border-border bg-secondary/20">
               <th className="text-left px-5 py-3 text-muted-foreground font-medium">ID</th>
-              <th className="text-left px-5 py-3 text-muted-foreground font-medium">Customer</th>
+              <th className="text-left px-5 py-3 text-muted-foreground font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort('customer')}>
+                <div className="flex items-center gap-2">
+                   Customer {sortConfig.key === 'customer' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                </div>
+              </th>
               <th className="text-left px-5 py-3 text-muted-foreground font-medium text-center">Event</th>
-              <th className="text-left px-5 py-3 text-muted-foreground font-medium">Date</th>
-              <th className="text-left px-5 py-3 text-muted-foreground font-medium">Time</th>
+              <th className="text-left px-5 py-3 text-muted-foreground font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort('date')}>
+                <div className="flex items-center gap-2">
+                   Schedule {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                </div>
+              </th>
               <th className="text-left px-5 py-3 text-muted-foreground font-medium">Status</th>
-              <th className="text-left px-5 py-3 text-muted-foreground font-medium">Payment Details</th>
+              <th className="text-left px-5 py-3 text-muted-foreground font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort('amount')}>
+                <div className="flex items-center gap-2">
+                   Payment Details {sortConfig.key === 'amount' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                </div>
+              </th>
               <th className="text-left px-5 py-3 text-muted-foreground font-medium text-right">Actions</th>
             </tr>
           </thead>
@@ -193,8 +280,10 @@ export default function AdminBookings() {
                 <td className="px-5 py-3 text-center">
                   <Badge variant="outline" className="text-primary border-primary/20">{getFacilityLabel(b.facility)}</Badge>
                 </td>
-                <td className="px-5 py-3 text-foreground">{b.date}</td>
-                <td className="px-5 py-3 text-foreground font-medium">{b.startTime}–{b.endTime}</td>
+                <td className="px-5 py-3">
+                   <p className="text-foreground font-bold">{b.date}</p>
+                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight">{b.startTime}–{b.endTime}</p>
+                </td>
                 <td className="px-5 py-3">
                   <Badge variant={b.status === "completed" ? "default" : b.status === "confirmed" ? "default" : b.status === "cancelled" ? "destructive" : "secondary"}
                     className={b.status === "completed" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : b.status === "confirmed" ? "bg-primary/10 text-primary border-primary/20" : ""}>
@@ -248,7 +337,6 @@ export default function AdminBookings() {
         {filtered.length === 0 && <p className="text-center text-muted-foreground py-12">No bookings found</p>}
       </div>
 
-      {/* Mobile: Card View */}
       <div className="lg:hidden grid gap-4">
         {filtered.map((b) => (
           <div key={b.id} className="bg-card border border-border rounded-xl p-4 shadow-sm space-y-4">
@@ -266,9 +354,7 @@ export default function AdminBookings() {
             <div className="grid grid-cols-2 gap-3 text-xs border-y border-border/50 py-3">
               <div className="space-y-1">
                 <p className="text-muted-foreground uppercase text-[10px] font-bold tracking-wider">Schedule</p>
-                <p className="text-foreground flex items-center gap-1.5">
-                  <span className="font-medium">{b.date}</span>
-                </p>
+                <p className="text-foreground font-bold">{b.date}</p>
                 <p className="text-foreground font-semibold">
                   {b.startTime} – {b.endTime}
                 </p>
@@ -374,7 +460,6 @@ export default function AdminBookings() {
         </div>
       )}
 
-      {/* Complete Payment Dialog */}
       <Dialog open={payOpen} onOpenChange={setPayOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
