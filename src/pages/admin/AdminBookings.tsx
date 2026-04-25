@@ -94,9 +94,12 @@ export default function AdminBookings() {
         get status() {
           if (this.rawStatus === 'cancelled') return 'cancelled';
           try {
-            const slotEnd = parse(`${this.date} ${this.endTime}`, 'yyyy-MM-dd HH:mm', new Date());
+            // Correctly parse the 12-hour time format (h:mm a) to determine completion
+            const slotEnd = parse(`${this.date} ${this.endTime}`, 'yyyy-MM-dd h:mm a', new Date());
             if (isAfter(new Date(), slotEnd)) return 'completed';
-          } catch { }
+          } catch (e) {
+            console.error("Status check failed:", e);
+          }
           return this.rawStatus;
         }
       }));
