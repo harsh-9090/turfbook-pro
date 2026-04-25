@@ -121,4 +121,89 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/analytics/finance - Granular financial metrics
+router.get('/finance', authMiddleware, async (req, res) => {
+  try {
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // 1. Revenue Split metrics (Cash vs UPI vs Online)
+    // Method mapping: 'online' (Razorpay), 'upi' (Staff QR), 'cash' (Physical)
+    const splitQuery = `
+      SELECT 
+        COALESCE(SUM(amount), 0) as total_volume,
+        COALESCE(SUM(CASE WHEN method = 'cash' THEN amount ELSE 0 END), 0) as cash_revenue,
+        COALESCE(SUM(CASE WHEN method = 'upi' THEN amount ELSE 0 END), 0) as upi_revenue,
+        COALESCE(SUM(CASE WHEN method = 'online' THEN amount ELSE 0 END), 0) as online_revenue,
+        COALESCE(SUM(platform_fee), 0) as total_fees
+      FROM payments
+    `;
+    const splitResult = await pool.query(splitQuery);
+    const splitData = splitResult.rows[0];
+
+    // 2. Pending Dues (Money stay out on the field)
+    const duesQuery = `
+      SELECT COALESCE(SUM(remaining_amount), 0) as total_pending 
+      FROM bookings 
+      WHERE status = 'confirmed' AND payment_status != 'paid'
+    `;
+    const duesResult = await pool.query(duesQuery);
+    const pendingDues = duesResult.rows[0].total_pending;
+
+    // 3. Facility Performance
+    const facilityQuery = `
+      SELECT 
+        f.facility_type as type,
+        COALESCE(SUM(p.amount), 0) as revenue,
+        COUNT(DISTINCT b.id) as bookings
+      FROM turfs f
+      LEFT JOIN slots s ON s.turf_id = f.id
+      LEFT JOIN bookings b ON b.slot_id = s.id
+      LEFT JOIN payments p ON p.booking_id = b.id
+      GROUP BY f.facility_type
+    `;
+    const facilityResult = await pool.query(facilityQuery);
+
+    // 4. Daily Trends (Last 14 days)
+    const trendQuery = `
+      WITH dates AS (
+        SELECT generate_series(CURRENT_DATE - 13, CURRENT_DATE, '1 day')::date AS d
+      )
+      SELECT 
+        d.d as date,
+        COALESCE(SUM(p.amount), 0) as amount
+      FROM dates d
+      LEFT JOIN payments p ON p.created_at::date = d.d
+      GROUP BY d.d
+      ORDER BY d.d
+    `;
+    const trendResult = await pool.query(trendQuery);
+    const trendData = trendResult.rows.map(r => ({
+      date: format(new Date(r.date), 'MMM dd'),
+      amount: Number(r.amount)
+    }));
+
+    res.json({
+      summary: {
+        totalRevenue: Number(splitData.total_volume),
+        netRevenue: Number(splitData.total_volume) - Number(splitData.total_fees),
+        cash: Number(splitData.cash_revenue),
+        upi: Number(splitData.upi_revenue),
+        online: Number(splitData.online_revenue),
+        fees: Number(splitData.total_fees),
+        pendingDues: Number(pendingDues)
+      },
+      facilities: facilityResult.rows.map(r => ({
+        type: r.type,
+        revenue: Number(r.revenue),
+        bookings: Number(r.bookings)
+      })),
+      trends: trendData
+    });
+
+  } catch (err) {
+    console.error('Finance Analytics Error:', err);
+    res.status(500).json({ error: 'Failed to fetch financial data' });
+  }
+});
+
 module.exports = router;

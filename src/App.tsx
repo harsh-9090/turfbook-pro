@@ -16,6 +16,7 @@ import AdminSlots from "./pages/admin/AdminSlots";
 import AdminFacilities from "./pages/admin/AdminFacilities";
 import AdminSchedules from "./pages/admin/AdminSchedules";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminFinance from "./pages/admin/AdminFinance";
 import AdminTables from "./pages/admin/AdminTables";
 import AdminPricing from "./pages/admin/AdminPricing";
 import AdminGallery from "./pages/admin/AdminGallery";
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="schedules" element={<AdminSchedules />} />
               <Route path="tables" element={<AdminTables />} />
               <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="finance" element={<AdminFinance />} />
               <Route path="pricing" element={<AdminPricing />} />
               <Route path="gallery" element={<AdminGallery />} />
               <Route path="gallery" element={<AdminGallery />} />

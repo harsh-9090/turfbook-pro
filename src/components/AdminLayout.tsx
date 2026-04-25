@@ -13,6 +13,7 @@ const sidebarGroups = [
       { name: "Scan Entry", path: "/admin/scan", icon: QrCode },
       { name: "Live Presence", path: "/admin/presence", icon: Activity },
       { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
+      { name: "Finance", path: "/admin/finance", icon: DollarSign },
     ]
   },
   {
