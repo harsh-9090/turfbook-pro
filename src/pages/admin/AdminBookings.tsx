@@ -202,44 +202,50 @@ export default function AdminBookings() {
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 text-sm bg-card/50 p-2 rounded-xl border border-border/50">
-          <div className="flex items-center gap-2 px-2 border-r border-border/50 mr-2">
-            <Filter className="w-4 h-4 text-primary" />
-            <span className="font-bold uppercase text-[10px] tracking-wider text-muted-foreground">Filters</span>
-          </div>
-          
-          <div className="flex items-center gap-1">
-            <span className="text-muted-foreground mr-1">Timeline:</span>
-            {['all', 'today', 'upcoming', 'past'].map((t: any) => (
-              <Button key={t} size="sm" variant={timelineFilter === t ? "secondary" : "ghost"}
-                onClick={() => setTimelineFilter(t)} className="h-7 px-3 capitalize text-xs">
-                {t}
-              </Button>
-            ))}
-          </div>
+        {/* Row 2: Advanced Filters (Refined) */}
+        <div className="bg-card/30 rounded-2xl border border-border/50 overflow-hidden">
+          <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-border/50">
+            {/* Timeline Tabs */}
+            <div className="flex items-center p-2 gap-2 min-w-0">
+              <div className="flex bg-secondary/20 p-1 rounded-xl w-full sm:w-auto overflow-x-auto scrollbar-hide">
+                {['all', 'today', 'upcoming', 'past'].map((t: any) => (
+                  <button key={t} onClick={() => setTimelineFilter(t)}
+                    className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                      timelineFilter === t ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" : "text-muted-foreground hover:bg-secondary/50"
+                    }`}>
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          <div className="w-[1px] h-4 bg-border/50" />
+            {/* Payment Filter */}
+            <div className="flex items-center p-2 gap-2">
+              <div className="flex bg-secondary/20 p-1 rounded-xl w-full sm:w-auto">
+                {['all', 'paid', 'pending'].map((p: any) => (
+                  <button key={p} onClick={() => setPaymentFilter(p)}
+                    className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      paymentFilter === p ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : "text-muted-foreground hover:bg-secondary/50"
+                    }`}>
+                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          <div className="flex items-center gap-1">
-            <span className="text-muted-foreground mr-1">Payment:</span>
-            {['all', 'paid', 'pending'].map((p: any) => (
-              <Button key={p} size="sm" variant={paymentFilter === p ? "secondary" : "ghost"}
-                onClick={() => setPaymentFilter(p)} className="h-7 px-3 capitalize text-xs">
-                {p}
-              </Button>
-            ))}
-          </div>
-
-          <div className="w-[1px] h-4 bg-border/50" />
-
-          <div className="flex items-center gap-1 flex-1 overflow-x-auto whitespace-nowrap scrollbar-hide">
-             <span className="text-muted-foreground mr-1">Facility:</span>
-             {["all", ...facilityTypes].map((f) => (
-                <Button key={f} size="sm" variant={facilityFilter === f ? "secondary" : "ghost"}
-                  onClick={() => setFacilityFilter(f)} className="h-7 px-3 text-xs">
-                  {f === "all" ? "All" : getFacilityLabel(f)}
-                </Button>
-              ))}
+            {/* Facility Filter */}
+            <div className="flex items-center p-2 gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
+              <div className="flex gap-1">
+                {["all", ...facilityTypes].map((f) => (
+                  <button key={f} onClick={() => setFacilityFilter(f)}
+                    className={`px-4 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                      facilityFilter === f ? "border-primary bg-primary/10 text-primary" : "border-transparent text-muted-foreground hover:bg-secondary/50"
+                    }`}>
+                    {f === "all" ? "All Sports" : getFacilityLabel(f)}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
