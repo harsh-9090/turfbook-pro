@@ -17,10 +17,13 @@ export default function AdminSlots() {
   const [facility, setFacility] = useState<FacilityType>("");
   const [slots, setSlots] = useState<any[]>([]);
   const [facilityTypes, setFacilityTypes] = useState<string[]>([]);
+  const [facilities, setFacilities] = useState<any[]>([]);
+  const [selectedTable, setSelectedTable] = useState(1);
 
-  // Fetch available facility types
+  // Fetch available facility types and facilities list
   useEffect(() => {
     api.get('/facilities').then(res => {
+      setFacilities(res.data);
       const types = [...new Set(res.data.map((f: any) => f.facility_type))] as string[];
       setFacilityTypes(types);
       if (types.length > 0 && !facility) setFacility(types[0]);
@@ -31,10 +34,11 @@ export default function AdminSlots() {
     try {
       const response = await api.get(`/slots?date=${format(date, "yyyy-MM-dd")}`);
       const mapped = response.data
-        .filter((s: any) => s.facility_type === facility || !s.facility_type) // Filter logic based on response
+        .filter((s: any) => s.facility_type === facility || !s.facility_type)
         .map((s: any) => ({
           id: s.id,
           turf_id: s.turf_id,
+          tableNumber: s.table_number || 1,
           startTime: s.start_time ? formatTime12Hour(s.start_time) : "",
           endTime: s.end_time ? formatTime12Hour(s.end_time) : "",
           isAvailable: s.is_available,
@@ -165,12 +169,39 @@ export default function AdminSlots() {
       <div className="flex overflow-x-auto flex-nowrap gap-2 pb-1 scrollbar-hide">
         {facilityTypes.map((f) => (
           <Button key={f} size="sm" variant={facility === f ? "default" : "outline"}
-            onClick={() => handleFacilityChange(f)}
+            onClick={() => {
+              handleFacilityChange(f);
+              setSelectedTable(1);
+            }}
             className={facility === f ? "bg-gradient-turf text-primary-foreground" : ""}>
             {getFacilityLabel(f)}
           </Button>
         ))}
       </div>
+
+      {/* Table Selector (if multiple tables) */}
+      {(() => {
+        const activeFacility = facilities.find(f => f.facility_type === facility);
+        const count = activeFacility?.table_count || 1;
+        if (count <= 1) return null;
+        
+        return (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <span className="text-xs font-semibold text-muted-foreground mr-2 uppercase tracking-wider">Tables:</span>
+            {Array.from({ length: count }).map((_, i) => (
+              <Button 
+                key={i + 1} 
+                size="sm" 
+                variant={selectedTable === i + 1 ? "secondary" : "ghost"}
+                onClick={() => setSelectedTable(i + 1)}
+                className={selectedTable === i + 1 ? "bg-primary/20 text-primary border border-primary/20" : "text-muted-foreground hover:bg-muted"}
+              >
+                Table {i + 1}
+              </Button>
+            ))}
+          </div>
+        );
+      })()}
 
       <div className="flex flex-col gap-6">
         <div className="flex-1 w-full mt-4">
@@ -206,7 +237,7 @@ export default function AdminSlots() {
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-            {slots.map((slot) => {
+            {slots.filter(s => s.tableNumber === selectedTable).map((slot) => {
               // Mathematical Telemetry Logic
               const startDateTime = parse(`${format(selectedDate, "yyyy-MM-dd")} ${slot.startTime}`, "yyyy-MM-dd HH:mm", new Date());
               const endDateTime = parse(`${format(selectedDate, "yyyy-MM-dd")} ${slot.endTime}`, "yyyy-MM-dd HH:mm", new Date());
