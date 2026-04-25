@@ -22,7 +22,7 @@ export default function ContactSection() {
   useEffect(() => {
     api.get("/settings/contact")
       .then(res => setContact(res.data))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Accept either a raw URL or a full <iframe> snippet pasted by admin
@@ -56,7 +56,7 @@ export default function ContactSection() {
             Visit Our <span className="text-gradient-turf">Arena</span>
           </h2>
           <p className="text-muted-foreground">
-            Drop by, call, or send us a message — we'd love to host your next game.
+            Drop by, call, or send us a message - we'd love to host your next game.
           </p>
         </div>
 

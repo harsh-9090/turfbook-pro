@@ -46,11 +46,11 @@ export default function AdminSettings() {
   const [contactInstagram, setContactInstagram] = useState("");
   const [contactTwitter, setContactTwitter] = useState("");
   const [contactMapUrl, setContactMapUrl] = useState("");
-  
+
   // Financial Settings
   const [gatewayPercent, setGatewayPercent] = useState("2.0");
   const [gstPercent, setGstPercent] = useState("18.0");
-  
+
   const [savingContact, setSavingContact] = useState(false);
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export default function AdminSettings() {
       setContactMapUrl(res.data.map_embed_url || "");
       setGatewayPercent(res.data.gateway_percent?.toString() || "2.0");
       setGstPercent(res.data.gst_percent?.toString() || "18.0");
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -175,7 +175,7 @@ export default function AdminSettings() {
     <div className="max-w-5xl mx-auto animate-in fade-in duration-500">
       <div className="flex flex-col lg:flex-row gap-6">
 
-        {/* Profile Sidebar — sticky on desktop, horizontal card on mobile */}
+        {/* Profile Sidebar - sticky on desktop, horizontal card on mobile */}
         <div className="w-full lg:w-64 shrink-0">
           <div className="lg:sticky lg:top-6 space-y-4">
             <div className="bg-card border border-border rounded-2xl p-5 text-center">
@@ -213,11 +213,10 @@ export default function AdminSettings() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-all flex-1 justify-center ${
-                    activeTab === tab.id
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-all flex-1 justify-center ${activeTab === tab.id
                       ? "bg-card text-primary shadow-sm border border-border"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   {tab.icon}
                   <span>{tab.label}</span>
@@ -395,7 +394,7 @@ export default function AdminSettings() {
               </section>
             </div>
           )}
- 
+
           {/* ============ FINANCIALS TAB ============ */}
           {activeTab === "financials" && (
             <div className="space-y-6 animate-in fade-in duration-300">
@@ -407,38 +406,38 @@ export default function AdminSettings() {
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Configure the additional fees charged to users during checkout to cover payment gateway costs and taxes.
                 </p>
- 
+
                 <form onSubmit={handleSaveContact} className="space-y-6">
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Gateway Charge (%)</label>
                       <div className="relative">
-                        <Input 
-                          type="text" 
-                          value={gatewayPercent} 
-                          onChange={(e) => setGatewayPercent(e.target.value.replace(/[^0-9.]/g, ""))} 
-                          className="bg-background font-bold text-lg" 
+                        <Input
+                          type="text"
+                          value={gatewayPercent}
+                          onChange={(e) => setGatewayPercent(e.target.value.replace(/[^0-9.]/g, ""))}
+                          className="bg-background font-bold text-lg"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">%</span>
                       </div>
                       <p className="text-[10px] text-muted-foreground italic">Usually 2.0% for most payment gateways.</p>
                     </div>
- 
+
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">GST on Charge (%)</label>
                       <div className="relative">
-                        <Input 
-                          type="text" 
-                          value={gstPercent} 
-                          onChange={(e) => setGstPercent(e.target.value.replace(/[^0-9.]/g, ""))} 
-                          className="bg-background font-bold text-lg" 
+                        <Input
+                          type="text"
+                          value={gstPercent}
+                          onChange={(e) => setGstPercent(e.target.value.replace(/[^0-9.]/g, ""))}
+                          className="bg-background font-bold text-lg"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">%</span>
                       </div>
                       <p className="text-[10px] text-muted-foreground italic">Standard GST is 18.0% in India.</p>
                     </div>
                   </div>
- 
+
                   <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 flex items-center justify-between">
                     <div>
                       <p className="text-sm font-bold text-foreground">Total Platform Fee</p>
@@ -448,7 +447,7 @@ export default function AdminSettings() {
                       {(parseFloat(gatewayPercent || "0") * (1 + parseFloat(gstPercent || "0") / 100)).toFixed(2)}%
                     </div>
                   </div>
- 
+
                   <div className="flex justify-end">
                     <Button type="submit" disabled={savingContact} className="bg-primary hover:bg-primary/90 text-white transition-all font-bold px-8">
                       {savingContact ? "Saving..." : "Save Financial Settings"}

@@ -39,7 +39,7 @@ const knownLabels: Record<string, string> = {
   pool: "Pool Table",
 };
 
-/** Dynamic label resolver — uses known map or capitalizes the raw type */
+/** Dynamic label resolver - uses known map or capitalizes the raw type */
 export function getFacilityLabel(type: string): string {
   if (!type) return "";
   const lower = type.toLowerCase();
@@ -47,7 +47,7 @@ export function getFacilityLabel(type: string): string {
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
-/** Legacy compat — acts as a proxy so existing `facilityLabels[x]` still works */
+/** Legacy compat - acts as a proxy so existing `facilityLabels[x]` still works */
 export const facilityLabels: Record<string, string> = new Proxy(knownLabels, {
   get(target, prop: string) {
     return getFacilityLabel(prop);

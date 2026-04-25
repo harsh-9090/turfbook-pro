@@ -113,7 +113,7 @@ export default function AdminAuditLogs() {
                       </span>
                     </td>
                     <td className="p-4 text-muted-foreground text-xs max-w-md truncate">
-                      {log.details || "—"}
+                      {log.details || "-"}
                     </td>
                   </tr>
                 ))}
