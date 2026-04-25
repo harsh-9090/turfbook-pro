@@ -115,7 +115,7 @@ export default function HeroSection() {
           >
             <Star className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary fill-primary" />
             <span className="text-xs md:text-sm font-semibold tracking-wide text-white">
-              Cricket • Snooker • Pool
+              Cricket • Snooker • Pool • Football
             </span>
           </motion.div>
 
