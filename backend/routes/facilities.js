@@ -135,13 +135,33 @@ router.post('/', authMiddleware, async (req, res) => {
       ]
     );
 
+    const t = result.rows[0];
+
+    // IMMEDIATELY initialize weekly master templates for the new facility based on the custom hours
+    const insertValues = [];
+    for (let day = 0; day <= 6; day++) {
+      const isWeekend = day === 0 || day === 6;
+      for (let hour = Number(t.opening_hour); hour < Number(t.closing_hour); hour++) {
+        let price = isWeekend ? t.weekend_day_price : t.weekday_day_price;
+        if (hour >= 18) price = isWeekend ? t.weekend_night_price : t.weekday_night_price;
+        insertValues.push(`('${t.id}', ${day}, '${String(hour).padStart(2, '0')}:00:00', '${String(hour+1).padStart(2, '0')}:00:00', ${price})`);
+      }
+    }
+    
+    if (insertValues.length > 0) {
+      await pool.query(`INSERT INTO slot_templates (turf_id, day_of_week, start_time, end_time, price) VALUES ${insertValues.join(',')} ON CONFLICT DO NOTHING`);
+    }
+
     // Invalidate caches
     await cache.del('facilities:all');
     await cache.delPattern('facilities:tables:*');
+    await cache.delPattern('slots:*');
+    await cache.delPattern('templates:*');
 
     req.app.get('io').emit('facility_updated');
     req.app.get('io').emit('template_updated');
-    res.status(201).json(result.rows[0]);
+    req.app.get('io').emit('slot_updated');
+    res.status(201).json(t);
   } catch (err) {
     res.status(500).json({ error: 'Server error: ' + err.message });
   }
