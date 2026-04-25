@@ -262,6 +262,145 @@ router.get('/my-bookings/:phone', async (req, res) => {
   }
 });
 
+// Staff: Verify QR Token (Publicly accessible but returns limited info, Staff uses it to get ID)
+router.get('/verify-qr/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const result = await pool.query(`
+      SELECT b.id, b.status, b.payment_status, b.paid_amount, b.remaining_amount, b.checked_in_at,
+        s.date, s.start_time, s.end_time, s.price as total_amount, s.table_number,
+        u.name as customer_name, u.phone,
+        t.facility_type, t.name as facility_name
+      FROM bookings b
+      JOIN users u ON u.id = b.user_id
+      JOIN slots s ON s.id = b.slot_id
+      JOIN turfs t ON t.id = s.turf_id
+      WHERE b.qr_token = $1
+    `, [token]);
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Invalid QR Token' });
+    
+    const b = result.rows[0];
+    const now = new Date();
+    const slotStart = new Date(b.date);
+    const [s_h, s_m] = b.start_time.split(':');
+    slotStart.setHours(parseInt(s_h), parseInt(s_m), 0);
+
+    const slotEnd = new Date(b.date);
+    const [e_h, e_m] = b.end_time.split(':');
+    slotEnd.setHours(parseInt(e_h), parseInt(e_m), 0);
+
+    const isExpired = now > slotEnd;
+    const isFuture = now < slotStart;
+    const isActive = now >= slotStart && now <= slotEnd;
+
+    res.json({ 
+      booking: b, 
+      timing: { isExpired, isFuture, isActive },
+      canCheckIn: isActive && !b.checked_in_at && b.status !== 'cancelled'
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Verification failed: ' + err.message });
+  }
+});
+
+// Staff: Mark as Checked-In
+router.patch('/:id/check-in', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      "UPDATE bookings SET checked_in_at = NOW() WHERE id = $1 AND checked_in_at IS NULL RETURNING *",
+      [id]
+    );
+    if (result.rows.length === 0) return res.status(400).json({ error: 'Already checked in or booking not found' });
+    
+    req.app.get('io').emit('booking_updated');
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Check-in failed' });
+  }
+});
+
+// Analytics: Get Live Presence
+router.get('/live-presence', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT b.id, b.checked_in_at, u.name as customer_name, t.name as facility_name,
+             s.start_time, s.end_time, s.table_number
+      FROM bookings b
+      JOIN users u ON u.id = b.user_id
+      JOIN slots s ON s.id = b.slot_id
+      JOIN turfs t ON t.id = s.turf_id
+      WHERE s.date = CURRENT_DATE
+      AND b.status != 'cancelled'
+      AND (
+        (b.checked_in_at IS NOT NULL AND (s.date + s.end_time) > NOW()) -- Currently inside
+        OR (b.checked_in_at IS NULL AND (s.date + s.start_time) <= NOW() AND (s.date + s.end_time) >= NOW()) -- No-shows/Late
+      )
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Presence fetch failed' });
+  }
+});
+
+// Staff: Extend a booking by one slot (if available)
+router.post('/:id/extend', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { id } = req.params;
+
+    // 1. Get original booking and slot details
+    const orig = await client.query(`
+      SELECT b.*, s.date, s.end_time, s.turf_id, s.table_number, u.name, u.phone
+      FROM bookings b
+      JOIN slots s ON s.id = b.slot_id
+      JOIN users u ON u.id = b.user_id
+      WHERE b.id = $1
+    `, [id]);
+
+    if (orig.rows.length === 0) return res.status(404).json({ error: 'Original booking not found' });
+    const bOrig = orig.rows[0];
+
+    // 2. Find the next slot (same date, same turf, start_time = current end_time)
+    const nextSlot = await client.query(`
+      SELECT * FROM slots 
+      WHERE turf_id = $1 
+      AND date = $2 
+      AND start_time = $3 
+      AND is_available = true
+      LIMIT 1
+    `, [bOrig.turf_id, bOrig.date, bOrig.end_time]);
+
+    if (nextSlot.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'No consecutive slots available for extension' });
+    }
+
+    const sNext = nextSlot.rows[0];
+
+    // 3. Create the extension booking
+    const newBooking = await client.query(
+      `INSERT INTO bookings (user_id, slot_id, status, payment_status, paid_amount, remaining_amount, extension_from_id) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [bOrig.user_id, sNext.id, 'confirmed', 'pending', 0, sNext.price, id]
+    );
+
+    await client.query('COMMIT');
+    await cache.delPattern('bookings:*');
+    await cache.delPattern('slots:*');
+    req.app.get('io').emit('booking_updated');
+
+    res.json({ message: 'Booking extended successfully', booking: newBooking.rows[0] });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: 'Extension failed: ' + err.message });
+  } finally {
+    client.release();
+  }
+});
+
 router.patch('/:id/cancel-pending', async (req, res) => {
   try {
     const { id } = req.params;

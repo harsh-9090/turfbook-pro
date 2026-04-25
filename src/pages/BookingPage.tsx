@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format, addDays, startOfDay, parse, isAfter } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { CalendarDays, Clock, User, Phone, ArrowRight, CheckCircle2, ArrowLeft, Loader2, Trophy } from "lucide-react";
+import { CalendarDays, Clock, User, Phone, ArrowRight, CheckCircle2, ArrowLeft, Loader2, Trophy, ShieldCheck } from "lucide-react";
 import { formatTime12Hour } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,10 @@ import { toast } from "sonner";
 import cricketImg from "@/assets/cricket-turf.jpg";
 import snookerImg from "@/assets/snooker-room.jpg";
 import poolImg from "@/assets/pool-room.jpg";
+import { QRCodeSVG } from "qrcode.react";
+import confetti from "canvas-confetti";
+import { toPng } from "html-to-image";
+import { Download, Share2 } from "lucide-react";
 
 /** Fallback images for known sport types */
 const knownImages: Record<string, string> = {
@@ -46,6 +50,7 @@ export default function BookingPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmedBooking, setConfirmedBooking] = useState<any>(null);
   const [feeSettings, setFeeSettings] = useState({ gateway: 2.0, gst: 18.0 });
  
   // Fetch settings for dynamic fee calculation
@@ -256,6 +261,14 @@ export default function BookingPage() {
             });
 
             if (verifyRes.data.success) {
+              setConfirmedBooking(verifyRes.data.booking || { id: bookingId, qr_token: 'fetching...' });
+              // Trigger confetti
+              confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#10b981', '#059669', '#34d399']
+              });
               toast.success("Payment successful! Booking confirmed.");
               setStep("success");
             } else {
@@ -552,11 +565,71 @@ export default function BookingPage() {
                   <CheckCircle2 className="w-10 h-10 text-primary" />
                 </div>
                 <h1 className="font-heading text-3xl font-bold mb-2">Booking <span className="text-gradient-turf">Confirmed!</span></h1>
-                <p className="text-muted-foreground mb-2">Your <span className="text-primary font-medium">{facilityName}</span> session is booked.</p>
-                <p className="text-muted-foreground mb-8 text-sm">You'll receive a confirmation on WhatsApp shortly.</p>
-                <Button onClick={resetBooking} className="bg-gradient-turf text-primary-foreground font-semibold shadow-turf hover:opacity-90">
-                  Book Another Session
-                </Button>
+                <p className="text-muted-foreground mb-6">Your <span className="text-primary font-medium">{facilityName}</span> session is ready.</p>
+
+                {/* Digital Entry Pass */}
+                <div id="entry-pass" className="bg-card border-2 border-primary/20 rounded-3xl overflow-hidden shadow-2xl mb-8 relative">
+                   <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-turf" />
+                   <div className="p-6">
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="text-left">
+                           <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Entry Pass</p>
+                           <h3 className="font-heading font-bold text-lg">{facilityName}</h3>
+                        </div>
+                        <div className="text-right">
+                           <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Date</p>
+                           <p className="font-bold text-sm tracking-tight">{selectedDate && format(selectedDate, "dd MMM yyyy")}</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-4 rounded-2xl inline-block mb-6 shadow-inner ring-1 ring-black/5">
+                        <QRCodeSVG 
+                          value={confirmedBooking?.qr_token || "pending"} 
+                          size={160}
+                          level="H"
+                          includeMargin={false}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 text-left border-t border-dashed border-border pt-6 mt-2">
+                         <div>
+                            <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mb-1">Time Slot</p>
+                            <p className="font-bold text-sm leading-none">{selectedSlotGroup?.time}</p>
+                         </div>
+                         <div>
+                            <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mb-1">Customer</p>
+                            <p className="font-bold text-sm leading-none truncate">{name}</p>
+                         </div>
+                      </div>
+                   </div>
+                   <div className="bg-black/5 border-t border-border p-4 flex items-center justify-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-primary" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Scan at entry gate for access</span>
+                   </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <Button 
+                    onClick={() => {
+                      const node = document.getElementById('entry-pass');
+                      if (node) {
+                        toPng(node).then((dataUrl) => {
+                          const link = document.createElement('a');
+                          link.download = `Arena-Pass-${name}.png`;
+                          link.href = dataUrl;
+                          link.click();
+                        });
+                      }
+                    }} 
+                    variant="outline" 
+                    className="h-12 rounded-xl font-bold border-2"
+                  >
+                    <Download className="mr-2 w-4 h-4" /> Download Ticket
+                  </Button>
+                  <Button onClick={resetBooking} className="h-12 rounded-xl bg-gradient-turf text-primary-foreground font-bold shadow-turf hover:opacity-90">
+                    Done
+                  </Button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

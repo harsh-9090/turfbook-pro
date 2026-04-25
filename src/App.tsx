@@ -24,6 +24,8 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminTournaments from "./pages/admin/AdminTournaments";
 import AdminAdStudio from "./pages/admin/AdminAdStudio";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
+import AdminScanner from "./pages/admin/AdminScanner";
+import AdminPresence from "./pages/admin/AdminPresence";
 import AdminStaff from "./pages/admin/AdminStaff";
 import StaffLogin from "./pages/StaffLogin";
 import MyBookings from "./pages/MyBookings";
@@ -64,6 +66,8 @@ const App = () => (
               <Route index element={<AdminDashboard />} />
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="calendar" element={<AdminCalendar />} />
+              <Route path="scan" element={<AdminScanner />} />
+              <Route path="presence" element={<AdminPresence />} />
               <Route path="tournaments" element={<AdminTournaments />} />
               <Route path="slots" element={<AdminSlots />} />
               <Route path="facilities" element={<AdminFacilities />} />
