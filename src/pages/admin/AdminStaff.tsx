@@ -13,7 +13,10 @@ const PERMISSION_GROUPS = [
     category: "Overview",
     tabs: [
       { path: "/admin", label: "Dashboard" },
+      { path: "/admin/scan", label: "Scan Entry" },
+      { path: "/admin/presence", label: "Live Presence" },
       { path: "/admin/analytics", label: "Analytics" },
+      { path: "/admin/finance", label: "Finance" },
     ]
   },
   {
