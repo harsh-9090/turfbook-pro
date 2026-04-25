@@ -220,6 +220,48 @@ router.patch('/:id/pay', authMiddleware, async (req, res) => {
 });
 
 // Public: Cancel a pending booking (called when user aborts Razorpay)
+// Public: Get bookings by phone number (categorized)
+router.get('/my-bookings/:phone', async (req, res) => {
+  try {
+    const { phone } = req.params;
+    const result = await pool.query(`
+      SELECT b.id, b.status, b.payment_status, b.paid_amount, b.remaining_amount,
+        s.date, s.start_time, s.end_time, s.price as total_amount, s.table_number,
+        t.facility_type, t.name as facility_name, t.image_url as facility_image
+      FROM bookings b
+      JOIN users u ON u.id = b.user_id
+      JOIN slots s ON s.id = b.slot_id
+      JOIN turfs t ON t.id = s.turf_id
+      WHERE u.phone = $1
+      ORDER BY s.date DESC, s.start_time DESC
+    `, [phone]);
+
+    const bookings = result.rows;
+    const now = new Date();
+    
+    // Categorize into active and history
+    const active = [];
+    const history = [];
+
+    bookings.forEach(b => {
+      // Combine date and time for comparison
+      const slotEnd = new Date(b.date);
+      const [hours, minutes] = b.end_time.split(':');
+      slotEnd.setHours(parseInt(hours), parseInt(minutes), 0);
+
+      if (slotEnd > now && b.status !== 'cancelled') {
+        active.push(b);
+      } else {
+        history.push(b);
+      }
+    });
+
+    res.json({ active, history });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+});
+
 router.patch('/:id/cancel-pending', async (req, res) => {
   try {
     const { id } = req.params;

@@ -9,6 +9,7 @@ import logoImage from "@/assets/logo.png";
 const navLinks = [
   { name: "Home", path: "/" },
   { name: "Book Now", path: "/book" },
+  { name: "My Bookings", path: "/my-bookings" },
   { name: "Facilities", path: "/#facilities" },
   { name: "Pricing", path: "/#pricing" },
   { name: "Contact", path: "/#contact-section" },
