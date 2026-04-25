@@ -115,7 +115,6 @@ export default function AdminFinance() {
       ["Cash in Hand", summary.cash],
       ["Unsettled Cash (Today)", summary.unsettledCash],
       ["Pending Dues", summary.pendingDues],
-      ["Estimated Tax (GST)", summary.gstAmount],
       ["Revenue Loss (No-Shows)", summary.noShowLoss]
     ].map(row => row.join(",")).join("\n");
 
@@ -289,24 +288,10 @@ export default function AdminFinance() {
       </div>
 
       {/* Advanced Insights Row */}
-      <div className="grid gap-4 lg:grid-cols-4">
+      <div className="grid gap-4 lg:grid-cols-2">
          <Card className="bg-secondary/10 border-border/30">
             <CardContent className="pt-6">
-               <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">Average Order Value (AOV)</p>
-               <h4 className="text-xl font-bold">₹{Math.round(summary.aov).toLocaleString()}</h4>
-               <p className="text-[10px] text-muted-foreground mt-1">Per confirmed booking</p>
-            </CardContent>
-         </Card>
-         <Card className="bg-secondary/10 border-border/30">
-            <CardContent className="pt-6">
-               <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">GST Collected (Est.)</p>
-               <h4 className="text-xl font-bold">₹{Math.round(summary.gstAmount).toLocaleString()}</h4>
-               <p className="text-[10px] text-muted-foreground mt-1">Based on 18% inclusive</p>
-            </CardContent>
-         </Card>
-         <Card className="bg-secondary/10 border-border/30">
-            <CardContent className="pt-6">
-               <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">Revenue Loss</p>
+               <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">Revenue Loss (No-Shows)</p>
                <h4 className="text-xl font-bold text-destructive/70">₹{summary.noShowLoss.toLocaleString()}</h4>
                <p className="text-[10px] text-muted-foreground mt-1">From cancelled bookings</p>
             </CardContent>
