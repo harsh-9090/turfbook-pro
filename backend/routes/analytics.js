@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../config/db');
 const authMiddleware = require('../middleware/auth');
 const cache = require('../config/cache');
+const { format } = require('date-fns');
 
 // Comprehensive analytics endpoint
 router.get('/', authMiddleware, async (req, res) => {
