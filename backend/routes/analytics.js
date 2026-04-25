@@ -178,20 +178,47 @@ router.get('/finance', authMiddleware, async (req, res) => {
       ORDER BY d.d
     `;
     const trendResult = await pool.query(trendQuery);
+
+    // 5. Advanced Metrics (Expenses, Unsettled Cash, No-Show Loss)
+    const advancedQuery = `
+      SELECT 
+        (SELECT COALESCE(SUM(amount), 0) FROM expenses) as total_expenses,
+        (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE method = 'cash' AND is_settled = false) as unsettled_cash,
+        (SELECT COALESCE(SUM(s.price), 0) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'cancelled') as no_show_loss,
+        (SELECT COUNT(*) FROM bookings WHERE status = 'confirmed') as total_confirmed_bookings
+      FROM (SELECT 1) as dummy
+    `;
+    const advancedResult = await pool.query(advancedQuery);
+    const advData = advancedResult.rows[0];
+
     const trendData = trendResult.rows.map(r => ({
       date: format(new Date(r.date), 'MMM dd'),
       amount: Number(r.amount)
     }));
 
+    const totalRevenue = Number(splitData.total_volume);
+    const platformFees = Number(splitData.total_fees);
+    const totalExpenses = Number(advData.total_expenses);
+    const netProfit = totalRevenue - platformFees - totalExpenses;
+    
+    // Tax Calculation (Assuming 18% GST inclusive)
+    const gstCollected = totalRevenue * (18/118);
+
     res.json({
       summary: {
-        totalRevenue: Number(splitData.total_volume),
-        netRevenue: Number(splitData.total_volume) - Number(splitData.total_fees),
+        totalRevenue,
+        netRevenue: totalRevenue - platformFees,
+        netProfit,
         cash: Number(splitData.cash_revenue),
         upi: Number(splitData.upi_revenue),
         online: Number(splitData.online_revenue),
-        fees: Number(splitData.total_fees),
-        pendingDues: Number(pendingDues)
+        fees: platformFees,
+        expenses: totalExpenses,
+        pendingDues: Number(pendingDues),
+        unsettledCash: Number(advData.unsettled_cash),
+        noShowLoss: Number(advData.no_show_loss),
+        gstAmount: gstCollected,
+        aov: advData.total_confirmed_bookings > 0 ? (totalRevenue / advData.total_confirmed_bookings) : 0
       },
       facilities: facilityResult.rows.map(r => ({
         type: r.type,
@@ -204,6 +231,22 @@ router.get('/finance', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('Finance Analytics Error:', err);
     res.status(500).json({ error: 'Failed to fetch financial data' });
+  }
+});
+
+// POST /api/analytics/finance/settle - Mark all cash as settled (Close the Day)
+router.post('/finance/settle', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      UPDATE payments 
+      SET is_settled = true 
+      WHERE method = 'cash' AND is_settled = false
+      RETURNING id
+    `);
+    res.json({ message: `Day closed! ${result.rowCount} cash payments settled.`, settledCount: result.rowCount });
+  } catch (err) {
+    console.error('Settle-up error:', err);
+    res.status(500).json({ error: 'Failed to settle payments' });
   }
 });
 

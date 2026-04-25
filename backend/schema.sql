@@ -61,8 +61,19 @@ CREATE TABLE payments (
   booking_id UUID REFERENCES bookings(id) ON DELETE CASCADE NOT NULL,
   amount DECIMAL(10, 2) NOT NULL,
   method VARCHAR(50) DEFAULT 'online',
+  is_settled BOOLEAN DEFAULT false,
   razorpay_order_id VARCHAR(255),
   razorpay_payment_id VARCHAR(255),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Expenses table
+CREATE TABLE expenses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  category VARCHAR(100) NOT NULL, -- e.g., 'Electricity', 'Staff Salary', 'Repairs'
+  amount DECIMAL(10, 2) NOT NULL,
+  description TEXT,
+  expense_date DATE DEFAULT CURRENT_DATE,
   created_at TIMESTAMP DEFAULT NOW()
 );
 

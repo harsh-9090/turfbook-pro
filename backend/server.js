@@ -49,6 +49,7 @@ const testimonialsRoutes = require('./routes/testimonials');
 const settingsRoutes = require('./routes/settings');
 const tournamentsRoutes = require('./routes/tournaments');
 const staffRoutes = require('./routes/staff');
+const expenseRoutes = require('./routes/expenses');
 
 const app = express();
 const server = http.createServer(app);
@@ -82,6 +83,7 @@ app.use('/api/testimonials', testimonialsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/tournaments', tournamentsRoutes);
 app.use('/api/staff', staffRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
