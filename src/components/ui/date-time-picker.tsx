@@ -21,7 +21,11 @@ interface DateTimePickerProps {
 }
 
 export function DateTimePicker({ date, onChange, placeholder = "Pick date & time" }: DateTimePickerProps) {
-  const selectedDate = date ? new Date(date) : undefined
+  const selectedDate = React.useMemo(() => {
+    if (!date) return undefined;
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? undefined : d;
+  }, [date]);
 
   const handleDateSelect = (newDate: Date | undefined) => {
     if (!newDate) return

@@ -21,7 +21,11 @@ interface DatePickerProps {
 }
 
 export function DatePicker({ date, setDate, placeholder = "Pick a date", className }: DatePickerProps) {
-  const selectedDate = typeof date === 'string' ? new Date(date) : date
+  const selectedDate = React.useMemo(() => {
+    if (!date) return undefined;
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return isNaN(d.getTime()) ? undefined : d;
+  }, [date]);
 
   return (
     <Popover>
