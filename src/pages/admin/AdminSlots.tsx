@@ -249,13 +249,15 @@ export default function AdminSlots() {
               return (
                 <div key={slot.id} onClick={() => handleCardClick(slot)}
                   className={`relative p-4 rounded-xl border transition-all duration-300 overflow-hidden flex flex-col ${
-                    slot.isBooked 
-                      ? "bg-primary/10 border-primary/40 cursor-pointer hover:border-primary" 
-                      : isPast && slot.isAvailable
-                        ? "bg-amber-500/5 border-amber-500/20"
-                      : slot.isAvailable 
-                        ? "bg-card border-border hover:border-primary/30" 
-                        : "bg-destructive/5 border-destructive/20"
+                    slot.isBooked && isPast
+                      ? "bg-secondary/30 border-border cursor-pointer hover:bg-secondary/50"
+                      : slot.isBooked 
+                        ? "bg-primary/10 border-primary/40 cursor-pointer hover:border-primary" 
+                        : isPast && slot.isAvailable
+                          ? "bg-amber-500/5 border-amber-500/20"
+                        : slot.isAvailable 
+                          ? "bg-card border-border hover:border-primary/30" 
+                          : "bg-destructive/5 border-destructive/20"
                   } ${isRunning ? 'ring-2 ring-green-500/60 ring-offset-2 ring-offset-background' : ''}`}>
                   
                   {isRunning && (
@@ -271,7 +273,11 @@ export default function AdminSlots() {
                   <p className="text-sm text-muted-foreground font-medium mb-4 mt-1">₹{slot.price}</p>
                   
                   <div className="flex items-center justify-between mt-auto">
-                    {slot.isBooked ? (
+                    {slot.isBooked && isPast ? (
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5 bg-background border border-border/60 shadow-sm px-2.5 py-1 rounded-md">
+                        <Lock className="w-3 h-3" /> Completed
+                      </span>
+                    ) : slot.isBooked ? (
                       <span className="text-[10px] uppercase tracking-wider font-bold text-primary flex items-center gap-1.5 bg-primary/20 px-2.5 py-1 rounded-md">
                         <Lock className="w-3 h-3" /> Booked
                       </span>
