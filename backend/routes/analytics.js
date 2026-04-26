@@ -109,6 +109,10 @@ router.get('/', authMiddleware, async (req, res) => {
     `;
     const topCustomersResult = await pool.query(topCustomersQuery);
 
+    const sportMap = {};
+    revenueBySport.rows.forEach(r => { sportMap[r.facility_type] = (sportMap[r.facility_type] || 0) + parseFloat(r.total || 0); });
+    sessionRevBySport.rows.forEach(r => { sportMap[r.facility_type] = (sportMap[r.facility_type] || 0) + parseFloat(r.total || 0); });
+
     const data = {
       revenue: {
         today: parseFloat(bookingRevenueToday.rows[0].total) + parseFloat(sessionRevenueToday.rows[0].total),
