@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { format, startOfMonth } from "date-fns";
 import { AdminDateFilter } from "@/components/admin/AdminDateFilter";
+import { cn } from "@/lib/utils";
 
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
 const PAYMENT_COLORS = {
@@ -135,26 +136,29 @@ export default function AdminFinance() {
     document.body.removeChild(link);
   };
 
-  if (loading || !data) {
+  if (loading && !data) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent shadow-lg"></div>
+        <p className="text-sm font-medium text-muted-foreground animate-pulse uppercase tracking-widest">Calculating Finances...</p>
       </div>
     );
   }
 
-  const { summary, facilities, trends } = data;
+  const summary = data?.summary || {};
+  const facilities = data?.facilities || [];
+  const trends = data?.trends || [];
 
   const pieData = [
-    { name: "Cash", value: summary.cash, color: PAYMENT_COLORS.cash },
-    { name: "UPI (Manual)", value: summary.upi, color: PAYMENT_COLORS.upi },
-    { name: "Online", value: summary.online, color: PAYMENT_COLORS.online },
+    { name: "Cash", value: summary.cash || 0, color: PAYMENT_COLORS.cash },
+    { name: "UPI (Manual)", value: summary.upi || 0, color: PAYMENT_COLORS.upi },
+    { name: "Online", value: summary.online || 0, color: PAYMENT_COLORS.online },
   ].filter(d => d.value > 0);
 
   return (
     <div className="space-y-6 pb-24">
       {/* Header with Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-heading font-bold tracking-tight text-foreground">Financial Command Center</h1>
           <p className="text-muted-foreground mt-1">Operational accounting and automated profit tracking.</p>
@@ -230,202 +234,204 @@ export default function AdminFinance() {
         </div>
       </div>
 
-      {/* Top Level Metrics (Primary) */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
-          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-             <IndianRupee className="w-12 h-12" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs uppercase font-bold tracking-wider">Gross Revenue</CardDescription>
-            <CardTitle className="text-2xl">₹{summary.totalRevenue.toLocaleString()}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center text-xs text-muted-foreground">
-               <TrendingUp className="w-3 h-3 mr-1 text-emerald-500" />
-               <span>Total booking & session volume</span>
+      <div className={cn("space-y-6 transition-all duration-500", loading ? "opacity-50 pointer-events-none blur-[1px]" : "opacity-100")}>
+        {/* Top Level Metrics (Primary) */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+               <IndianRupee className="w-12 h-12" />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
-          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-             <Calculator className="w-12 h-12" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs uppercase font-bold tracking-wider text-emerald-500">Actual Net Profit</CardDescription>
-            <CardTitle className="text-2xl">₹{summary.netProfit.toLocaleString()}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center text-xs text-muted-foreground">
-               <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
-               <span>Revenue - Expenses</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
-          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-             <AlertCircle className="w-12 h-12" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs uppercase font-bold tracking-wider text-amber-500">Total Expenses</CardDescription>
-            <CardTitle className="text-2xl text-destructive/80">₹{summary.expenses.toLocaleString()}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center text-xs text-muted-foreground">
-               <div className="w-2 h-2 rounded-full bg-destructive/50 mr-2" />
-               <span>Operating costs recorded</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
-          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-             <CheckCircle2 className="w-12 h-12" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardDescription className="text-xs uppercase font-bold tracking-wider text-primary">Unsettled Cash</CardDescription>
-            <CardTitle className="text-2xl">₹{summary.unsettledCash.toLocaleString()}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center text-xs text-muted-foreground">
-               <span>Awaiting 'Close Day' verification</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Advanced Insights Row */}
-      <div className="grid gap-4 lg:grid-cols-2">
-         <Card className="bg-secondary/10 border-border/30">
-            <CardContent className="pt-6">
-               <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">Revenue Loss (No-Shows)</p>
-               <h4 className="text-xl font-bold text-destructive/70">₹{summary.noShowLoss.toLocaleString()}</h4>
-               <p className="text-[10px] text-muted-foreground mt-1">From cancelled bookings</p>
-            </CardContent>
-         </Card>
-         <Card className="bg-secondary/10 border-border/30">
-            <CardContent className="pt-6">
-               <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">Platform Fees</p>
-               <h4 className="text-xl font-bold">₹{summary.fees.toLocaleString()}</h4>
-               <p className="text-[10px] text-muted-foreground mt-1">Total gateway costs</p>
-            </CardContent>
-         </Card>
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2 bg-card/40 border-border/50">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              14-Day Revenue Trend
-            </CardTitle>
-            <CardDescription>Daily income across all sports.</CardDescription>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trends}>
-                <defs>
-                   <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: 'currentColor', opacity: 0.5, fontSize: 12}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: 'currentColor', opacity: 0.5, fontSize: 12}} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                  itemStyle={{ color: 'hsl(var(--primary))' }}
-                />
-                <Area type="monotone" dataKey="amount" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorAmount)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card/40 border-border/50">
-          <CardHeader>
-            <CardTitle className="text-lg">Payment Methods</CardTitle>
-            <CardDescription>Manual vs Online breakdown.</CardDescription>
-          </CardHeader>
-          <CardContent className="h-[250px] flex flex-col justify-center">
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                  {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex flex-wrap justify-center gap-4 mt-2">
-               {pieData.map(d => (
-                 <div key={d.name} className="flex items-center text-xs">
-                    <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: d.color }} />
-                    <span className="text-muted-foreground">{d.name}: ₹{d.value}</span>
-                 </div>
-               ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Expenses & Facility Performance */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Expenses List */}
-        <Card className="bg-card/40 border-border/50">
-           <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">Recent Expenses</CardTitle>
-                <CardDescription>Operating costs logged this month.</CardDescription>
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase font-bold tracking-wider">Gross Revenue</CardDescription>
+              <CardTitle className="text-2xl">₹{summary.totalRevenue.toLocaleString()}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center text-xs text-muted-foreground">
+                 <TrendingUp className="w-3 h-3 mr-1 text-emerald-500" />
+                 <span>Total booking & session volume</span>
               </div>
-              <Badge variant="outline" className="font-mono text-destructive">₹{summary.expenses}</Badge>
-           </CardHeader>
-           <CardContent>
-              <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
-                 {expenses.map((e: any) => (
-                   <div key={e.id} className="group flex items-center justify-between p-3 rounded-xl border border-border/30 bg-secondary/5 hover:bg-secondary/10 transition-colors">
-                      <div className="flex items-center gap-3">
-                         <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
-                            <Receipt className="w-4 h-4" />
-                         </div>
-                         <div>
-                            <p className="text-sm font-bold">{e.category}</p>
-                            <p className="text-[10px] text-muted-foreground">{format(new Date(e.expense_date), 'MMM dd, yyyy')} • {e.description || 'No notes'}</p>
-                         </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                         <p className="font-bold text-destructive/80">-₹{Number(e.amount).toLocaleString()}</p>
-                         <Button size="icon" variant="ghost" onClick={() => handleDeleteExpense(e.id)} className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
-                         </Button>
-                      </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+               <Calculator className="w-12 h-12" />
+            </div>
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase font-bold tracking-wider text-emerald-500">Actual Net Profit</CardDescription>
+              <CardTitle className="text-2xl">₹{summary.netProfit.toLocaleString()}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center text-xs text-muted-foreground">
+                 <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
+                 <span>Revenue - Expenses</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+               <AlertCircle className="w-12 h-12" />
+            </div>
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase font-bold tracking-wider text-amber-500">Total Expenses</CardDescription>
+              <CardTitle className="text-2xl text-destructive/80">₹{summary.expenses.toLocaleString()}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center text-xs text-muted-foreground">
+                 <div className="w-2 h-2 rounded-full bg-destructive/50 mr-2" />
+                 <span>Operating costs recorded</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+               <CheckCircle2 className="w-12 h-12" />
+            </div>
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase font-bold tracking-wider text-primary">Unsettled Cash</CardDescription>
+              <CardTitle className="text-2xl">₹{summary.unsettledCash.toLocaleString()}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center text-xs text-muted-foreground">
+                 <span>Awaiting 'Close Day' verification</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Advanced Insights Row */}
+        <div className="grid gap-4 lg:grid-cols-2">
+           <Card className="bg-secondary/10 border-border/30">
+              <CardContent className="pt-6">
+                 <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">Revenue Loss (No-Shows)</p>
+                 <h4 className="text-xl font-bold text-destructive/70">₹{summary.noShowLoss.toLocaleString()}</h4>
+                 <p className="text-[10px] text-muted-foreground mt-1">From cancelled bookings</p>
+              </CardContent>
+           </Card>
+           <Card className="bg-secondary/10 border-border/30">
+              <CardContent className="pt-6">
+                 <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">Platform Fees</p>
+                 <h4 className="text-xl font-bold">₹{summary.fees.toLocaleString()}</h4>
+                 <p className="text-[10px] text-muted-foreground mt-1">Total gateway costs</p>
+              </CardContent>
+           </Card>
+        </div>
+
+        {/* Charts Row */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-2 bg-card/40 border-border/50">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                14-Day Revenue Trend
+              </CardTitle>
+              <CardDescription>Daily income across all sports.</CardDescription>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trends}>
+                  <defs>
+                     <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: 'currentColor', opacity: 0.5, fontSize: 12}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: 'currentColor', opacity: 0.5, fontSize: 12}} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                    itemStyle={{ color: 'hsl(var(--primary))' }}
+                  />
+                  <Area type="monotone" dataKey="amount" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorAmount)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/40 border-border/50">
+            <CardHeader>
+              <CardTitle className="text-lg">Payment Methods</CardTitle>
+              <CardDescription>Manual vs Online breakdown.</CardDescription>
+            </CardHeader>
+            <CardContent className="h-[250px] flex flex-col justify-center">
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                    {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap justify-center gap-4 mt-2">
+                 {pieData.map(d => (
+                   <div key={d.name} className="flex items-center text-xs">
+                      <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: d.color }} />
+                      <span className="text-muted-foreground">{d.name}: ₹{d.value}</span>
                    </div>
                  ))}
-                 {expenses.length === 0 && <p className="text-center text-muted-foreground py-12 text-sm">No expenses recorded yet.</p>}
               </div>
-           </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card className="bg-card/40 border-border/50">
-           <CardHeader>
-              <CardTitle className="text-lg">Revenue by Facility</CardTitle>
-              <CardDescription>Comparison of sport performance.</CardDescription>
-           </CardHeader>
-           <CardContent className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={facilities}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis dataKey="type" axisLine={false} tickLine={false} tick={{fill: 'currentColor', opacity: 0.5, fontSize: 12}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: 'currentColor', opacity: 0.5, fontSize: 12}} />
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} />
-                  <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-           </CardContent>
-        </Card>
+        {/* Expenses & Facility Performance */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Expenses List */}
+          <Card className="bg-card/40 border-border/50">
+             <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Recent Expenses</CardTitle>
+                  <CardDescription>Operating costs logged this month.</CardDescription>
+                </div>
+                <Badge variant="outline" className="font-mono text-destructive">₹{summary.expenses}</Badge>
+             </CardHeader>
+             <CardContent>
+                <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                   {expenses.map((e: any) => (
+                     <div key={e.id} className="group flex items-center justify-between p-3 rounded-xl border border-border/30 bg-secondary/5 hover:bg-secondary/10 transition-colors">
+                        <div className="flex items-center gap-3">
+                           <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+                              <Receipt className="w-4 h-4" />
+                           </div>
+                           <div>
+                              <p className="text-sm font-bold">{e.category}</p>
+                              <p className="text-[10px] text-muted-foreground">{format(new Date(e.expense_date), 'MMM dd, yyyy')} • {e.description || 'No notes'}</p>
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                           <p className="font-bold text-destructive/80">-₹{Number(e.amount).toLocaleString()}</p>
+                           <Button size="icon" variant="ghost" onClick={() => handleDeleteExpense(e.id)} className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
+                           </Button>
+                        </div>
+                     </div>
+                   ))}
+                   {expenses.length === 0 && <p className="text-center text-muted-foreground py-12 text-sm">No expenses recorded yet.</p>}
+                </div>
+             </CardContent>
+          </Card>
+
+          <Card className="bg-card/40 border-border/50">
+             <CardHeader>
+                <CardTitle className="text-lg">Revenue by Facility</CardTitle>
+                <CardDescription>Comparison of sport performance.</CardDescription>
+             </CardHeader>
+             <CardContent className="h-[350px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={facilities}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="type" axisLine={false} tickLine={false} tick={{fill: 'currentColor', opacity: 0.5, fontSize: 12}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: 'currentColor', opacity: 0.5, fontSize: 12}} />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }} />
+                    <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+             </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

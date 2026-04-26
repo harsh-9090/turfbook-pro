@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import api from "@/lib/api";
 import { AdminDateFilter } from "@/components/admin/AdminDateFilter";
 import { startOfMonth, format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const SPORT_COLORS: Record<string, string> = {
   cricket: "hsl(142 76% 36%)",
@@ -44,39 +45,41 @@ export default function AdminAnalytics() {
     fetchAnalytics(dates.start, dates.end);
   }, [dates.start, dates.end, fetchAnalytics]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return <div className="text-center py-20 text-muted-foreground">Failed to load analytics data.</div>;
-  }
-
-  const dailyTrend = data.dailyTrend.map((d: any) => ({
-    ...d,
-    date: new Date(d.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric" }),
-  }));
-
-  const sportData = data.revenueBySport.map((s: any) => ({
+  const sportData = (data?.revenueBySport || []).map((s: any) => ({
     name: s.type.charAt(0).toUpperCase() + s.type.slice(1),
     value: s.total,
     fill: SPORT_COLORS[s.type] || "hsl(0 0% 50%)",
   }));
 
+  const dailyTrend = (data?.dailyTrend || []).map((d: any) => ({
+    ...d,
+    date: new Date(d.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric" }),
+  }));
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-2xl font-heading font-bold text-foreground">Operational Insights</h2>
+        <div>
+          <h2 className="text-2xl font-heading font-bold text-foreground">Operational Insights</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Real-time performance metrics across all facilities.</p>
+        </div>
         <AdminDateFilter 
           onFilterChange={(start, end) => setDates({ start, end })} 
         />
       </div>
 
-      {/* Revenue Cards */}
+      {!data && loading ? (
+        <div className="flex flex-col items-center justify-center py-32 space-y-4">
+          <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full shadow-lg"></div>
+          <p className="text-sm font-medium text-muted-foreground animate-pulse uppercase tracking-widest">Gathering insights...</p>
+        </div>
+      ) : !data ? (
+        <div className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed border-border text-muted-foreground">
+          Failed to load analytics data.
+        </div>
+      ) : (
+        <div className={cn("space-y-6 transition-all duration-500", loading ? "opacity-50 pointer-events-none blur-[1px]" : "opacity-100")}>
+          {/* Revenue Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={IndianRupee} label="Today's Revenue" value={`₹${data.revenue.today.toLocaleString()}`} sub={`Online: ₹${data.revenue.onlineToday.toLocaleString()} • Walk-in: ₹${data.revenue.walkInToday.toLocaleString()}`} color="text-emerald-500" bg="bg-emerald-500/10" />
         <StatCard icon={TrendingUp} label="This Week" value={`₹${data.revenue.week.toLocaleString()}`} sub={`${data.counts.totalBookings + data.counts.totalSessions} total transactions`} color="text-blue-500" bg="bg-blue-500/10" />
@@ -240,6 +243,8 @@ export default function AdminAnalytics() {
         </div>
       </div>
     </div>
+  )}
+</div>
   );
 }
 
