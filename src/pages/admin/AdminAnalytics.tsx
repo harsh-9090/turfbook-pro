@@ -4,8 +4,6 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, A
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import api from "@/lib/api";
-import { AdminDateFilter } from "@/components/admin/AdminDateFilter";
-import { startOfMonth, format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const SPORT_COLORS: Record<string, string> = {
@@ -24,15 +22,10 @@ const tooltipStyle = {
 export default function AdminAnalytics() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [dates, setDates] = useState({
-    start: format(startOfMonth(new Date()), "yyyy-MM-dd"),
-    end: format(new Date(), "yyyy-MM-dd")
-  });
-
-  const fetchAnalytics = useCallback(async (start: string, end: string) => {
+  const fetchAnalytics = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/analytics?startDate=${start}&endDate=${end}`);
+      const res = await api.get(`/analytics`);
       setData(res.data);
     } catch {
       toast.error("Failed to load analytics");
@@ -42,8 +35,8 @@ export default function AdminAnalytics() {
   }, []);
 
   useEffect(() => {
-    fetchAnalytics(dates.start, dates.end);
-  }, [dates.start, dates.end, fetchAnalytics]);
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   const sportData = (data?.revenueBySport || []).map((s: any) => ({
     name: s.type.charAt(0).toUpperCase() + s.type.slice(1),
@@ -63,9 +56,6 @@ export default function AdminAnalytics() {
           <h2 className="text-2xl font-heading font-bold text-foreground">Operational Insights</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Real-time performance metrics across all facilities.</p>
         </div>
-        <AdminDateFilter 
-          onFilterChange={(start, end) => setDates({ start, end })} 
-        />
       </div>
 
       {!data && loading ? (
@@ -78,7 +68,7 @@ export default function AdminAnalytics() {
           Failed to load analytics data.
         </div>
       ) : (
-        <div className={cn("space-y-6 transition-all duration-500", loading ? "opacity-50 pointer-events-none blur-[1px]" : "opacity-100")}>
+        <div className="space-y-6">
           {/* Revenue Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={IndianRupee} label="Today's Revenue" value={`₹${data.revenue.today.toLocaleString()}`} sub={`Online: ₹${data.revenue.onlineToday.toLocaleString()} • Walk-in: ₹${data.revenue.walkInToday.toLocaleString()}`} color="text-emerald-500" bg="bg-emerald-500/10" />

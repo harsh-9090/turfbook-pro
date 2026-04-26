@@ -82,20 +82,20 @@ export function AdminDateFilter({ onFilterChange }: AdminDateFilterProps) {
         </Select>
 
         <div className={cn(
-          "flex items-center gap-2 flex-1 sm:flex-none transition-all duration-300",
+          "flex flex-wrap items-center gap-2 flex-1 sm:flex-none transition-all duration-300 min-w-0",
           range !== "custom" ? "opacity-30 pointer-events-none grayscale" : "opacity-100"
         )}>
-          <div className="flex items-center gap-1.5 flex-1 sm:flex-none">
+          <div className="flex items-center gap-1.5 flex-1 sm:flex-none min-w-0">
             <DatePicker 
               date={startDate} 
               setDate={(d) => handleCustomChange("start", d ? format(d, "yyyy-MM-dd") : "")}
-              className="w-full sm:w-[125px] h-9 text-[11px]"
+              className="w-[110px] xs:w-[125px] h-9 text-[11px]"
             />
-            <span className="text-muted-foreground text-[10px] uppercase font-bold px-1">to</span>
+            <span className="text-muted-foreground text-[10px] uppercase font-bold px-0.5 shrink-0">to</span>
             <DatePicker 
               date={endDate} 
               setDate={(d) => handleCustomChange("end", d ? format(d, "yyyy-MM-dd") : "")}
-              className="w-full sm:w-[125px] h-9 text-[11px]"
+              className="w-[110px] xs:w-[125px] h-9 text-[11px]"
             />
           </div>
           
@@ -103,7 +103,7 @@ export function AdminDateFilter({ onFilterChange }: AdminDateFilterProps) {
             <Button 
               variant="secondary" 
               size="sm" 
-              className="h-9 text-xs px-4 bg-primary text-primary-foreground hover:bg-primary/90"
+              className="h-9 text-xs px-4 bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
               onClick={() => onFilterChange(startDate, endDate)}
             >
               Apply

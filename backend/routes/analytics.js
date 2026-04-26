@@ -210,7 +210,7 @@ router.get('/finance', authMiddleware, async (req, res) => {
         COALESCE(SUM(platform_fee), 0) as total_fees,
         COALESCE(SUM(CASE WHEN method = 'cash' AND is_settled = false THEN amount ELSE 0 END), 0) as unsettled_cash
       FROM unified_revenue
-      WHERE created_at BETWEEN $1 AND $2
+      WHERE created_at::date BETWEEN $1 AND $2
     `;
     const splitResult = await pool.query(unifiedQuery, [effectiveStart, effectiveEnd]);
     const splitData = splitResult.rows[0];
@@ -282,9 +282,9 @@ router.get('/finance', authMiddleware, async (req, res) => {
     // 5. Advanced Metrics
     const advancedQuery = `
       SELECT 
-        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE expense_date BETWEEN $1 AND $2) as total_expenses,
-        (SELECT COALESCE(SUM(s.price), 0) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'cancelled' AND s.date BETWEEN $1 AND $2) as no_show_loss,
-        (SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'confirmed' AND s.date BETWEEN $1 AND $2) + (SELECT COUNT(*) FROM table_sessions WHERE status = 'completed' AND DATE(start_time) BETWEEN $1 AND $2) as total_activities
+        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE expense_date::date BETWEEN $1 AND $2) as total_expenses,
+        (SELECT COALESCE(SUM(s.price), 0) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'confirmed' AND s.date BETWEEN $1 AND $2) as no_show_loss,
+        (SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'confirmed' AND s.date BETWEEN $1 AND $2) + (SELECT COUNT(*) FROM table_sessions WHERE status = 'completed' AND start_time::date BETWEEN $1 AND $2) as total_activities
       FROM (SELECT 1) as dummy
     `;
     const advancedResult = await pool.query(advancedQuery, [effectiveStart, effectiveEnd]);
