@@ -46,7 +46,8 @@ export default function AdminSlots() {
           isBooked: s.is_booked,
           userName: s.user_name,
           phone: s.phone,
-          paymentStatus: s.payment_status
+          paymentStatus: s.payment_status,
+          sharedBookingFacility: s.shared_booking_facility
       }));
       setSlots(mapped);
     } catch(e) {
@@ -348,40 +349,53 @@ export default function AdminSlots() {
                 </div>
               </div>
               
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                    <User className="w-4 h-4 text-primary" />
+              {inspectTarget.userName ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <User className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Booked By</p>
+                      <p className="font-medium text-foreground">{inspectTarget.userName}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Booked By</p>
-                    <p className="font-medium text-foreground">{inspectTarget.userName}</p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Phone className="w-4 h-4 text-primary" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Phone className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Contact Number</p>
+                      <p className="font-medium text-foreground">{inspectTarget.phone}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Contact Number</p>
-                    <p className="font-medium text-foreground">{inspectTarget.phone}</p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                    <CreditCard className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Payment Status</p>
-                    <p className="font-medium capitalize text-foreground">
-                      {inspectTarget.paymentStatus} 
-                      <span className="text-muted-foreground ml-2">(₹{inspectTarget.price})</span>
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <CreditCard className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Payment Status</p>
+                      <p className="font-medium capitalize text-foreground">
+                        {inspectTarget.paymentStatus} 
+                        <span className="text-muted-foreground ml-2">(₹{inspectTarget.price})</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : inspectTarget.sharedBookingFacility ? (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mt-2">
+                  <p className="text-amber-500 font-semibold text-sm mb-1">Shared Resource Blocked</p>
+                  <p className="text-xs text-muted-foreground">
+                    This slot is automatically blocked because the physical area is currently booked for <strong className="text-foreground">{inspectTarget.sharedBookingFacility}</strong>.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-secondary/40 border border-border rounded-lg p-4 mt-2">
+                  <p className="text-muted-foreground text-sm">Booking details unavailable.</p>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>

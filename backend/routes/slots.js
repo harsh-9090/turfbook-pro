@@ -63,7 +63,18 @@ router.get('/', async (req, res) => {
             AND ts.start_time < (s.date + s.end_time)
           ) THEN true
           ELSE false 
-        END as is_booked
+        END as is_booked,
+        (
+            SELECT t2.name FROM slots s2
+            JOIN bookings b2 ON b2.slot_id = s2.id AND b2.status != 'cancelled'
+            JOIN turfs t2 ON s2.turf_id = t2.id
+            WHERE t.physical_resource_id IS NOT NULL 
+            AND t2.physical_resource_id = t.physical_resource_id
+            AND s2.date = s.date
+            AND s2.start_time = s.start_time
+            AND s2.id != s.id
+            LIMIT 1
+        ) as shared_booking_facility
        FROM slots s
        JOIN turfs t ON s.turf_id = t.id
        LEFT JOIN bookings b ON b.slot_id = s.id AND b.status != 'cancelled'
