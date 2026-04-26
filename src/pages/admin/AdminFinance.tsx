@@ -238,7 +238,7 @@ export default function AdminFinance() {
         {/* Top Level Metrics (Primary) */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-emerald-500">
                <IndianRupee className="w-12 h-12" />
             </div>
             <CardHeader className="pb-2">
@@ -254,7 +254,7 @@ export default function AdminFinance() {
           </Card>
 
           <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-blue-500">
                <Calculator className="w-12 h-12" />
             </div>
             <CardHeader className="pb-2">
@@ -270,7 +270,7 @@ export default function AdminFinance() {
           </Card>
 
           <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-amber-500">
                <AlertCircle className="w-12 h-12" />
             </div>
             <CardHeader className="pb-2">
@@ -286,7 +286,7 @@ export default function AdminFinance() {
           </Card>
 
           <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-primary">
                <CheckCircle2 className="w-12 h-12" />
             </div>
             <CardHeader className="pb-2">
