@@ -282,7 +282,7 @@ router.get('/finance', authMiddleware, async (req, res) => {
     // 5. Advanced Metrics
     const advancedQuery = `
       SELECT 
-        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE date BETWEEN $1 AND $2) as total_expenses,
+        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE expense_date BETWEEN $1 AND $2) as total_expenses,
         (SELECT COALESCE(SUM(s.price), 0) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'cancelled' AND s.date BETWEEN $1 AND $2) as no_show_loss,
         (SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'confirmed' AND s.date BETWEEN $1 AND $2) + (SELECT COUNT(*) FROM table_sessions WHERE status = 'completed' AND DATE(start_time) BETWEEN $1 AND $2) as total_activities
       FROM (SELECT 1) as dummy
