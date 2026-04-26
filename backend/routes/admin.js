@@ -67,4 +67,99 @@ router.get('/audit-logs', authMiddleware, async (req, res) => {
   }
 });
 
+// Get Live Occupancy Pulse
+router.get('/live-pulse', authMiddleware, async (req, res) => {
+  try {
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    const nowIST = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
+    
+    // Calculate 30 mins from now for 'booked_soon' status
+    const nowObj = new Date(`1970-01-01T${nowIST}Z`);
+    const in30MinsObj = new Date(nowObj.getTime() + 30 * 60000);
+    const in30MinsIST = in30MinsObj.toISOString().split('T')[1].substring(0, 8);
+
+    const [turfsResult, bookingsResult, sessionsResult] = await Promise.all([
+      pool.query('SELECT id, name, facility_type, COALESCE(table_count, 1) as table_count FROM turfs'),
+      pool.query(`
+        SELECT b.id as booking_id, u.name as customer_name, s.turf_id, s.start_time, s.end_time, s.table_number
+        FROM bookings b
+        JOIN slots s ON s.id = b.slot_id
+        JOIN users u ON u.id = b.user_id
+        WHERE s.date = $1 AND b.status = 'confirmed'
+      `, [today]),
+      pool.query(`
+        SELECT id as session_id, customer_name, turf_id, table_number, start_time
+        FROM table_sessions
+        WHERE status = 'running'
+      `)
+    ]);
+
+    const turfs = turfsResult.rows;
+    const bookings = bookingsResult.rows;
+    const sessions = sessionsResult.rows;
+
+    const resources = [];
+
+    // Map each table/turf into a single uniform state resource
+    for (const turf of turfs) {
+      const isTableGame = ['snooker', 'pool'].includes(turf.facility_type.toLowerCase());
+      const count = isTableGame ? turf.table_count : 1;
+
+      for (let i = 1; i <= count; i++) {
+        // Find active uncompleted sessions (if this is a table game walk-in)
+        const activeSession = sessions.find(s => s.turf_id === turf.id && s.table_number === i);
+        
+        // Find bookings specific to this resource
+        const resourceBookings = bookings.filter(b => b.turf_id === turf.id && (!isTableGame || b.table_number === i));
+        
+        const activeBooking = resourceBookings.find(b => b.start_time <= nowIST && b.end_time > nowIST);
+        const upcomingBooking = resourceBookings.find(b => b.start_time > nowIST && b.start_time <= in30MinsIST);
+
+        let status = 'available';
+        let currentBooking = null;
+
+        if (activeSession) {
+          status = 'in_use';
+          currentBooking = {
+            id: activeSession.session_id,
+            customerName: activeSession.customer_name || 'Walk-in',
+            type: 'session'
+          };
+        } else if (activeBooking) {
+          status = 'in_use';
+          currentBooking = {
+            id: activeBooking.booking_id,
+            customerName: activeBooking.customer_name,
+            endTime: activeBooking.end_time.substring(0, 5), // Format HH:MM
+            type: 'booking'
+          };
+        } else if (upcomingBooking) {
+          status = 'booked_soon';
+          currentBooking = {
+            id: upcomingBooking.booking_id,
+            customerName: upcomingBooking.customer_name,
+            startTime: upcomingBooking.start_time.substring(0, 5),
+            type: 'booking'
+          };
+        }
+
+        resources.push({
+          id: `${turf.id}-${i}`,
+          turfId: turf.id,
+          name: isTableGame ? `${turf.name} (T${i})` : turf.name,
+          facilityType: turf.facility_type,
+          tableNumber: isTableGame ? i : null,
+          status,
+          currentBooking
+        });
+      }
+    }
+
+    res.json(resources);
+  } catch (err) {
+    console.error('Live pulse error:', err);
+    res.status(500).json({ error: 'Server error fetching live pulse' });
+  }
+});
+
 module.exports = router;

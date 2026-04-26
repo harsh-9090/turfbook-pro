@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { format } from "date-fns";
 import { useSocket } from "@/hooks/useSocket";
+import { LiveOccupancyPulse } from "@/components/admin/LiveOccupancyPulse";
 
 export default function AdminDashboard() {
   const [statsData, setStatsData] = useState({
@@ -84,6 +85,8 @@ export default function AdminDashboard() {
           </motion.div>
         ))}
       </div>
+
+      <LiveOccupancyPulse />
 
       <div className="rounded-xl bg-card border border-border">
         <div className="px-5 py-4 border-b border-border">
