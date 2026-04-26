@@ -237,68 +237,49 @@ export default function AdminFinance() {
       <div className={cn("space-y-6 transition-all duration-500", loading ? "opacity-50 pointer-events-none blur-[1px]" : "opacity-100")}>
         {/* Top Level Metrics (Primary) */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-emerald-500">
-               <IndianRupee className="w-12 h-12" />
-            </div>
-            <CardHeader className="pb-2">
-              <CardDescription className="text-xs uppercase font-bold tracking-wider">Gross Revenue</CardDescription>
-              <CardTitle className="text-2xl">₹{summary.totalRevenue.toLocaleString()}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-xs text-muted-foreground">
-                 <TrendingUp className="w-3 h-3 mr-1 text-emerald-500" />
-                 <span>Total booking & session volume</span>
+          <div className="rounded-xl bg-card border border-border p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <IndianRupee className="w-4.5 h-4.5 text-emerald-500" />
               </div>
-            </CardContent>
-          </Card>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Gross Revenue</span>
+            </div>
+            <p className="font-heading font-bold text-2xl text-foreground mb-1">₹{summary.totalRevenue.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground leading-tight">Total booking & session volume</p>
+          </div>
 
-          <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-blue-500">
-               <Calculator className="w-12 h-12" />
-            </div>
-            <CardHeader className="pb-2">
-              <CardDescription className="text-xs uppercase font-bold tracking-wider text-emerald-500">Actual Net Profit</CardDescription>
-              <CardTitle className="text-2xl">₹{summary.netProfit.toLocaleString()}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-xs text-muted-foreground">
-                 <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
-                 <span>Revenue - Expenses</span>
+          <div className="rounded-xl bg-card border border-border p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <Calculator className="w-4.5 h-4.5 text-blue-500" />
               </div>
-            </CardContent>
-          </Card>
+              <span className="text-xs text-emerald-500 uppercase tracking-wider font-semibold">Actual Net Profit</span>
+            </div>
+            <p className="font-heading font-bold text-2xl text-foreground mb-1">₹{summary.netProfit.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground leading-tight">Revenue - Expenses</p>
+          </div>
 
-          <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-amber-500">
-               <AlertCircle className="w-12 h-12" />
-            </div>
-            <CardHeader className="pb-2">
-              <CardDescription className="text-xs uppercase font-bold tracking-wider text-amber-500">Total Expenses</CardDescription>
-              <CardTitle className="text-2xl text-destructive/80">₹{summary.expenses.toLocaleString()}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-xs text-muted-foreground">
-                 <div className="w-2 h-2 rounded-full bg-destructive/50 mr-2" />
-                 <span>Operating costs recorded</span>
+          <div className="rounded-xl bg-card border border-border p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                <AlertCircle className="w-4.5 h-4.5 text-amber-500" />
               </div>
-            </CardContent>
-          </Card>
+              <span className="text-xs text-amber-500 uppercase tracking-wider font-semibold">Total Expenses</span>
+            </div>
+            <p className="font-heading font-bold text-2xl text-destructive/80 mb-1">₹{summary.expenses.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground leading-tight">Operating costs recorded</p>
+          </div>
 
-          <Card className="bg-card/50 border-border/50 shadow-sm overflow-hidden relative group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-primary">
-               <CheckCircle2 className="w-12 h-12" />
-            </div>
-            <CardHeader className="pb-2">
-              <CardDescription className="text-xs uppercase font-bold tracking-wider text-primary">Unsettled Cash</CardDescription>
-              <CardTitle className="text-2xl">₹{summary.unsettledCash.toLocaleString()}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center text-xs text-muted-foreground">
-                 <span>Awaiting 'Close Day' verification</span>
+          <div className="rounded-xl bg-card border border-border p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                <CheckCircle2 className="w-4.5 h-4.5 text-purple-500" />
               </div>
-            </CardContent>
-          </Card>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Unsettled Cash</span>
+            </div>
+            <p className="font-heading font-bold text-2xl text-foreground mb-1">₹{summary.unsettledCash.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground leading-tight">Awaiting 'Close Day' verification</p>
+          </div>
         </div>
 
         {/* Advanced Insights Row */}
