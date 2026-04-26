@@ -12,19 +12,21 @@ router.get('/stats', authMiddleware, async (req, res) => {
     }
 
     const today = new Date().toISOString().split('T')[0];
-    const [total, todayBookings, todayRevenue, totalRevenue, upcoming] = await Promise.all([
-      pool.query('SELECT COUNT(*) FROM bookings'),
-      pool.query('SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE s.date = $1', [today]),
-      pool.query('SELECT COALESCE(SUM(p.amount), 0) as total FROM payments p JOIN bookings b ON b.id = p.booking_id WHERE DATE(p.created_at) = $1 AND b.status != $2', [today, 'cancelled']),
-      pool.query('SELECT COALESCE(SUM(p.amount), 0) as total FROM payments p JOIN bookings b ON b.id = p.booking_id WHERE b.status != $1', ['cancelled']),
-      pool.query('SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE s.date >= $1 AND b.status = $2', [today, 'confirmed']),
+    const [total, todayBookings, todayRevenue, todaySessionRevenue, totalRevenue, totalSessionRevenue, upcoming] = await Promise.all([
+      pool.query("SELECT COUNT(*) FROM bookings WHERE status != 'cancelled'"),
+      pool.query("SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE s.date = $1 AND b.status != 'cancelled'", [today]),
+      pool.query("SELECT COALESCE(SUM(p.amount), 0) as total FROM payments p JOIN bookings b ON b.id = p.booking_id JOIN slots s ON s.id = b.slot_id WHERE s.date = $1 AND b.status != 'cancelled'", [today]),
+      pool.query("SELECT COALESCE(SUM(total_amount), 0) as total FROM table_sessions WHERE status = 'completed' AND end_time::date = $1", [today]),
+      pool.query("SELECT COALESCE(SUM(p.amount), 0) as total FROM payments p JOIN bookings b ON b.id = p.booking_id WHERE b.status != 'cancelled'"),
+      pool.query("SELECT COALESCE(SUM(total_amount), 0) as total FROM table_sessions WHERE status = 'completed'"),
+      pool.query("SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE s.date >= $1 AND b.status = 'confirmed'", [today]),
     ]);
 
     const data = {
       totalBookings: parseInt(total.rows[0].count),
       todayBookings: parseInt(todayBookings.rows[0].count),
-      todayRevenue: parseInt(todayRevenue.rows[0].total),
-      totalRevenue: parseInt(totalRevenue.rows[0].total),
+      todayRevenue: parseInt(todayRevenue.rows[0].total) + parseInt(todaySessionRevenue.rows[0].total),
+      totalRevenue: parseInt(totalRevenue.rows[0].total) + parseInt(totalSessionRevenue.rows[0].total),
       upcomingBookings: parseInt(upcoming.rows[0].count),
     };
 
