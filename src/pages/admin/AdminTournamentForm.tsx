@@ -8,6 +8,7 @@ import { Loader2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { format } from "date-fns";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Tournament } from "./AdminTournaments";
 
 interface Props {
@@ -143,11 +144,19 @@ export default function AdminTournamentForm({ initialData, onSuccess }: Props) {
 
         <div className="space-y-2">
           <Label>Event Start Date</Label>
-          <Input type="datetime-local" name="start_date" value={formData.start_date} onChange={handleChange} required />
+          <DateTimePicker 
+            date={formData.start_date} 
+            onChange={(d) => setFormData(prev => ({ ...prev, start_date: d }))} 
+            placeholder="Select start date & time"
+          />
         </div>
         <div className="space-y-2">
           <Label>Event End Date</Label>
-          <Input type="datetime-local" name="end_date" value={formData.end_date} onChange={handleChange} required />
+          <DateTimePicker 
+            date={formData.end_date} 
+            onChange={(d) => setFormData(prev => ({ ...prev, end_date: d }))} 
+            placeholder="Select end date & time"
+          />
         </div>
 
         <div className="space-y-2">
@@ -197,11 +206,19 @@ export default function AdminTournamentForm({ initialData, onSuccess }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
           <div className="space-y-2">
             <Label>Carousel Start Date (Optional)</Label>
-            <Input type="datetime-local" name="display_start_date" value={formData.display_start_date} onChange={handleChange} />
+            <DateTimePicker 
+              date={formData.display_start_date} 
+              onChange={(d) => setFormData(prev => ({ ...prev, display_start_date: d }))} 
+              placeholder="Start showing on slider"
+            />
           </div>
           <div className="space-y-2">
             <Label>Carousel End Date (Optional)</Label>
-            <Input type="datetime-local" name="display_end_date" value={formData.display_end_date} onChange={handleChange} />
+            <DateTimePicker 
+              date={formData.display_end_date} 
+              onChange={(d) => setFormData(prev => ({ ...prev, display_end_date: d }))} 
+              placeholder="End showing on slider"
+            />
           </div>
           <div className="space-y-2">
             <Label>Display Priority Score</Label>

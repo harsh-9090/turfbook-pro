@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { format } from "date-fns";
 import api from "@/lib/api";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface Facility {
   id: string;
@@ -277,7 +279,12 @@ export default function AdminTables() {
                 ))}
               </SelectContent>
             </Select>
-            <Input type="date" className="w-[130px] h-8 text-xs bg-card border-border" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
+            <DatePicker 
+              date={filterDate} 
+              setDate={(d) => setFilterDate(d ? format(d, 'yyyy-MM-dd') : '')}
+              className="w-[180px] h-9 text-sm"
+              placeholder="Filter by date"
+            />
             {(filterSport !== "all" || filterDate) && (
               <Button size="sm" variant="ghost" className="h-8 px-2 text-xs text-muted-foreground" onClick={() => { setFilterSport("all"); setFilterDate(""); }}>Clear</Button>
             )}

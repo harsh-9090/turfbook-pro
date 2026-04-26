@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getFacilityLabel } from "@/lib/mock-data";
 import api from "@/lib/api";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useSocket } from "@/hooks/useSocket";
 import { format, parse, isAfter, isSameDay, startOfDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -433,7 +434,12 @@ export default function AdminBookings() {
                 </div>
                 <div className="flex-1">
                   <label className="text-sm text-muted-foreground block mb-1">Date</label>
-                  <Input type="date" value={bDate} onChange={e => setBDate(e.target.value)} required className="bg-background h-10" />
+                  <DatePicker 
+                    date={bDate} 
+                    setDate={(d) => setBDate(d ? format(d, 'yyyy-MM-dd') : '')}
+                    className="bg-background h-10 w-full"
+                    placeholder="Booking Date"
+                  />
                 </div>
               </div>
               <div>
