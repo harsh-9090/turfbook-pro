@@ -250,7 +250,7 @@ export default function AdminFinance() {
           <CardContent>
             <div className="flex items-center text-xs text-muted-foreground">
                <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
-               <span>Revenue - (Fees + Expenses)</span>
+               <span>Revenue - Expenses</span>
             </div>
           </CardContent>
         </Card>

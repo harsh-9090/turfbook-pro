@@ -133,4 +133,23 @@ BEGIN
     END LOOP;
   END LOOP;
 END;
-$$ LANGUAGE plpgsql;
+-- Table Sessions (Snooker/Pool walk-ins)
+CREATE TABLE table_sessions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  turf_id UUID REFERENCES turfs(id) ON DELETE CASCADE,
+  name VARCHAR(255) DEFAULT 'Live Walk-in Table',
+  customer_name VARCHAR(255),
+  customer_phone VARCHAR(20),
+  table_number INT DEFAULT 1,
+  start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  end_time TIMESTAMP,
+  total_amount DECIMAL(10, 2) DEFAULT 0.00,
+  payment_mode VARCHAR(20) DEFAULT 'cash',
+  status VARCHAR(20) DEFAULT 'running' CHECK (status IN ('running', 'completed')),
+  is_settled BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Index for sessions
+CREATE INDEX idx_sessions_status ON table_sessions(status);
+CREATE INDEX idx_sessions_date ON table_sessions(created_at);

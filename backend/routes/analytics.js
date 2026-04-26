@@ -127,21 +127,29 @@ router.get('/finance', authMiddleware, async (req, res) => {
   try {
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // 1. Revenue Split metrics (Cash vs UPI vs Online)
-    // Method mapping: 'online' (Razorpay), 'upi' (Staff QR), 'cash' (Physical)
-    const splitQuery = `
+    // 1. Unified Revenue Split (Bookings + Table Sessions)
+    const unifiedQuery = `
+      WITH unified_revenue AS (
+        -- Payments from bookings and tournaments
+        SELECT amount, platform_fee, method, is_settled, created_at FROM payments
+        UNION ALL
+        -- Direct revenue from completed table sessions (Snooker/Pool walk-ins)
+        SELECT total_amount as amount, 0 as platform_fee, payment_mode as method, true as is_settled, end_time as created_at 
+        FROM table_sessions WHERE status = 'completed'
+      )
       SELECT 
-        COALESCE(SUM(amount), 0) as total_volume,
+        COALESCE(SUM(amount), 0) as arena_revenue,
         COALESCE(SUM(CASE WHEN method = 'cash' THEN amount ELSE 0 END), 0) as cash_revenue,
         COALESCE(SUM(CASE WHEN method = 'upi' THEN amount ELSE 0 END), 0) as upi_revenue,
         COALESCE(SUM(CASE WHEN method = 'online' THEN amount ELSE 0 END), 0) as online_revenue,
-        COALESCE(SUM(platform_fee), 0) as total_fees
-      FROM payments
+        COALESCE(SUM(platform_fee), 0) as total_fees,
+        COALESCE(SUM(CASE WHEN method = 'cash' AND is_settled = false THEN amount ELSE 0 END), 0) as unsettled_cash
+      FROM unified_revenue
     `;
-    const splitResult = await pool.query(splitQuery);
+    const splitResult = await pool.query(unifiedQuery);
     const splitData = splitResult.rows[0];
 
-    // 2. Pending Dues (Money stay out on the field)
+    // 2. Pending Dues
     const duesQuery = `
       SELECT COALESCE(SUM(remaining_amount), 0) as total_pending 
       FROM bookings 
@@ -150,12 +158,12 @@ router.get('/finance', authMiddleware, async (req, res) => {
     const duesResult = await pool.query(duesQuery);
     const pendingDues = duesResult.rows[0].total_pending;
 
-    // 3. Facility Performance
+    // 3. Facility Performance (Bookings + Sessions)
     const facilityQuery = `
       SELECT 
         f.facility_type as type,
-        COALESCE(SUM(p.amount), 0) as revenue,
-        COUNT(DISTINCT b.id) as bookings
+        COALESCE(SUM(p.amount), 0) + COALESCE((SELECT SUM(ts.total_amount) FROM table_sessions ts WHERE ts.turf_id = f.id AND ts.status = 'completed'), 0) as revenue,
+        COUNT(DISTINCT b.id) + COALESCE((SELECT COUNT(*) FROM table_sessions ts WHERE ts.turf_id = f.id AND ts.status = 'completed'), 0) as total_activities
       FROM turfs f
       LEFT JOIN slots s ON s.turf_id = f.id
       LEFT JOIN bookings b ON b.slot_id = s.id
@@ -164,28 +172,32 @@ router.get('/finance', authMiddleware, async (req, res) => {
     `;
     const facilityResult = await pool.query(facilityQuery);
 
-    // 4. Daily Trends (Last 14 days)
+    // 4. Daily Trends (Bookings + Sessions)
     const trendQuery = `
       WITH dates AS (
         SELECT generate_series(CURRENT_DATE - 13, CURRENT_DATE, '1 day')::date AS d
+      ),
+      combined_daily AS (
+        SELECT created_at::date as d, amount FROM payments
+        UNION ALL
+        SELECT end_time::date as d, total_amount as amount FROM table_sessions WHERE status = 'completed'
       )
       SELECT 
         d.d as date,
-        COALESCE(SUM(p.amount), 0) as amount
+        COALESCE(SUM(c.amount), 0) as amount
       FROM dates d
-      LEFT JOIN payments p ON p.created_at::date = d.d
+      LEFT JOIN combined_daily c ON c.d = d.d
       GROUP BY d.d
       ORDER BY d.d
     `;
     const trendResult = await pool.query(trendQuery);
 
-    // 5. Advanced Metrics (Expenses, Unsettled Cash, No-Show Loss)
+    // 5. Advanced Metrics
     const advancedQuery = `
       SELECT 
         (SELECT COALESCE(SUM(amount), 0) FROM expenses) as total_expenses,
-        (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE method = 'cash' AND is_settled = false) as unsettled_cash,
         (SELECT COALESCE(SUM(s.price), 0) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'cancelled') as no_show_loss,
-        (SELECT COUNT(*) FROM bookings WHERE status = 'confirmed') as total_confirmed_bookings
+        (SELECT COUNT(*) FROM bookings WHERE status = 'confirmed') + (SELECT COUNT(*) FROM table_sessions WHERE status = 'completed') as total_activities
       FROM (SELECT 1) as dummy
     `;
     const advancedResult = await pool.query(advancedQuery);
@@ -196,18 +208,14 @@ router.get('/finance', authMiddleware, async (req, res) => {
       amount: Number(r.amount)
     }));
 
-    const totalRevenue = Number(splitData.total_volume);
-    const platformFees = Number(splitData.total_fees);
+    const arenaRevenue = Number(splitData.arena_revenue);
+    const platformFees = Number(splitData.total_fees); // Collected separately as surcharge
     const totalExpenses = Number(advData.total_expenses);
-    const netProfit = totalRevenue - platformFees - totalExpenses;
+    const netProfit = arenaRevenue - totalExpenses; // Fees are not deducted from arena's share
     
-    // Tax Calculation (Assuming 18% GST inclusive)
-    const gstCollected = totalRevenue * (18/118);
-
     res.json({
       summary: {
-        totalRevenue,
-        netRevenue: totalRevenue - platformFees,
+        totalRevenue: arenaRevenue, // The "Turf Price" revenue
         netProfit,
         cash: Number(splitData.cash_revenue),
         upi: Number(splitData.upi_revenue),
@@ -215,10 +223,9 @@ router.get('/finance', authMiddleware, async (req, res) => {
         fees: platformFees,
         expenses: totalExpenses,
         pendingDues: Number(pendingDues),
-        unsettledCash: Number(advData.unsettled_cash),
+        unsettledCash: Number(splitData.unsettled_cash),
         noShowLoss: Number(advData.no_show_loss),
-        gstAmount: gstCollected,
-        aov: advData.total_confirmed_bookings > 0 ? (totalRevenue / advData.total_confirmed_bookings) : 0
+        aov: advData.total_activities > 0 ? (arenaRevenue / advData.total_activities) : 0
       },
       facilities: facilityResult.rows.map(r => ({
         type: r.type,
@@ -237,13 +244,34 @@ router.get('/finance', authMiddleware, async (req, res) => {
 // POST /api/analytics/finance/settle - Mark all cash as settled (Close the Day)
 router.post('/finance/settle', authMiddleware, async (req, res) => {
   try {
-    const result = await pool.query(`
-      UPDATE payments 
-      SET is_settled = true 
-      WHERE method = 'cash' AND is_settled = false
-      RETURNING id
-    `);
-    res.json({ message: `Day closed! ${result.rowCount} cash payments settled.`, settledCount: result.rowCount });
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Settle booking payments
+      const payResult = await client.query(`
+        UPDATE payments SET is_settled = true 
+        WHERE method = 'cash' AND is_settled = false
+      `);
+      
+      // Settle table sessions
+      const sessionResult = await client.query(`
+        UPDATE table_sessions SET is_settled = true 
+        WHERE payment_mode = 'cash' AND is_settled = false
+      `);
+      
+      await client.query('COMMIT');
+      const totalSettle = (payResult.rowCount || 0) + (sessionResult.rowCount || 0);
+      res.json({ 
+        message: `Day closed! ${totalSettle} cash transactions settled.`, 
+        settledCount: totalSettle 
+      });
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     console.error('Settle-up error:', err);
     res.status(500).json({ error: 'Failed to settle payments' });
