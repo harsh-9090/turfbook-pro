@@ -77,7 +77,7 @@ router.get('/', authMiddleware, async (req, res) => {
           ts.customer_name, ts.customer_phone,
           ts.start_time, ts.end_time,
           ts.total_amount,
-          ts.created_at
+          ts.start_time as created_at
         FROM table_sessions ts
         JOIN turfs f ON f.id = ts.turf_id
         WHERE ts.status = 'completed'
