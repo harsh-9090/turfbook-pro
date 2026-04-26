@@ -1,6 +1,6 @@
 import React from "react";
 import { format, subDays, startOfMonth, startOfYear } from "date-fns";
-import { Calendar as CalendarIcon, Filter } from "lucide-react";
+import { Filter } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ export function AdminDateFilter({ onFilterChange }: AdminDateFilterProps) {
         start = startOfYear(now);
         break;
       case "custom":
-        return; // Don't trigger change yet
+        return;
     }
 
     const startStr = format(start, "yyyy-MM-dd");
@@ -50,25 +50,21 @@ export function AdminDateFilter({ onFilterChange }: AdminDateFilterProps) {
   };
 
   const handleCustomChange = (type: "start" | "end", date: string) => {
-    if (type === "start") {
-      setStartDate(date);
-      if (range === "custom") onFilterChange(date, endDate);
-    } else {
-      setEndDate(date);
-      if (range === "custom") onFilterChange(startDate, date);
-    }
+    if (type === "start") setStartDate(date);
+    else setEndDate(date);
   };
 
   return (
-    <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-3 bg-card p-2 sm:p-3 rounded-xl border border-border shadow-sm w-full xl:w-auto">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground px-1 py-1">
-        <Filter className="w-4 h-4 text-primary" />
-        <span className="whitespace-nowrap">Filter Period</span>
-      </div>
+    <div className="bg-card p-3 rounded-xl border border-border shadow-sm w-full xl:w-auto">
+      {/* Row 1: Label + Select + Desktop pickers */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground shrink-0">
+          <Filter className="w-4 h-4 text-primary" />
+          <span className="whitespace-nowrap hidden sm:inline">Filter Period</span>
+        </div>
 
-      <div className="flex flex-wrap items-center gap-2">
         <Select value={range} onValueChange={applyPreset}>
-          <SelectTrigger className="w-full sm:w-[140px] h-9 text-xs bg-muted/50 border-border/50">
+          <SelectTrigger className="w-[140px] h-9 text-xs bg-muted/50 border-border/50 shrink-0">
             <SelectValue placeholder="Select range" />
           </SelectTrigger>
           <SelectContent>
@@ -81,35 +77,61 @@ export function AdminDateFilter({ onFilterChange }: AdminDateFilterProps) {
           </SelectContent>
         </Select>
 
+        {/* Desktop: inline date pickers (xl and up) */}
         <div className={cn(
-          "flex flex-wrap items-center gap-2 flex-1 sm:flex-none transition-all duration-300 min-w-0",
+          "hidden xl:flex items-center gap-2 transition-all duration-300",
           range !== "custom" ? "opacity-30 pointer-events-none grayscale" : "opacity-100"
         )}>
-          <div className="flex items-center gap-1.5 flex-1 sm:flex-none min-w-0">
-            <DatePicker 
-              date={startDate} 
-              setDate={(d) => handleCustomChange("start", d ? format(d, "yyyy-MM-dd") : "")}
-              className="w-[110px] xs:w-[125px] h-9 text-[11px]"
-            />
-            <span className="text-muted-foreground text-[10px] uppercase font-bold px-0.5 shrink-0">to</span>
-            <DatePicker 
-              date={endDate} 
-              setDate={(d) => handleCustomChange("end", d ? format(d, "yyyy-MM-dd") : "")}
-              className="w-[110px] xs:w-[125px] h-9 text-[11px]"
-            />
-          </div>
-          
+          <DatePicker 
+            date={startDate} 
+            setDate={(d) => handleCustomChange("start", d ? format(d, "yyyy-MM-dd") : "")}
+            className="w-[130px] h-9 text-[11px]"
+          />
+          <span className="text-muted-foreground text-[10px] uppercase font-bold shrink-0">to</span>
+          <DatePicker 
+            date={endDate} 
+            setDate={(d) => handleCustomChange("end", d ? format(d, "yyyy-MM-dd") : "")}
+            className="w-[130px] h-9 text-[11px]"
+          />
           {range === "custom" && (
             <Button 
-              variant="secondary" 
               size="sm" 
-              className="h-9 text-xs px-4 bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
+              className="h-9 text-xs px-5 bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => onFilterChange(startDate, endDate)}
             >
               Apply
             </Button>
           )}
         </div>
+      </div>
+
+      {/* Row 2: Mobile/Tablet date pickers (below xl) */}
+      <div className={cn(
+        "xl:hidden mt-3 transition-all duration-300",
+        range !== "custom" ? "opacity-30 pointer-events-none grayscale" : "opacity-100"
+      )}>
+        <div className="flex items-center gap-2">
+          <DatePicker 
+            date={startDate} 
+            setDate={(d) => handleCustomChange("start", d ? format(d, "yyyy-MM-dd") : "")}
+            className="flex-1 h-9 text-[11px]"
+          />
+          <span className="text-muted-foreground text-[10px] uppercase font-bold shrink-0">to</span>
+          <DatePicker 
+            date={endDate} 
+            setDate={(d) => handleCustomChange("end", d ? format(d, "yyyy-MM-dd") : "")}
+            className="flex-1 h-9 text-[11px]"
+          />
+        </div>
+        {range === "custom" && (
+          <Button 
+            size="sm" 
+            className="w-full mt-2 h-9 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() => onFilterChange(startDate, endDate)}
+          >
+            Apply
+          </Button>
+        )}
       </div>
     </div>
   );
