@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { IndianRupee, TrendingUp, Users, Calendar, Clock, Activity } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, Legend, PieChart, Pie, Cell } from "recharts";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import api from "@/lib/api";
 
 const SPORT_COLORS: Record<string, string> = {
@@ -175,41 +176,50 @@ export default function AdminAnalytics() {
           )}
         </div>
 
-        {/* Session History */}
+        {/* Recent Activities */}
         <div className="rounded-xl bg-card border border-border p-5">
           <h3 className="font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-primary" /> Recent Sessions
+            <Activity className="w-4 h-4 text-primary" /> Recent Activities
           </h3>
           {data.sessionHistory.length > 0 ? (
             <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
               {data.sessionHistory.map((s: any) => {
+                const isBooking = s.type === 'booking';
                 const start = new Date(s.startTime);
                 const end = new Date(s.endTime);
-                const durationMins = Math.round((end.getTime() - start.getTime()) / 60000);
+                const durationMins = isBooking ? 60 : Math.round((end.getTime() - start.getTime()) / 60000); // Bookings usually 1h
                 const h = Math.floor(durationMins / 60);
                 const m = durationMins % 60;
                 const durationStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
 
                 return (
-                  <div key={s.id} className="bg-muted/30 px-3 py-2.5 rounded-lg">
+                  <div key={`${s.type}-${s.id}`} className="bg-muted/30 px-3 py-2.5 rounded-lg">
                     <div className="flex justify-between items-start mb-1">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{s.table}</p>
-                        <p className="text-[10px] text-muted-foreground">{s.customer} • {s.phone}</p>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isBooking ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                           {isBooking ? <Calendar className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{s.facility}</p>
+                          <p className="text-[10px] text-muted-foreground">{s.customer} • {s.phone}</p>
+                        </div>
                       </div>
-                      <span className="font-bold text-primary text-sm">₹{s.amount.toLocaleString()}</span>
+                      <div className="text-right">
+                        <span className="font-bold text-primary text-sm">₹{s.amount.toLocaleString()}</span>
+                        {isBooking && <Badge variant="outline" className="block text-[8px] mt-0.5 px-1 py-0 h-3 leading-none opacity-70">ONLINE</Badge>}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                      <span>{start.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-1">
+                      <span className="font-mono">{start.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
                       <span>{start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} → {end.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
-                      <span className="text-foreground font-medium">{durationStr}</span>
+                      <span className="text-foreground font-medium">{isBooking ? 'Slot' : durationStr}</span>
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground text-sm">No completed sessions yet.</div>
+            <div className="text-center py-8 text-muted-foreground text-sm">No recent activities available.</div>
           )}
         </div>
       </div>

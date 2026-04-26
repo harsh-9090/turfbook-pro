@@ -35,12 +35,10 @@ router.get('/', authMiddleware, async (req, res) => {
       dailyTrend,
       peakHours,
       utilization,
-      sessionHistory,
       totalBookings,
       totalSessions,
       todayBookingCount,
-      todaySessionCount,
-      topCustomers
+      todaySessionCount
     ] = await Promise.all([
       pool.query(`SELECT COALESCE(SUM(s.price), 0) as total FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE s.date = $1 AND b.status != 'cancelled'`, [today]),
       pool.query(`SELECT COALESCE(SUM(s.price), 0) as total FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE s.date >= $1 AND b.status != 'cancelled'`, [weekStartStr]),
@@ -53,18 +51,63 @@ router.get('/', authMiddleware, async (req, res) => {
       pool.query(`SELECT d.date::text, COALESCE((SELECT SUM(sl.price) FROM bookings bk JOIN slots sl ON sl.id = bk.slot_id WHERE sl.date = d.date AND bk.status != 'cancelled'), 0) as booking_revenue, COALESCE((SELECT SUM(ts.total_amount) FROM table_sessions ts WHERE DATE(ts.start_time) = d.date AND ts.status = 'completed'), 0) as session_revenue FROM generate_series(CURRENT_DATE - 6, CURRENT_DATE, '1 day') d(date) ORDER BY d.date`),
       pool.query(`SELECT EXTRACT(HOUR FROM s.start_time)::int as hour, COUNT(*) as count FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE s.date >= $1 AND b.status != 'cancelled' GROUP BY hour ORDER BY hour`, [monthStartStr]),
       pool.query(`SELECT COUNT(*) as total_slots, SUM(CASE WHEN s.id IN (SELECT slot_id FROM bookings WHERE status != 'cancelled') THEN 1 ELSE 0 END) as booked_slots FROM slots s WHERE s.date >= $1 AND s.date <= $2`, [weekStartStr, today]),
-      pool.query(`SELECT ts.*, f.name as facility_name, f.weekday_day_price as hourly_rate FROM table_sessions ts JOIN turfs f ON f.id = ts.turf_id WHERE ts.status = 'completed' ORDER BY ts.end_time DESC LIMIT 50`),
       pool.query('SELECT COUNT(*) FROM bookings WHERE status != $1', ['cancelled']),
       pool.query(`SELECT COUNT(*) FROM table_sessions WHERE status = 'completed'`),
       pool.query(`SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE s.date = $1 AND b.status != 'cancelled'`, [today]),
-      pool.query(`SELECT COUNT(*) FROM table_sessions WHERE DATE(start_time) = $1 AND status = 'completed'`, [today]),
-      pool.query(`SELECT customer_name, customer_phone, COUNT(*) as total_visits, COALESCE(SUM(total_amount), 0) as total_spent FROM table_sessions WHERE status = 'completed' AND customer_name IS NOT NULL GROUP BY customer_name, customer_phone ORDER BY total_spent DESC LIMIT 10`)
+      pool.query(`SELECT COUNT(*) FROM table_sessions WHERE DATE(start_time) = $1 AND status = 'completed'`, [today])
     ]);
 
-    // Merge sport revenues
-    const sportMap = {};
-    revenueBySport.rows.forEach(r => { sportMap[r.facility_type] = (sportMap[r.facility_type] || 0) + parseFloat(r.total); });
-    sessionRevBySport.rows.forEach(r => { sportMap[r.facility_type] = (sportMap[r.facility_type] || 0) + parseFloat(r.total); });
+    // 6. Unified Recent Activities (Confimed Bookings + Completed Sessions)
+    const recentQuery = `
+      WITH combined_recent AS (
+        SELECT 
+          b.id::text, 'booking' as type, f.name as facility_name, f.facility_type,
+          u.name as customer_name, u.phone as customer_phone,
+          (s.date + s.start_time) as start_time, (s.date + s.end_time) as end_time,
+          COALESCE((SELECT SUM(amount) FROM payments WHERE booking_id = b.id), 0) as total_amount,
+          b.created_at
+        FROM bookings b
+        JOIN slots s ON s.id = b.slot_id
+        JOIN turfs f ON f.id = s.turf_id
+        JOIN users u ON u.id = b.user_id
+        WHERE b.status = 'confirmed'
+        UNION ALL
+        SELECT 
+          ts.id::text, 'session' as type, f.name as facility_name, f.facility_type,
+          ts.customer_name, ts.customer_phone,
+          ts.start_time, ts.end_time,
+          ts.total_amount,
+          ts.created_at
+        FROM table_sessions ts
+        JOIN turfs f ON f.id = ts.turf_id
+        WHERE ts.status = 'completed'
+      )
+      SELECT * FROM combined_recent 
+      ORDER BY created_at DESC 
+      LIMIT 50
+    `;
+    const recentResult = await pool.query(recentQuery);
+
+    // 7. Unified Top Customers (By Total Spent)
+    const topCustomersQuery = `
+      WITH customer_revenue AS (
+        SELECT u.name as customer_name, u.phone as customer_phone, p.amount as spent
+        FROM payments p
+        JOIN bookings b ON b.id = p.booking_id
+        JOIN users u ON u.id = b.user_id
+        WHERE b.status = 'confirmed'
+        UNION ALL
+        SELECT customer_name, customer_phone, total_amount as spent
+        FROM table_sessions
+        WHERE status = 'completed' AND customer_name IS NOT NULL
+      )
+      SELECT customer_name, customer_phone, COUNT(*) as total_visits, SUM(spent) as total_spent
+      FROM customer_revenue
+      GROUP BY customer_name, customer_phone
+      ORDER BY total_spent DESC
+      LIMIT 10
+    `;
+    const topCustomersResult = await pool.query(topCustomersQuery);
 
     const data = {
       revenue: {
@@ -95,22 +138,22 @@ router.get('/', authMiddleware, async (req, res) => {
         todayBookings: parseInt(todayBookingCount.rows[0].count),
         todaySessions: parseInt(todaySessionCount.rows[0].count),
       },
-      topCustomers: topCustomers.rows.map(r => ({
+      topCustomers: topCustomersResult.rows.map(r => ({
         name: r.customer_name,
         phone: r.customer_phone,
         visits: parseInt(r.total_visits),
         spent: parseFloat(r.total_spent)
       })),
-      sessionHistory: sessionHistory.rows.map(r => ({
+      sessionHistory: recentResult.rows.map(r => ({
         id: r.id,
+        type: r.type,
         facility: r.facility_name,
-        table: r.name,
+        sportType: r.facility_type,
         customer: r.customer_name,
         phone: r.customer_phone,
         startTime: r.start_time,
         endTime: r.end_time,
-        amount: parseFloat(r.total_amount || 0),
-        hourlyRate: parseFloat(r.hourly_rate)
+        amount: parseFloat(r.total_amount || 0)
       }))
     };
 
