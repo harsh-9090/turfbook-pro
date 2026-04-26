@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { IndianRupee, TrendingUp, Users, Calendar, Clock, Activity } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, Legend, PieChart, Pie, Cell } from "recharts";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import api from "@/lib/api";
+import { AdminDateFilter } from "@/components/admin/AdminDateFilter";
+import { startOfMonth, format } from "date-fns";
 
 const SPORT_COLORS: Record<string, string> = {
   cricket: "hsl(142 76% 36%)",
@@ -21,19 +23,26 @@ const tooltipStyle = {
 export default function AdminAnalytics() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [dates, setDates] = useState({
+    start: format(startOfMonth(new Date()), "yyyy-MM-dd"),
+    end: format(new Date(), "yyyy-MM-dd")
+  });
+
+  const fetchAnalytics = useCallback(async (start: string, end: string) => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/analytics?startDate=${start}&endDate=${end}`);
+      setData(res.data);
+    } catch {
+      toast.error("Failed to load analytics");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await api.get("/analytics");
-        setData(res.data);
-      } catch {
-        toast.error("Failed to load analytics");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    fetchAnalytics(dates.start, dates.end);
+  }, [dates.start, dates.end, fetchAnalytics]);
 
   if (loading) {
     return (
@@ -60,6 +69,13 @@ export default function AdminAnalytics() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h2 className="text-2xl font-heading font-bold text-foreground">Operational Insights</h2>
+        <AdminDateFilter 
+          onFilterChange={(start, end) => setDates({ start, end })} 
+        />
+      </div>
+
       {/* Revenue Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={IndianRupee} label="Today's Revenue" value={`₹${data.revenue.today.toLocaleString()}`} sub={`Online: ₹${data.revenue.onlineToday.toLocaleString()} • Walk-in: ₹${data.revenue.walkInToday.toLocaleString()}`} color="text-emerald-500" bg="bg-emerald-500/10" />

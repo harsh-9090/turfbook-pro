@@ -20,7 +20,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, startOfMonth } from "date-fns";
+import { AdminDateFilter } from "@/components/admin/AdminDateFilter";
 
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
 const PAYMENT_COLORS = {
@@ -33,6 +34,10 @@ export default function AdminFinance() {
   const [data, setData] = useState<any>(null);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dates, setDates] = useState({
+    start: format(startOfMonth(new Date()), "yyyy-MM-dd"),
+    end: format(new Date(), "yyyy-MM-dd")
+  });
   
   // Expense Modal State
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
@@ -43,11 +48,12 @@ export default function AdminFinance() {
   // Settle Modal State
   const [settleModalOpen, setSettleModalOpen] = useState(false);
 
-  const fetchFinance = async () => {
+  const fetchFinance = async (start = dates.start, end = dates.end) => {
+    setLoading(true);
     try {
       const [finRes, expRes] = await Promise.all([
-        api.get("/analytics/finance"),
-        api.get("/expenses")
+        api.get(`/analytics/finance?startDate=${start}&endDate=${end}`),
+        api.get(`/expenses?startDate=${start}&endDate=${end}`)
       ]);
       setData(finRes.data);
       setExpenses(expRes.data);
@@ -61,7 +67,7 @@ export default function AdminFinance() {
 
   useEffect(() => {
     fetchFinance();
-  }, []);
+  }, [dates.start, dates.end]);
 
   const handleAddExpense = async () => {
     if (!expenseCategory || !expenseAmount) return toast.error("Please fill required fields");
@@ -153,7 +159,10 @@ export default function AdminFinance() {
           <h1 className="text-3xl font-heading font-bold tracking-tight text-foreground">Financial Command Center</h1>
           <p className="text-muted-foreground mt-1">Operational accounting and automated profit tracking.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <AdminDateFilter 
+            onFilterChange={(start, end) => setDates({ start, end })} 
+          />
           <Button variant="outline" size="sm" onClick={exportToCSV} className="border-border/50 bg-card/50">
             <Download className="w-4 h-4 mr-2" /> Export CSV
           </Button>

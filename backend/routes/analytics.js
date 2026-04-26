@@ -13,8 +13,15 @@ router.get('/', authMiddleware, async (req, res) => {
       if (cached) return res.json(cached);
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const { startDate, endDate } = req.query;
     const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    
+    // Fallback defaults if no filter is provided (Current Month)
+    const effectiveStart = startDate || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    const effectiveEnd = endDate || today;
+
+    // Helper static dates for quick-view cards (Always current)
     const dayOfWeek = now.getDay();
     const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     const weekStart = new Date(now);
@@ -46,11 +53,12 @@ router.get('/', authMiddleware, async (req, res) => {
       pool.query(`SELECT COALESCE(SUM(total_amount), 0) as total FROM table_sessions WHERE DATE(start_time) = $1 AND status = 'completed'`, [today]),
       pool.query(`SELECT COALESCE(SUM(total_amount), 0) as total FROM table_sessions WHERE DATE(start_time) >= $1 AND status = 'completed'`, [weekStartStr]),
       pool.query(`SELECT COALESCE(SUM(total_amount), 0) as total FROM table_sessions WHERE DATE(start_time) >= $1 AND status = 'completed'`, [monthStartStr]),
-      pool.query(`SELECT f.facility_type, COALESCE(SUM(s.price), 0) as total FROM bookings b JOIN slots s ON s.id = b.slot_id JOIN turfs f ON f.id = s.turf_id WHERE s.date >= $1 AND b.status != 'cancelled' GROUP BY f.facility_type`, [monthStartStr]),
-      pool.query(`SELECT f.facility_type, COALESCE(SUM(ts.total_amount), 0) as total FROM table_sessions ts JOIN turfs f ON f.id = ts.turf_id WHERE DATE(ts.start_time) >= $1 AND ts.status = 'completed' GROUP BY f.facility_type`, [monthStartStr]),
-      pool.query(`SELECT d.date::text, COALESCE((SELECT SUM(sl.price) FROM bookings bk JOIN slots sl ON sl.id = bk.slot_id WHERE sl.date = d.date AND bk.status != 'cancelled'), 0) as booking_revenue, COALESCE((SELECT SUM(ts.total_amount) FROM table_sessions ts WHERE DATE(ts.start_time) = d.date AND ts.status = 'completed'), 0) as session_revenue FROM generate_series(CURRENT_DATE - 6, CURRENT_DATE, '1 day') d(date) ORDER BY d.date`),
-      pool.query(`SELECT EXTRACT(HOUR FROM s.start_time)::int as hour, COUNT(*) as count FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE s.date >= $1 AND b.status != 'cancelled' GROUP BY hour ORDER BY hour`, [monthStartStr]),
-      pool.query(`SELECT COUNT(*) as total_slots, SUM(CASE WHEN s.id IN (SELECT slot_id FROM bookings WHERE status != 'cancelled') THEN 1 ELSE 0 END) as booked_slots FROM slots s WHERE s.date >= $1 AND s.date <= $2`, [weekStartStr, today]),
+      // Filtered Chart Data:
+      pool.query(`SELECT f.facility_type, COALESCE(SUM(s.price), 0) as total FROM bookings b JOIN slots s ON s.id = b.slot_id JOIN turfs f ON f.id = s.turf_id WHERE s.date BETWEEN $1 AND $2 AND b.status != 'cancelled' GROUP BY f.facility_type`, [effectiveStart, effectiveEnd]),
+      pool.query(`SELECT f.facility_type, COALESCE(SUM(ts.total_amount), 0) as total FROM table_sessions ts JOIN turfs f ON f.id = ts.turf_id WHERE DATE(ts.start_time) BETWEEN $1 AND $2 AND ts.status = 'completed' GROUP BY f.facility_type`, [effectiveStart, effectiveEnd]),
+      pool.query(`SELECT d.date::text, COALESCE((SELECT SUM(sl.price) FROM bookings bk JOIN slots sl ON sl.id = bk.slot_id WHERE sl.date = d.date AND bk.status != 'cancelled'), 0) as booking_revenue, COALESCE((SELECT SUM(ts.total_amount) FROM table_sessions ts WHERE DATE(ts.start_time) = d.date AND ts.status = 'completed'), 0) as session_revenue FROM generate_series($1::date, $2::date, '1 day') d(date) ORDER BY d.date`, [effectiveStart, effectiveEnd]),
+      pool.query(`SELECT EXTRACT(HOUR FROM s.start_time)::int as hour, COUNT(*) as count FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE s.date BETWEEN $1 AND $2 AND b.status != 'cancelled' GROUP BY hour ORDER BY hour`, [effectiveStart, effectiveEnd]),
+      pool.query(`SELECT COUNT(*) as total_slots, SUM(CASE WHEN s.id IN (SELECT slot_id FROM bookings WHERE status != 'cancelled') THEN 1 ELSE 0 END) as booked_slots FROM slots s WHERE s.date BETWEEN $1 AND $2`, [effectiveStart, effectiveEnd]),
       pool.query('SELECT COUNT(*) FROM bookings WHERE status != $1', ['cancelled']),
       pool.query(`SELECT COUNT(*) FROM table_sessions WHERE status = 'completed'`),
       pool.query(`SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE s.date = $1 AND b.status != 'cancelled'`, [today]),
@@ -95,19 +103,19 @@ router.get('/', authMiddleware, async (req, res) => {
         FROM payments p
         JOIN bookings b ON b.id = p.booking_id
         JOIN users u ON u.id = b.user_id
-        WHERE b.status = 'confirmed'
+        JOIN slots s ON s.id = b.slot_id
+        WHERE b.status = 'confirmed' AND s.date BETWEEN $1 AND $2
         UNION ALL
         SELECT customer_name, customer_phone, total_amount as spent
         FROM table_sessions
-        WHERE status = 'completed' AND customer_name IS NOT NULL
+        WHERE status = 'completed' AND customer_name IS NOT NULL AND DATE(start_time) BETWEEN $1 AND $2
       )
       SELECT customer_name, customer_phone, COUNT(*) as total_visits, SUM(spent) as total_spent
       FROM customer_revenue
       GROUP BY customer_name, customer_phone
       ORDER BY total_spent DESC
-      LIMIT 10
     `;
-    const topCustomersResult = await pool.query(topCustomersQuery);
+    const topCustomersResult = await pool.query(topCustomersQuery, [effectiveStart, effectiveEnd]);
 
     const sportMap = {};
     revenueBySport.rows.forEach(r => { sportMap[r.facility_type] = (sportMap[r.facility_type] || 0) + parseFloat(r.total || 0); });
@@ -172,7 +180,17 @@ router.get('/', authMiddleware, async (req, res) => {
 // GET /api/analytics/finance - Granular financial metrics
 router.get('/finance', authMiddleware, async (req, res) => {
   try {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const { startDate, endDate } = req.query;
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    
+    // Default to last 30 days if not provided
+    const last30 = new Date(now);
+    last30.setDate(now.getDate() - 30);
+    const last30Str = last30.toISOString().split('T')[0];
+
+    const effectiveStart = startDate || last30Str;
+    const effectiveEnd = endDate || today;
 
     // 1. Unified Revenue Split (Bookings + Table Sessions)
     const unifiedQuery = `
@@ -192,8 +210,9 @@ router.get('/finance', authMiddleware, async (req, res) => {
         COALESCE(SUM(platform_fee), 0) as total_fees,
         COALESCE(SUM(CASE WHEN method = 'cash' AND is_settled = false THEN amount ELSE 0 END), 0) as unsettled_cash
       FROM unified_revenue
+      WHERE created_at BETWEEN $1 AND $2
     `;
-    const splitResult = await pool.query(unifiedQuery);
+    const splitResult = await pool.query(unifiedQuery, [effectiveStart, effectiveEnd]);
     const splitData = splitResult.rows[0];
 
     // 2. Pending Dues
@@ -221,6 +240,7 @@ router.get('/finance', authMiddleware, async (req, res) => {
         LEFT JOIN slots s ON s.turf_id = f.id
         LEFT JOIN bookings b ON b.slot_id = s.id
         LEFT JOIN payments p ON p.booking_id = b.id
+        WHERE s.date BETWEEN $1 AND $2
         GROUP BY f.facility_type
         
         UNION ALL
@@ -232,17 +252,17 @@ router.get('/finance', authMiddleware, async (req, res) => {
           COUNT(*) as total_activities
         FROM table_sessions ts
         JOIN turfs f ON ts.turf_id = f.id
-        WHERE ts.status = 'completed'
+        WHERE ts.status = 'completed' AND DATE(ts.start_time) BETWEEN $1 AND $2
         GROUP BY f.facility_type
       ) combined
       GROUP BY type
     `;
-    const facilityResult = await pool.query(facilityQuery);
+    const facilityResult = await pool.query(facilityQuery, [effectiveStart, effectiveEnd]);
 
     // 4. Daily Trends (Bookings + Sessions)
     const trendQuery = `
       WITH dates AS (
-        SELECT generate_series(CURRENT_DATE - 13, CURRENT_DATE, '1 day')::date AS d
+        SELECT generate_series($1::date, $2::date, '1 day')::date AS d
       ),
       combined_daily AS (
         SELECT created_at::date as d, amount FROM payments
@@ -257,17 +277,17 @@ router.get('/finance', authMiddleware, async (req, res) => {
       GROUP BY d.d
       ORDER BY d.d
     `;
-    const trendResult = await pool.query(trendQuery);
+    const trendResult = await pool.query(trendQuery, [effectiveStart, effectiveEnd]);
 
     // 5. Advanced Metrics
     const advancedQuery = `
       SELECT 
-        (SELECT COALESCE(SUM(amount), 0) FROM expenses) as total_expenses,
-        (SELECT COALESCE(SUM(s.price), 0) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'cancelled') as no_show_loss,
-        (SELECT COUNT(*) FROM bookings WHERE status = 'confirmed') + (SELECT COUNT(*) FROM table_sessions WHERE status = 'completed') as total_activities
+        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE date BETWEEN $1 AND $2) as total_expenses,
+        (SELECT COALESCE(SUM(s.price), 0) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'cancelled' AND s.date BETWEEN $1 AND $2) as no_show_loss,
+        (SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'confirmed' AND s.date BETWEEN $1 AND $2) + (SELECT COUNT(*) FROM table_sessions WHERE status = 'completed' AND DATE(start_time) BETWEEN $1 AND $2) as total_activities
       FROM (SELECT 1) as dummy
     `;
-    const advancedResult = await pool.query(advancedQuery);
+    const advancedResult = await pool.query(advancedQuery, [effectiveStart, effectiveEnd]);
     const advData = advancedResult.rows[0];
 
     const trendData = trendResult.rows.map(r => ({

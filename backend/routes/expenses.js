@@ -5,8 +5,18 @@ const authMiddleware = require('../middleware/auth');
 
 // GET /api/expenses - List all expenses
 router.get('/', authMiddleware, async (req, res) => {
+  const { startDate, endDate } = req.query;
   try {
-    const result = await pool.query('SELECT * FROM expenses ORDER BY expense_date DESC, created_at DESC');
+    let query = 'SELECT * FROM expenses';
+    let params = [];
+
+    if (startDate && endDate) {
+      query += ' WHERE expense_date BETWEEN $1 AND $2';
+      params = [startDate, endDate];
+    }
+    
+    query += ' ORDER BY expense_date DESC, created_at DESC';
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
     console.error('Fetch expenses error:', err);
