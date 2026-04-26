@@ -19,7 +19,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
       pool.query("SELECT COALESCE(SUM(total_amount), 0) as total FROM table_sessions WHERE status = 'completed' AND end_time::date = $1", [today]),
       pool.query("SELECT COALESCE(SUM(p.amount), 0) as total FROM payments p JOIN bookings b ON b.id = p.booking_id WHERE b.status != 'cancelled'"),
       pool.query("SELECT COALESCE(SUM(total_amount), 0) as total FROM table_sessions WHERE status = 'completed'"),
-      pool.query("SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE s.date >= $1 AND b.status = 'confirmed'", [today]),
+      pool.query("SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'confirmed' AND (s.date > $1 OR (s.date = $1 AND s.end_time > $2))", [today, new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false })]),
     ]);
 
     const data = {
