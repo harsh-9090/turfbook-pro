@@ -236,7 +236,7 @@ export default function AdminFinance() {
 
       <div className={cn("space-y-6 transition-all duration-500", loading ? "opacity-50 pointer-events-none blur-[1px]" : "opacity-100")}>
         {/* Top Level Metrics (Primary) */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="rounded-xl bg-card border border-border p-4">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
