@@ -292,8 +292,21 @@ router.get('/verify-qr/:token', async (req, res) => {
     
     // Convert b.date and times to absolute UTC timestamps using Arena (+05:30) offset
     const datePart = b.date instanceof Date ? b.date.toISOString().split('T')[0] : b.date;
-    const slotStart = new Date(`${datePart}T${b.start_time}:00+05:30`);
-    const slotEnd = new Date(`${datePart}T${b.end_time}:00+05:30`);
+    
+    // PostgreSQL TIME values may come as "HH:mm:ss" or "HH:mm" — normalize to HH:mm
+    const normalizeTime = (t) => {
+      const str = String(t);
+      const parts = str.split(':');
+      return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+    };
+    
+    const startTimeStr = normalizeTime(b.start_time);
+    const endTimeStr = normalizeTime(b.end_time);
+    
+    const slotStart = new Date(`${datePart}T${startTimeStr}:00+05:30`);
+    const slotEnd = new Date(`${datePart}T${endTimeStr}:00+05:30`);
+
+    console.log(`[QR Debug] now=${now.toISOString()}, slotStart=${slotStart.toISOString()}, slotEnd=${slotEnd.toISOString()}, rawStart=${b.start_time}, rawEnd=${b.end_time}`);
 
     const isExpired = now > slotEnd;
     const isFuture = now < slotStart;
