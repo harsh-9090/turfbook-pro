@@ -195,12 +195,16 @@ router.get('/finance', authMiddleware, async (req, res) => {
     // 1. Unified Revenue Split (Bookings + Table Sessions)
     const unifiedQuery = `
       WITH unified_revenue AS (
-        -- Payments from bookings and tournaments
-        SELECT amount, platform_fee, method, is_settled, created_at FROM payments
+        -- Payments from bookings, filtered by the booking's slot date
+        SELECT p.amount, p.platform_fee, p.method, p.is_settled, s.date as revenue_date
+        FROM payments p
+        JOIN bookings b ON b.id = p.booking_id
+        JOIN slots s ON s.id = b.slot_id
+        WHERE b.status != 'cancelled' AND s.date BETWEEN $1 AND $2
         UNION ALL
         -- Direct revenue from completed table sessions (Snooker/Pool walk-ins)
-        SELECT total_amount as amount, 0 as platform_fee, payment_mode as method, true as is_settled, end_time as created_at 
-        FROM table_sessions WHERE status = 'completed'
+        SELECT total_amount as amount, 0 as platform_fee, payment_mode as method, true as is_settled, end_time::date as revenue_date 
+        FROM table_sessions WHERE status = 'completed' AND end_time::date BETWEEN $1 AND $2
       )
       SELECT 
         COALESCE(SUM(amount), 0) as arena_revenue,
@@ -210,7 +214,6 @@ router.get('/finance', authMiddleware, async (req, res) => {
         COALESCE(SUM(platform_fee), 0) as total_fees,
         COALESCE(SUM(CASE WHEN method = 'cash' AND is_settled = false THEN amount ELSE 0 END), 0) as unsettled_cash
       FROM unified_revenue
-      WHERE created_at::date BETWEEN $1 AND $2
     `;
     const splitResult = await pool.query(unifiedQuery, [effectiveStart, effectiveEnd]);
     const splitData = splitResult.rows[0];
@@ -238,7 +241,7 @@ router.get('/finance', authMiddleware, async (req, res) => {
           COUNT(DISTINCT b.id) as total_activities
         FROM turfs f
         LEFT JOIN slots s ON s.turf_id = f.id
-        LEFT JOIN bookings b ON b.slot_id = s.id
+        LEFT JOIN bookings b ON b.slot_id = s.id AND b.status != 'cancelled'
         LEFT JOIN payments p ON p.booking_id = b.id
         WHERE s.date BETWEEN $1 AND $2
         GROUP BY f.facility_type
@@ -252,7 +255,7 @@ router.get('/finance', authMiddleware, async (req, res) => {
           COUNT(*) as total_activities
         FROM table_sessions ts
         JOIN turfs f ON ts.turf_id = f.id
-        WHERE ts.status = 'completed' AND DATE(ts.start_time) BETWEEN $1 AND $2
+        WHERE ts.status = 'completed' AND ts.end_time::date BETWEEN $1 AND $2
         GROUP BY f.facility_type
       ) combined
       GROUP BY type
@@ -265,7 +268,11 @@ router.get('/finance', authMiddleware, async (req, res) => {
         SELECT generate_series($1::date, $2::date, '1 day')::date AS d
       ),
       combined_daily AS (
-        SELECT created_at::date as d, amount FROM payments
+        SELECT s.date as d, p.amount 
+        FROM payments p
+        JOIN bookings b ON b.id = p.booking_id
+        JOIN slots s ON s.id = b.slot_id
+        WHERE b.status != 'cancelled'
         UNION ALL
         SELECT end_time::date as d, total_amount as amount FROM table_sessions WHERE status = 'completed'
       )
@@ -283,8 +290,8 @@ router.get('/finance', authMiddleware, async (req, res) => {
     const advancedQuery = `
       SELECT 
         (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE expense_date::date BETWEEN $1 AND $2) as total_expenses,
-        (SELECT COALESCE(SUM(s.price), 0) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'confirmed' AND s.date BETWEEN $1 AND $2) as no_show_loss,
-        (SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'confirmed' AND s.date BETWEEN $1 AND $2) + (SELECT COUNT(*) FROM table_sessions WHERE status = 'completed' AND start_time::date BETWEEN $1 AND $2) as total_activities
+        (SELECT COALESCE(SUM(s.price), 0) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'cancelled' AND s.date BETWEEN $1 AND $2) as no_show_loss,
+        (SELECT COUNT(*) FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.status = 'confirmed' AND s.date BETWEEN $1 AND $2) + (SELECT COUNT(*) FROM table_sessions WHERE status = 'completed' AND end_time::date BETWEEN $1 AND $2) as total_activities
       FROM (SELECT 1) as dummy
     `;
     const advancedResult = await pool.query(advancedQuery, [effectiveStart, effectiveEnd]);
