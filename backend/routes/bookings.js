@@ -289,13 +289,11 @@ router.get('/verify-qr/:token', async (req, res) => {
     
     const b = result.rows[0];
     const now = new Date();
-    const slotStart = new Date(b.date);
-    const [s_h, s_m] = b.start_time.split(':');
-    slotStart.setHours(parseInt(s_h), parseInt(s_m), 0);
-
-    const slotEnd = new Date(b.date);
-    const [e_h, e_m] = b.end_time.split(':');
-    slotEnd.setHours(parseInt(e_h), parseInt(e_m), 0);
+    
+    // Convert b.date and times to absolute UTC timestamps using Arena (+05:30) offset
+    const datePart = b.date instanceof Date ? b.date.toISOString().split('T')[0] : b.date;
+    const slotStart = new Date(`${datePart}T${b.start_time}:00+05:30`);
+    const slotEnd = new Date(`${datePart}T${b.end_time}:00+05:30`);
 
     const isExpired = now > slotEnd;
     const isFuture = now < slotStart;
