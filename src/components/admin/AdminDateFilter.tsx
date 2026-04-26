@@ -1,6 +1,6 @@
 import React from "react";
 import { format, subDays, startOfMonth, startOfYear } from "date-fns";
-import { Filter } from "lucide-react";
+import { Filter, ChevronDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,20 @@ interface AdminDateFilterProps {
   onFilterChange: (start: string, end: string) => void;
 }
 
+const RANGE_LABELS: Record<string, string> = {
+  today: "Today",
+  yesterday: "Yesterday",
+  week: "Last 7 Days",
+  month: "This Month",
+  year: "This Year",
+  custom: "Custom Range",
+};
+
 export function AdminDateFilter({ onFilterChange }: AdminDateFilterProps) {
   const [range, setRange] = React.useState("month");
   const [startDate, setStartDate] = React.useState(format(startOfMonth(new Date()), "yyyy-MM-dd"));
   const [endDate, setEndDate] = React.useState(format(new Date(), "yyyy-MM-dd"));
+  const [isOpen, setIsOpen] = React.useState(false);
 
   const applyPreset = (value: string) => {
     setRange(value);
@@ -55,83 +65,75 @@ export function AdminDateFilter({ onFilterChange }: AdminDateFilterProps) {
   };
 
   return (
-    <div className="bg-card p-3 rounded-xl border border-border shadow-sm w-full xl:w-auto">
-      {/* Row 1: Label + Select + Desktop pickers */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground shrink-0">
+    <div className="bg-card rounded-xl border border-border shadow-sm w-full xl:w-auto">
+      {/* Collapsed Header — always visible */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between gap-3 w-full px-4 py-2.5 text-left"
+      >
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <Filter className="w-4 h-4 text-primary" />
-          <span className="whitespace-nowrap hidden sm:inline">Filter Period</span>
+          <span className="whitespace-nowrap">Filter Period</span>
+          <span className="text-xs font-semibold text-foreground bg-muted px-2 py-0.5 rounded-md">
+            {RANGE_LABELS[range] || "This Month"}
+          </span>
         </div>
+        <ChevronDown className={cn(
+          "w-4 h-4 text-muted-foreground transition-transform duration-200",
+          isOpen && "rotate-180"
+        )} />
+      </button>
 
-        <Select value={range} onValueChange={applyPreset}>
-          <SelectTrigger className="w-[140px] h-9 text-xs bg-muted/50 border-border/50 shrink-0">
-            <SelectValue placeholder="Select range" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="today">Today</SelectItem>
-            <SelectItem value="yesterday">Yesterday</SelectItem>
-            <SelectItem value="week">Last 7 Days</SelectItem>
-            <SelectItem value="month">This Month</SelectItem>
-            <SelectItem value="year">This Year</SelectItem>
-            <SelectItem value="custom">Custom Range</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Desktop: inline date pickers (xl and up) */}
-        <div className={cn(
-          "hidden xl:flex items-center gap-2 transition-all duration-300",
-          range !== "custom" ? "opacity-30 pointer-events-none grayscale" : "opacity-100"
-        )}>
-          <DatePicker 
-            date={startDate} 
-            setDate={(d) => handleCustomChange("start", d ? format(d, "yyyy-MM-dd") : "")}
-            className="w-[130px] h-9 text-[11px]"
-          />
-          <span className="text-muted-foreground text-[10px] uppercase font-bold shrink-0">to</span>
-          <DatePicker 
-            date={endDate} 
-            setDate={(d) => handleCustomChange("end", d ? format(d, "yyyy-MM-dd") : "")}
-            className="w-[130px] h-9 text-[11px]"
-          />
-          {range === "custom" && (
-            <Button 
-              size="sm" 
-              className="h-9 text-xs px-5 bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => onFilterChange(startDate, endDate)}
-            >
-              Apply
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Row 2: Mobile/Tablet date pickers (below xl) */}
+      {/* Expanded Content */}
       <div className={cn(
-        "xl:hidden mt-3 transition-all duration-300",
-        range !== "custom" ? "opacity-30 pointer-events-none grayscale" : "opacity-100"
+        "overflow-hidden transition-all duration-300 ease-in-out",
+        isOpen ? "max-h-[300px] opacity-100" : "max-h-0 opacity-0"
       )}>
-        <div className="flex items-center gap-2">
-          <DatePicker 
-            date={startDate} 
-            setDate={(d) => handleCustomChange("start", d ? format(d, "yyyy-MM-dd") : "")}
-            className="flex-1 h-9 text-[11px]"
-          />
-          <span className="text-muted-foreground text-[10px] uppercase font-bold shrink-0">to</span>
-          <DatePicker 
-            date={endDate} 
-            setDate={(d) => handleCustomChange("end", d ? format(d, "yyyy-MM-dd") : "")}
-            className="flex-1 h-9 text-[11px]"
-          />
+        <div className="px-4 pb-3 pt-1 border-t border-border/50 space-y-3">
+          {/* Select Dropdown */}
+          <Select value={range} onValueChange={applyPreset}>
+            <SelectTrigger className="w-full sm:w-[160px] h-9 text-xs bg-muted/50 border-border/50">
+              <SelectValue placeholder="Select range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="yesterday">Yesterday</SelectItem>
+              <SelectItem value="week">Last 7 Days</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+              <SelectItem value="custom">Custom Range</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Date Pickers */}
+          <div className={cn(
+            "transition-all duration-300",
+            range !== "custom" ? "opacity-30 pointer-events-none grayscale" : "opacity-100"
+          )}>
+            <div className="flex items-center gap-2">
+              <DatePicker 
+                date={startDate} 
+                setDate={(d) => handleCustomChange("start", d ? format(d, "yyyy-MM-dd") : "")}
+                className="flex-1 h-9 text-[11px]"
+              />
+              <span className="text-muted-foreground text-[10px] uppercase font-bold shrink-0">to</span>
+              <DatePicker 
+                date={endDate} 
+                setDate={(d) => handleCustomChange("end", d ? format(d, "yyyy-MM-dd") : "")}
+                className="flex-1 h-9 text-[11px]"
+              />
+            </div>
+            {range === "custom" && (
+              <Button 
+                size="sm" 
+                className="w-full mt-2 h-9 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => onFilterChange(startDate, endDate)}
+              >
+                Apply
+              </Button>
+            )}
+          </div>
         </div>
-        {range === "custom" && (
-          <Button 
-            size="sm" 
-            className="w-full mt-2 h-9 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={() => onFilterChange(startDate, endDate)}
-          >
-            Apply
-          </Button>
-        )}
       </div>
     </div>
   );
