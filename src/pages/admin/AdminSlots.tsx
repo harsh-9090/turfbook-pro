@@ -240,8 +240,8 @@ export default function AdminSlots() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {slots.filter(s => s.tableNumber === selectedTable).map((slot) => {
               // Mathematical Telemetry Logic
-              const startDateTime = parse(`${format(selectedDate, "yyyy-MM-dd")} ${slot.startTime}`, "yyyy-MM-dd HH:mm", new Date());
-              const endDateTime = parse(`${format(selectedDate, "yyyy-MM-dd")} ${slot.endTime}`, "yyyy-MM-dd HH:mm", new Date());
+              const startDateTime = parse(`${format(selectedDate, "yyyy-MM-dd")} ${slot.startTime}`, "yyyy-MM-dd hh:mm a", new Date());
+              const endDateTime = parse(`${format(selectedDate, "yyyy-MM-dd")} ${slot.endTime}`, "yyyy-MM-dd hh:mm a", new Date());
               const isRunning = slot.isBooked && isAfter(now, startDateTime) && isBefore(now, endDateTime);
               const isPast = isAfter(now, endDateTime);
               const remainingSecs = isRunning ? differenceInSeconds(endDateTime, now) : 0;
