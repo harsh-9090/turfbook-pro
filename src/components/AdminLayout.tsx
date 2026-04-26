@@ -89,7 +89,7 @@ export default function AdminLayout() {
   const isBlocked = !isAdmin && location.pathname !== "/admin" && !allowedTabs.includes(location.pathname);
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen bg-background flex overflow-hidden">
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 flex flex-col lg:translate-x-0 lg:static ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex items-center gap-2 px-6 h-16 border-b border-border min-w-0 overflow-hidden">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-white/5 border border-white/10 shrink-0">
@@ -142,7 +142,7 @@ export default function AdminLayout() {
 
       {sidebarOpen && <div className="fixed inset-0 z-40 bg-background/80 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="h-16 border-b border-border flex items-center px-4 lg:px-8 gap-4">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-muted-foreground"><Menu size={20} /></button>
           <h2 className="font-heading font-semibold text-foreground">
@@ -156,7 +156,7 @@ export default function AdminLayout() {
             {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
         </header>
-        <main className="flex-1 p-4 lg:p-8 overflow-auto">
+        <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
           {isBlocked ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Shield className="w-12 h-12 text-destructive mb-4" />
