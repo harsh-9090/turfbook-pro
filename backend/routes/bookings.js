@@ -133,7 +133,7 @@ router.get('/calendar', authMiddleware, async (req, res) => {
 
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const { date, status, limit } = req.query;
+    const { date, status, limit, upcoming } = req.query;
     const cacheKey = `bookings:list:${date || 'all'}:${status || 'all'}:${limit || 'none'}`;
 
     if (!cache.shouldBypass(req)) {
@@ -156,8 +156,15 @@ router.get('/', authMiddleware, async (req, res) => {
     const params = [];
     if (date) { params.push(date); query += ` AND s.date = $${params.length}`; }
     if (status) { params.push(status); query += ` AND b.status = $${params.length}`; }
+    if (upcoming === 'true') {
+      const nowIST = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
+      const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      params.push(todayIST);
+      params.push(nowIST);
+      query += ` AND b.status = 'confirmed' AND (s.date > $${params.length - 1} OR (s.date = $${params.length - 1} AND s.end_time > $${params.length}))`;
+    }
     
-    query += ' ORDER BY b.created_at DESC';
+    query += upcoming === 'true' ? ' ORDER BY s.date ASC, s.start_time ASC' : ' ORDER BY b.created_at DESC';
 
     if (limit) {
       params.push(limit);

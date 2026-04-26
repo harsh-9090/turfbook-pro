@@ -28,7 +28,7 @@ export default function AdminDashboard() {
         upcomingBookings: statsRes.data.upcomingBookings,
       });
 
-      const bookingsRes = await api.get('/bookings?limit=5');
+      const bookingsRes = await api.get('/bookings?limit=5&upcoming=true');
       const mapped = bookingsRes.data.map((b: any) => ({
         id: b.id,
         customerName: b.customer_name,
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
 
       <div className="rounded-xl bg-card border border-border">
         <div className="px-5 py-4 border-b border-border">
-          <h3 className="font-heading font-semibold text-foreground">Recent Bookings</h3>
+          <h3 className="font-heading font-semibold text-foreground">Upcoming Bookings</h3>
         </div>
         <div className="hidden md:block">
           <table className="w-full text-sm">
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
               </Badge>
             </div>
           ))}
-          {recentBookings.length === 0 && <p className="p-8 text-center text-muted-foreground">No recent bookings</p>}
+          {recentBookings.length === 0 && <p className="p-8 text-center text-muted-foreground">No upcoming bookings</p>}
         </div>
       </div>
     </div>
