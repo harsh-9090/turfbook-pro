@@ -204,14 +204,34 @@ router.get('/finance', authMiddleware, async (req, res) => {
     // 3. Facility Performance (Bookings + Sessions)
     const facilityQuery = `
       SELECT 
-        f.facility_type as type,
-        COALESCE(SUM(p.amount), 0) + COALESCE((SELECT SUM(ts.total_amount) FROM table_sessions ts WHERE ts.turf_id = f.id AND ts.status = 'completed'), 0) as revenue,
-        COUNT(DISTINCT b.id) + COALESCE((SELECT COUNT(*) FROM table_sessions ts WHERE ts.turf_id = f.id AND ts.status = 'completed'), 0) as total_activities
-      FROM turfs f
-      LEFT JOIN slots s ON s.turf_id = f.id
-      LEFT JOIN bookings b ON b.slot_id = s.id
-      LEFT JOIN payments p ON p.booking_id = b.id
-      GROUP BY f.facility_type
+        type, 
+        SUM(revenue) as revenue, 
+        SUM(total_activities) as total_activities
+      FROM (
+        -- Turf Bookings Revenue
+        SELECT 
+          f.facility_type as type,
+          COALESCE(SUM(p.amount), 0) as revenue,
+          COUNT(DISTINCT b.id) as total_activities
+        FROM turfs f
+        LEFT JOIN slots s ON s.turf_id = f.id
+        LEFT JOIN bookings b ON b.slot_id = s.id
+        LEFT JOIN payments p ON p.booking_id = b.id
+        GROUP BY f.facility_type
+        
+        UNION ALL
+        
+        -- Table Sessions Revenue
+        SELECT 
+          f.facility_type as type,
+          COALESCE(SUM(ts.total_amount), 0) as revenue,
+          COUNT(*) as total_activities
+        FROM table_sessions ts
+        JOIN turfs f ON ts.turf_id = f.id
+        WHERE ts.status = 'completed'
+        GROUP BY f.facility_type
+      ) combined
+      GROUP BY type
     `;
     const facilityResult = await pool.query(facilityQuery);
 
