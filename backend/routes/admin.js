@@ -81,7 +81,7 @@ router.get('/live-pulse', authMiddleware, async (req, res) => {
     const [turfsResult, bookingsResult, sessionsResult] = await Promise.all([
       pool.query('SELECT id, name, facility_type, COALESCE(table_count, 1) as table_count FROM turfs'),
       pool.query(`
-        SELECT b.id as booking_id, u.name as customer_name, s.turf_id, s.start_time, s.end_time, s.table_number
+        SELECT b.id as booking_id, u.name as customer_name, u.phone as customer_phone, s.turf_id, s.start_time, s.end_time, s.table_number
         FROM bookings b
         JOIN slots s ON s.id = b.slot_id
         JOIN users u ON u.id = b.user_id
@@ -127,10 +127,18 @@ router.get('/live-pulse', authMiddleware, async (req, res) => {
           };
         } else if (activeBooking) {
           status = 'in_use';
+          
+          let tracingEndTime = activeBooking.end_time;
+          let nextSegment = resourceBookings.find(b => b.start_time === tracingEndTime && b.customer_phone === activeBooking.customer_phone);
+          while (nextSegment) {
+            tracingEndTime = nextSegment.end_time;
+            nextSegment = resourceBookings.find(b => b.start_time === tracingEndTime && b.customer_phone === activeBooking.customer_phone);
+          }
+
           currentBooking = {
             id: activeBooking.booking_id,
             customerName: activeBooking.customer_name,
-            endTime: activeBooking.end_time.substring(0, 5), // Format HH:MM
+            endTime: tracingEndTime.substring(0, 5), // Format HH:MM
             type: 'booking'
           };
         } else if (upcomingBooking) {

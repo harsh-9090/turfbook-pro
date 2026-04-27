@@ -3,6 +3,7 @@ import { Activity, Clock, User, AlertCircle, CircleDot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import api from "@/lib/api";
+import { formatTime12Hour } from "@/lib/utils";
 
 interface Resource {
   id: string;
@@ -159,7 +160,7 @@ export function LiveOccupancyPulse() {
                       <div className="flex items-center gap-1 shrink-0 bg-background px-2 py-1 rounded text-[10px] font-bold">
                         <Clock className={`w-3 h-3 ${styles.text}`} />
                         <span className="text-foreground">
-                          {res.status === "in_use" ? `Till ${res.currentBooking?.endTime || 'open'}` : `At ${res.currentBooking?.startTime}`}
+                          {res.status === "in_use" ? `Till ${res.currentBooking?.endTime ? formatTime12Hour(res.currentBooking.endTime) : 'open'}` : `At ${res.currentBooking?.startTime ? formatTime12Hour(res.currentBooking.startTime) : ''}`}
                         </span>
                       </div>
                     </div>
