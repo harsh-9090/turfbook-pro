@@ -4,6 +4,7 @@ import logoImage from "@/assets/logo.png";
 import { LayoutDashboard, Calendar, CalendarDays, Settings, LogOut, BarChart3, Menu, X, Layers, Clock, Timer, DollarSign, Image as LucideImage, MessageSquare, Sun, Moon, Trophy, Megaphone, Shield, Users, QrCode, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
+import { title } from "process";
 
 const sidebarGroups = [
   {
@@ -12,6 +13,12 @@ const sidebarGroups = [
       { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
       { name: "Scan Entry", path: "/admin/scan", icon: QrCode },
       { name: "Live Presence", path: "/admin/presence", icon: Activity },
+
+    ]
+  },
+  {
+    title: "Finance",
+    links: [
       { name: "Analytics", path: "/admin/analytics", icon: BarChart3 },
       { name: "Finance", path: "/admin/finance", icon: DollarSign },
     ]
@@ -101,8 +108,8 @@ export default function AdminLayout() {
         <nav className="p-4 space-y-6 flex-1 overflow-y-auto scrollbar-thin">
           {sidebarGroups.map((group) => {
             const filteredLinks = group.links.filter(link =>
-              isAdmin || 
-              link.path === "/admin" || 
+              isAdmin ||
+              link.path === "/admin" ||
               (!link.adminOnly && allowedTabs.includes(link.path))
             );
 
@@ -123,9 +130,8 @@ export default function AdminLayout() {
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/80"
                       }`}
                   >
-                    <link.icon className={`w-4 h-4 transition-transform duration-200 ${
-                      location.pathname === link.path ? "scale-110" : "group-hover:scale-110"
-                    }`} />
+                    <link.icon className={`w-4 h-4 transition-transform duration-200 ${location.pathname === link.path ? "scale-110" : "group-hover:scale-110"
+                      }`} />
                     <span>{link.name}</span>
                   </Link>
                 ))}
