@@ -370,9 +370,9 @@ router.get('/live-presence', authMiddleware, async (req, res) => {
 
     for (const b of allBookings) {
       const isCurrentlyInside = b.checked_in_at !== null && b.end_time > nowIST;
-      const isExpectedNow = b.checked_in_at === null && b.start_time <= nowIST && b.end_time >= nowIST;
+      const isExpectedToday = b.checked_in_at === null && b.end_time >= nowIST;
 
-      if (isCurrentlyInside || isExpectedNow) {
+      if (isCurrentlyInside || isExpectedToday) {
         const traceKey = `${b.customer_phone}-${b.facility_name}-${b.table_number}`;
         if (processedKeys.has(traceKey)) continue;
 
