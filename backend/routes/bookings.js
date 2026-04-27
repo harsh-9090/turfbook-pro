@@ -349,6 +349,9 @@ router.patch('/:id/check-in', authMiddleware, async (req, res) => {
 // Analytics: Get Live Presence
 router.get('/live-presence', authMiddleware, async (req, res) => {
   try {
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    const nowIST = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
+
     const result = await pool.query(`
       SELECT b.id, b.checked_in_at, u.name as customer_name, t.name as facility_name,
              s.start_time, s.end_time, s.table_number
@@ -356,13 +359,13 @@ router.get('/live-presence', authMiddleware, async (req, res) => {
       JOIN users u ON u.id = b.user_id
       JOIN slots s ON s.id = b.slot_id
       JOIN turfs t ON t.id = s.turf_id
-      WHERE s.date = CURRENT_DATE
+      WHERE s.date = $1
       AND b.status != 'cancelled'
       AND (
-        (b.checked_in_at IS NOT NULL AND (s.date + s.end_time) > NOW()) -- Currently inside
-        OR (b.checked_in_at IS NULL AND (s.date + s.start_time) <= NOW() AND (s.date + s.end_time) >= NOW()) -- No-shows/Late
+        (b.checked_in_at IS NOT NULL AND s.end_time > $2) -- Currently inside
+        OR (b.checked_in_at IS NULL AND s.start_time <= $2 AND s.end_time >= $2) -- No-shows/Late
       )
-    `);
+    `, [today, nowIST]);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: 'Presence fetch failed' });
