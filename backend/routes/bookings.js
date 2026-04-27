@@ -353,7 +353,7 @@ router.get('/live-presence', authMiddleware, async (req, res) => {
     const nowIST = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
 
     const result = await pool.query(`
-      SELECT b.id, b.checked_in_at, u.name as customer_name, t.name as facility_name,
+      SELECT b.id, b.checked_in_at, u.phone as customer_phone, u.name as customer_name, t.name as facility_name,
              s.start_time, s.end_time, s.table_number
       FROM bookings b
       JOIN users u ON u.id = b.user_id
@@ -361,12 +361,37 @@ router.get('/live-presence', authMiddleware, async (req, res) => {
       JOIN turfs t ON t.id = s.turf_id
       WHERE s.date = $1
       AND b.status != 'cancelled'
-      AND (
-        (b.checked_in_at IS NOT NULL AND s.end_time > $2) -- Currently inside
-        OR (b.checked_in_at IS NULL AND s.start_time <= $2 AND s.end_time >= $2) -- No-shows/Late
-      )
-    `, [today, nowIST]);
-    res.json(result.rows);
+      ORDER BY s.start_time
+    `, [today]);
+
+    const allBookings = result.rows;
+    const finalPresences = [];
+    const processedKeys = new Set();
+
+    for (const b of allBookings) {
+      const isCurrentlyInside = b.checked_in_at !== null && b.end_time > nowIST;
+      const isExpectedNow = b.checked_in_at === null && b.start_time <= nowIST && b.end_time >= nowIST;
+
+      if (isCurrentlyInside || isExpectedNow) {
+        const traceKey = `${b.customer_phone}-${b.facility_name}-${b.table_number}`;
+        if (processedKeys.has(traceKey)) continue;
+
+        let tracingEndTime = b.end_time;
+        let nextSegment = allBookings.find(next => next.start_time === tracingEndTime && next.customer_phone === b.customer_phone && next.facility_name === b.facility_name);
+        while (nextSegment) {
+          tracingEndTime = nextSegment.end_time;
+          nextSegment = allBookings.find(next => next.start_time === tracingEndTime && next.customer_phone === b.customer_phone && next.facility_name === b.facility_name);
+        }
+
+        finalPresences.push({
+          ...b,
+          end_time: tracingEndTime
+        });
+        processedKeys.add(traceKey);
+      }
+    }
+
+    res.json(finalPresences);
   } catch (err) {
     res.status(500).json({ error: 'Presence fetch failed' });
   }
