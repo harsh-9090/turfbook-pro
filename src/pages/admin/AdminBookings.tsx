@@ -211,7 +211,7 @@ export default function AdminBookings() {
         <div className="bg-card/30 rounded-xl border border-border/50 overflow-hidden">
           <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-border/50">
             {/* Timeline Tabs */}
-            <div className="flex-1 p-2 overflow-x-auto scrollbar-hide">
+            <div className="p-2 overflow-x-auto scrollbar-hide">
               <div className="flex gap-2 min-w-max">
                 {['all', 'today', 'upcoming', 'past'].map((t: any) => (
                   <button key={t} onClick={() => setTimelineFilter(t)}
