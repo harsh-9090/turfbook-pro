@@ -109,6 +109,9 @@ server.listen(PORT, async () => {
     await pool.query(`ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user', 'admin', 'staff'))`);
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS allowed_tabs TEXT[] DEFAULT '{}'`);
     await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS platform_fee DECIMAL(10, 2) DEFAULT 0.00`);
+    await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS is_settled BOOLEAN DEFAULT false`);
+    await pool.query(`ALTER TABLE table_sessions ADD COLUMN IF NOT EXISTS is_settled BOOLEAN DEFAULT false`);
+    
     // Site settings expansion
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pin_hash TEXT`);
     await pool.query(`ALTER TABLE gallery_images ADD COLUMN IF NOT EXISTS resource_type TEXT DEFAULT 'image'`);
