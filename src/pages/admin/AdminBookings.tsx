@@ -7,7 +7,7 @@ import { format, parse, isAfter, isSameDay, startOfDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, XCircle, Plus, CheckCircle2, IndianRupee, Smartphone, Wallet, Banknote, ArrowUp, ArrowDown, Filter } from "lucide-react";
+import { Search, XCircle, Plus, CheckCircle2, IndianRupee, Smartphone, Wallet, Banknote, ArrowUp, ArrowDown, Filter, User, Calendar } from "lucide-react";
 import { formatTime12Hour } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -207,15 +207,17 @@ export default function AdminBookings() {
         </div>
 
         {/* Row 2: Advanced Filters (Refined) */}
-        <div className="bg-card/30 rounded-2xl border border-border/50 overflow-hidden">
+        <div className="bg-card/30 rounded-xl border border-border/50 overflow-hidden">
           <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-border/50">
             {/* Timeline Tabs */}
-            <div className="flex items-center p-2 gap-2 min-w-0">
-              <div className="flex bg-secondary/20 p-1 rounded-xl w-full sm:w-auto overflow-x-auto scrollbar-hide">
+            <div className="flex-1 p-2 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-2 min-w-max">
                 {['all', 'today', 'upcoming', 'past'].map((t: any) => (
                   <button key={t} onClick={() => setTimelineFilter(t)}
-                    className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                      timelineFilter === t ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" : "text-muted-foreground hover:bg-secondary/50"
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                      timelineFilter === t 
+                        ? "border-primary bg-primary/10 text-primary" 
+                        : "border-transparent bg-secondary/30 text-muted-foreground hover:bg-secondary/50"
                     }`}>
                     {t.charAt(0).toUpperCase() + t.slice(1)}
                   </button>
@@ -224,12 +226,14 @@ export default function AdminBookings() {
             </div>
 
             {/* Payment Filter */}
-            <div className="flex items-center p-2 gap-2">
-              <div className="flex bg-secondary/20 p-1 rounded-xl w-full sm:w-auto">
+            <div className="p-2 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-2 min-w-max">
                 {['all', 'paid', 'pending'].map((p: any) => (
                   <button key={p} onClick={() => setPaymentFilter(p)}
-                    className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      paymentFilter === p ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : "text-muted-foreground hover:bg-secondary/50"
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                      paymentFilter === p 
+                        ? "border-primary bg-primary/10 text-primary" 
+                        : "border-transparent bg-secondary/30 text-muted-foreground hover:bg-secondary/50"
                     }`}>
                     {p.charAt(0).toUpperCase() + p.slice(1)}
                   </button>
@@ -238,12 +242,14 @@ export default function AdminBookings() {
             </div>
 
             {/* Facility Filter */}
-            <div className="flex items-center p-2 gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
-              <div className="flex gap-1">
+            <div className="p-2 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-2 min-w-max">
                 {["all", ...facilityTypes].map((f) => (
                   <button key={f} onClick={() => setFacilityFilter(f)}
-                    className={`px-4 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                      facilityFilter === f ? "border-primary bg-primary/10 text-primary" : "border-transparent text-muted-foreground hover:bg-secondary/50"
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                      facilityFilter === f 
+                        ? "border-primary bg-primary/10 text-primary" 
+                        : "border-transparent bg-secondary/30 text-muted-foreground hover:bg-secondary/50"
                     }`}>
                     {f === "all" ? "All Sports" : getFacilityLabel(f)}
                   </button>
@@ -349,63 +355,87 @@ export default function AdminBookings() {
 
       <div className="lg:hidden grid gap-4">
         {filtered.map((b) => (
-          <div key={b.id} className="bg-card border border-border rounded-xl p-4 shadow-sm space-y-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="font-bold text-foreground">{b.customerName}</p>
-                <p className="text-xs text-muted-foreground">{b.phone}</p>
-              </div>
-              <Badge variant={b.status === "completed" ? "default" : b.status === "confirmed" ? "default" : b.status === "cancelled" ? "destructive" : "secondary"}
-                className={b.status === "completed" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : b.status === "confirmed" ? "bg-primary/10 text-primary border-primary/20" : ""}>
-                {b.status === "completed" ? "✓ Completed" : b.status}
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-xs border-y border-border/50 py-3">
-              <div className="space-y-1">
-                <p className="text-muted-foreground uppercase text-[10px] font-bold tracking-wider">Schedule</p>
-                <p className="text-foreground font-bold">{b.date}</p>
-                <p className="text-foreground font-semibold">
-                  {b.startTime} – {b.endTime}
-                </p>
-              </div>
-              <div className="space-y-1 text-right">
-                <p className="text-muted-foreground uppercase text-[10px] font-bold tracking-wider">Financials</p>
-                <p className="font-bold text-lg text-foreground">₹{b.amount}</p>
-                <div className="flex flex-col items-end gap-1">
-                  <Badge variant="outline" className={`text-[10px] ${b.paymentStatus === "paid" ? "text-primary border-primary/20" : "text-amber-500 border-amber-500/20"}`}>
-                    {b.paymentStatus === 'paid' ? 'PAID' : `DUE: ₹${b.remainingAmount}`}
-                  </Badge>
-                  {b.paymentMode && (
-                    <Badge variant="outline" className="text-[9px] uppercase font-bold text-muted-foreground">{b.paymentMode}</Badge>
-                  )}
+          <div key={b.id} className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm flex flex-col">
+            {/* Header: Customer & Status */}
+            <div className="p-4 flex justify-between items-start bg-secondary/10">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="w-4 h-4 text-primary" />
+                   </div>
+                   <div>
+                      <p className="font-bold text-sm text-foreground leading-tight">{b.customerName}</p>
+                      <p className="text-[10px] font-mono text-muted-foreground uppercase opacity-70 tracking-tighter">ID: {b.id.substring(0, 8)}</p>
+                   </div>
                 </div>
               </div>
+              <Badge variant={b.status === "completed" ? "default" : b.status === "confirmed" ? "default" : b.status === "cancelled" ? "destructive" : "secondary"}
+                className={`${b.status === "completed" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : b.status === "confirmed" ? "bg-primary/10 text-primary border-primary/20" : ""} text-[10px] font-bold`}>
+                {b.status === "completed" ? "✓ Done" : b.status.toUpperCase()}
+              </Badge>
             </div>
 
-            <div className="flex items-center justify-between">
-              <Badge variant="outline" className="text-[10px] text-primary border-primary/20">
-                {getFacilityLabel(b.facility)}
-              </Badge>
-              <div className="flex items-center gap-2">
-                {b.paymentStatus === 'pending' && b.status !== 'cancelled' && (
-                  <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary/20 h-7 px-3 text-[10px] font-bold"
-                    onClick={() => { setPayTarget(b); setPayOpen(true); }}>
-                    Mark Paid
-                  </Button>
-                )}
-                <div className="h-4 w-[1px] bg-border mx-1" />
-                {b.status === "completed" ? (
-                  <span className="inline-flex items-center text-xs text-emerald-500 font-medium">
-                    <CheckCircle2 className="w-4 h-4 mr-1" /> Done
-                  </span>
-                ) : b.status === "cancelled" ? (
-                  <span className="text-xs text-muted-foreground">Cancelled</span>
-                ) : (
-                  <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 h-8 px-2 text-xs" onClick={() => handleCancel(b.id)}>
-                    <XCircle className="w-4 h-4 mr-1" /> Cancel
-                  </Button>
-                )}
+            <div className="p-4 space-y-4">
+              {/* Info Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest flex items-center gap-1">
+                    <Calendar className="w-3 h-3" /> Schedule
+                  </p>
+                  <p className="text-sm font-bold text-foreground">{b.date}</p>
+                  <p className="text-xs font-medium text-muted-foreground">{b.startTime} - {b.endTime}</p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest flex items-center justify-end gap-1">
+                    <IndianRupee className="w-3 h-3" /> Financials
+                  </p>
+                  <p className="text-lg font-black text-foreground">₹{b.amount}</p>
+                  <Badge variant="outline" className={`text-[10px] font-bold ${b.paymentStatus === "paid" ? "text-emerald-500 border-emerald-500/20 bg-emerald-500/5" : "text-amber-500 border-amber-500/20 bg-amber-500/5"}`}>
+                    {b.paymentStatus === 'paid' ? 'FULLY PAID' : `DUE: ₹${b.remainingAmount}`}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Meta & Actions */}
+              <div className="pt-4 border-t border-border/50 flex flex-col gap-3">
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                       <Badge variant="outline" className="text-[10px] text-primary border-primary/20 bg-primary/5 uppercase font-bold py-0.5">
+                          {getFacilityLabel(b.facility)}
+                       </Badge>
+                       {b.paymentMode && (
+                          <Badge variant="outline" className="text-[9px] uppercase font-bold text-muted-foreground bg-secondary/20">
+                             {b.paymentMode}
+                          </Badge>
+                       )}
+                    </div>
+                    <a href={`tel:${b.phone}`} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-primary transition-colors border border-border">
+                       <Smartphone className="w-4 h-4" />
+                    </a>
+                 </div>
+
+                 <div className="flex items-center gap-2">
+                    {b.paymentStatus === 'pending' && b.status !== 'cancelled' && (
+                      <Button size="sm" className="flex-1 bg-primary text-primary-foreground h-9 text-xs font-bold shadow-sm"
+                        onClick={() => { setPayTarget(b); setPayOpen(true); }}>
+                        Mark as Paid
+                      </Button>
+                    )}
+                    
+                    {b.status === "completed" ? (
+                      <div className="flex-1 h-9 rounded-lg border border-emerald-500/20 bg-emerald-500/5 flex items-center justify-center text-xs text-emerald-500 font-bold gap-1.5">
+                        <CheckCircle2 className="w-4 h-4" /> Session Verified
+                      </div>
+                    ) : b.status === "cancelled" ? (
+                      <div className="flex-1 h-9 rounded-lg border border-border bg-secondary/20 flex items-center justify-center text-xs text-muted-foreground font-bold">
+                        Booking Cancelled
+                      </div>
+                    ) : (
+                      <Button size="sm" variant="outline" className="flex-1 text-destructive border-destructive/20 hover:bg-destructive/10 h-9 text-xs font-bold" onClick={() => handleCancel(b.id)}>
+                        <XCircle className="w-4 h-4 mr-1.5" /> Cancel
+                      </Button>
+                    )}
+                 </div>
               </div>
             </div>
           </div>
