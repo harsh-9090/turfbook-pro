@@ -192,7 +192,7 @@ server.listen(PORT, async () => {
     
     console.log('[MIGRATION] Schema ready');
 
-    // Start background cleanup for ghost bookings (abandoned checkouts older than 5 minutes)
+    // Start background cleanup for ghost bookings (abandoned checkouts older than 2 minutes)
     setInterval(async () => {
       try {
         const res = await pool.query(`
