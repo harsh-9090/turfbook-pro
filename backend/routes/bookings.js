@@ -7,7 +7,7 @@ const { bookingLimiter } = require('../middleware/rateLimiter');
 
 router.post('/', bookingLimiter, async (req, res) => {
   try {
-    const { name, phone, slot_id, paid_amount = 0 } = req.body;
+    const { name, phone, slot_id, paid_amount = 0, is_manual, payment_method } = req.body;
     if (!name || !phone || !slot_id) return res.status(400).json({ error: 'Name, phone, and slot_id required' });
 
     // Check availability
@@ -69,7 +69,7 @@ router.post('/', bookingLimiter, async (req, res) => {
     const totalAmount = slot.price || 800;
     const remainingAmount = Math.max(0, totalAmount - paid_amount);
     const paymentStatus = (paid_amount > 0 && remainingAmount === 0) ? 'paid' : 'pending';
-    const bookingStatus = paid_amount > 0 ? 'confirmed' : 'pending'; // Manual bookings are confirmed immediately
+    const bookingStatus = (paid_amount > 0 || is_manual) ? 'confirmed' : 'pending'; // Manual/Admin bookings are confirmed securely
 
     // Create booking
     const booking = await pool.query(
@@ -82,7 +82,7 @@ router.post('/', bookingLimiter, async (req, res) => {
     if (paid_amount > 0) {
       await pool.query(
         `INSERT INTO payments (booking_id, amount, method) VALUES ($1, $2, $3)`,
-        [booking.rows[0].id, paid_amount, 'cash'] // Default to cash for manual admin bookings
+        [booking.rows[0].id, paid_amount, payment_method || 'cash'] 
       );
     }
 

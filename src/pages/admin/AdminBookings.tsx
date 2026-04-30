@@ -39,6 +39,7 @@ export default function AdminBookings() {
   const [bSlots, setBSlots] = useState<any[]>([]);
   const [selectedSlot, setSelectedSlot] = useState("");
   const [bPaidAmount, setBPaidAmount] = useState<number>(0);
+  const [bPayMode, setBPayMode] = useState<"upi" | "cash">("cash");
 
   // Mark as Paid Dialog
   const [payOpen, setPayOpen] = useState(false);
@@ -67,7 +68,9 @@ export default function AdminBookings() {
         name: bName,
         phone: bPhone,
         slot_id: selectedSlot,
-        paid_amount: Number(bPaidAmount) || 0
+        paid_amount: Number(bPaidAmount) || 0,
+        is_manual: true,
+        payment_method: bPayMode
       });
       toast.success("Booking created!");
       setShowModal(false);
@@ -463,6 +466,31 @@ export default function AdminBookings() {
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-1 italic">Balance will be calculated automatically.</p>
               </div>
+
+              {Number(bPaidAmount) > 0 && (
+                <div>
+                  <label className="text-sm text-muted-foreground block mb-2">Payment Method</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button type="button" onClick={() => setBPayMode("cash")}
+                      className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border-2 transition-all ${bPayMode === "cash"
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-transparent text-muted-foreground hover:border-border/80"
+                        }`}>
+                      <Banknote className="w-4 h-4" />
+                      <span className="font-semibold text-sm">Cash</span>
+                    </button>
+                    <button type="button" onClick={() => setBPayMode("upi")}
+                      className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border-2 transition-all ${bPayMode === "upi"
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-transparent text-muted-foreground hover:border-border/80"
+                        }`}>
+                      <Smartphone className="w-4 h-4" />
+                      <span className="font-semibold text-sm">UPI</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3 pt-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setShowModal(false)}>Cancel</Button>
                 <Button type="submit" className="flex-1 bg-gradient-turf text-primary-foreground font-semibold">Confirm Booking</Button>
