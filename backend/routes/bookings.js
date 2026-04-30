@@ -457,9 +457,9 @@ router.post('/:id/extend', authMiddleware, async (req, res) => {
 router.patch('/:id/cancel-pending', async (req, res) => {
   try {
     const { id } = req.params;
-    // Only allow cancellation if status is 'pending'
+    // Delete booking entirely if it was pending
     const result = await pool.query(
-      `UPDATE bookings SET status = 'cancelled' WHERE id = $1 AND status = 'pending' RETURNING *`,
+      `DELETE FROM bookings WHERE id = $1 AND status = 'pending' RETURNING *`,
       [id]
     );
     

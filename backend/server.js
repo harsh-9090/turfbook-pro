@@ -191,6 +191,28 @@ server.listen(PORT, async () => {
     await pool.query(`INSERT INTO site_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
     
     console.log('[MIGRATION] Schema ready');
+
+    // Start background cleanup for ghost bookings (abandoned checkouts older than 5 minutes)
+    setInterval(async () => {
+      try {
+        const res = await pool.query(`
+          DELETE FROM bookings 
+          WHERE status = 'pending' 
+          AND created_at < NOW() - INTERVAL '2 minutes'
+          RETURNING id
+        `);
+        if (res.rowCount > 0) {
+           console.log(`[CLEANUP] Deleted ${res.rowCount} aged pending bookings.`);
+           const cache = require('./config/cache');
+           await cache.delPattern('slots:*');
+           await cache.delPattern('bookings:*');
+           io.emit('booking_updated');
+        }
+      } catch (err) {
+        console.error('[CLEANUP] Error:', err.message);
+      }
+    }, 60000); // Check every 60 seconds
+
   } catch (err) {
     console.error('[MIGRATION] Staff schema error (non-fatal):', err.message);
   }
