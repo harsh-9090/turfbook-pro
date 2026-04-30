@@ -15,6 +15,12 @@ const PERMISSION_GROUPS = [
       { path: "/admin", label: "Dashboard" },
       { path: "/admin/scan", label: "Scan Entry" },
       { path: "/admin/presence", label: "Live Presence" },
+
+    ]
+  },
+  {
+    category: "Finance",
+    tabs: [
       { path: "/admin/analytics", label: "Analytics" },
       { path: "/admin/finance", label: "Finance" },
     ]
@@ -143,7 +149,7 @@ export default function AdminStaff() {
           } catch { toast.error("Failed to delete"); }
         }
       },
-      cancel: { label: "Cancel", onClick: () => {} }
+      cancel: { label: "Cancel", onClick: () => { } }
     });
   };
 
@@ -243,10 +249,10 @@ export default function AdminStaff() {
                 <Label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
                   {editingStaff ? "New 6-Digit PIN (Optional)" : "6-Digit PIN"}
                 </Label>
-                <Input 
-                  value={pin} 
-                  onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))} 
-                  placeholder={editingStaff ? "••••••" : "123456"} 
+                <Input
+                  value={pin}
+                  onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder={editingStaff ? "••••••" : "123456"}
                   maxLength={6}
                 />
               </div>
@@ -268,8 +274,8 @@ export default function AdminStaff() {
                       <div className="flex items-center justify-between px-1">
                         <span className="text-[10px] font-black uppercase text-primary/70 tracking-widest">{group.category}</span>
                         {!isDashboardGroup && (
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             onClick={() => {
                               if (allSelected) {
                                 setSelectedTabs(prev => prev.filter(t => !categoryTabs.includes(t) || t === "/admin"));
@@ -291,15 +297,13 @@ export default function AdminStaff() {
                             <button key={tab.path} type="button"
                               onClick={() => toggleTab(tab.path)}
                               disabled={isDashboard}
-                              className={`text-left px-3 py-2.5 rounded-lg border text-[11px] font-semibold transition-all group ${
-                                isDashboard ? "bg-primary/10 border-primary/30 text-primary cursor-default" :
-                                isSelected ? "bg-primary/20 border-primary/40 text-primary shadow-sm" :
-                                "bg-card border-border text-muted-foreground hover:border-primary/20 hover:bg-secondary/50"
-                              }`}>
-                              <span className="flex items-center gap-2">
-                                <span className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                                  isSelected || isDashboard ? "bg-primary border-primary" : "border-muted-foreground/30 bg-background"
+                              className={`text-left px-3 py-2.5 rounded-lg border text-[11px] font-semibold transition-all group ${isDashboard ? "bg-primary/10 border-primary/30 text-primary cursor-default" :
+                                  isSelected ? "bg-primary/20 border-primary/40 text-primary shadow-sm" :
+                                    "bg-card border-border text-muted-foreground hover:border-primary/20 hover:bg-secondary/50"
                                 }`}>
+                              <span className="flex items-center gap-2">
+                                <span className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-colors ${isSelected || isDashboard ? "bg-primary border-primary" : "border-muted-foreground/30 bg-background"
+                                  }`}>
                                   {(isSelected || isDashboard) && <span className="text-primary-foreground text-[8px] font-bold">✓</span>}
                                 </span>
                                 {tab.label}
