@@ -99,6 +99,7 @@ export default function AdminBookings() {
         paidAmount: Number(b.paid_amount || 0),
         remainingAmount: Number(b.remaining_amount || 0),
         paymentMode: b.payment_mode,
+        isManual: !!b.is_manual,
         get status() {
           if (this.rawStatus === 'cancelled') return 'cancelled';
           try {
@@ -290,8 +291,17 @@ export default function AdminBookings() {
               <tr key={b.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                 <td className="px-5 py-3 font-mono text-[10px] text-muted-foreground uppercase">{b.id.substring(0, 8)}</td>
                 <td className="px-5 py-3">
-                  <p className="font-medium text-foreground">{b.customerName}</p>
-                  <p className="text-xs text-muted-foreground">{b.phone}</p>
+                  <div className="flex flex-col">
+                    <p className="font-medium text-foreground">{b.customerName}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-xs text-muted-foreground">{b.phone}</p>
+                      {b.isManual ? (
+                        <Badge variant="outline" className="text-[9px] h-4 py-0 bg-slate-500/5 text-slate-500 border-slate-500/20 font-bold">MANUAL</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[9px] h-4 py-0 bg-blue-500/5 text-blue-500 border-blue-500/20 font-bold">ONLINE</Badge>
+                      )}
+                    </div>
+                  </div>
                 </td>
                 <td className="px-5 py-3 text-center">
                   <Badge variant="outline" className="text-primary border-primary/20">{getFacilityLabel(b.facility)}</Badge>
@@ -364,7 +374,14 @@ export default function AdminBookings() {
                       <User className="w-4 h-4 text-primary" />
                    </div>
                    <div>
-                      <p className="font-bold text-sm text-foreground leading-tight">{b.customerName}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-bold text-sm text-foreground leading-tight">{b.customerName}</p>
+                        {b.isManual ? (
+                          <Badge variant="outline" className="text-[8px] h-3.5 py-0 bg-slate-500/5 text-slate-500 border-slate-500/20 font-black">MANUAL</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[8px] h-3.5 py-0 bg-blue-500/5 text-blue-500 border-blue-500/20 font-black">ONLINE</Badge>
+                        )}
+                      </div>
                       <p className="text-[10px] font-mono text-muted-foreground uppercase opacity-70 tracking-tighter">ID: {b.id.substring(0, 8)}</p>
                    </div>
                 </div>

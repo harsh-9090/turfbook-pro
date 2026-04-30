@@ -111,6 +111,7 @@ server.listen(PORT, async () => {
     await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS platform_fee DECIMAL(10, 2) DEFAULT 0.00`);
     await pool.query(`ALTER TABLE payments ADD COLUMN IF NOT EXISTS is_settled BOOLEAN DEFAULT false`);
     await pool.query(`ALTER TABLE table_sessions ADD COLUMN IF NOT EXISTS is_settled BOOLEAN DEFAULT false`);
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS is_manual BOOLEAN DEFAULT false`);
     
     // Site settings expansion
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pin_hash TEXT`);

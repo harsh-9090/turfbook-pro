@@ -73,9 +73,9 @@ router.post('/', bookingLimiter, async (req, res) => {
 
     // Create booking
     const booking = await pool.query(
-      `INSERT INTO bookings (user_id, slot_id, status, payment_status, paid_amount, remaining_amount) 
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [userId, slot_id, bookingStatus, paymentStatus, paid_amount, remainingAmount]
+      `INSERT INTO bookings (user_id, slot_id, status, payment_status, paid_amount, remaining_amount, is_manual) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [userId, slot_id, bookingStatus, paymentStatus, paid_amount, remainingAmount, !!is_manual]
     );
 
     // Create payment record ONLY if paid_amount > 0 (Manual/Admin flow)

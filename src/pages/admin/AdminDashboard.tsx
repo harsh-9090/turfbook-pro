@@ -40,7 +40,8 @@ export default function AdminDashboard() {
         startTime: b.start_time ? formatTime12Hour(b.start_time) : "",
         endTime: b.end_time ? formatTime12Hour(b.end_time) : "",
         status: b.status,
-        amount: Number(b.total_amount)
+        amount: Number(b.total_amount),
+        isManual: !!b.is_manual
       }));
       setRecentBookings(mapped);
     } catch (err) {
@@ -127,8 +128,17 @@ export default function AdminDashboard() {
                 <tr key={b.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                   <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{b.id}</td>
                   <td className="px-5 py-3">
-                    <p className="font-medium text-foreground">{b.customerName}</p>
-                    <p className="text-xs text-muted-foreground">{b.phone}</p>
+                    <div className="flex flex-col">
+                      <p className="font-medium text-foreground">{b.customerName}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-muted-foreground">{b.phone}</p>
+                        {b.isManual ? (
+                          <Badge variant="outline" className="text-[9px] h-4 py-0 bg-slate-500/5 text-slate-500 border-slate-500/20 font-bold">MANUAL</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[9px] h-4 py-0 bg-blue-500/5 text-blue-500 border-blue-500/20 font-bold">ONLINE</Badge>
+                        )}
+                      </div>
+                    </div>
                   </td>
                   <td className="px-5 py-3">
                     <Badge variant="outline" className="text-primary border-primary/20">{getFacilityLabel(b.facility)}</Badge>
@@ -153,7 +163,14 @@ export default function AdminDashboard() {
               <div key={b.id} className="p-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-semibold text-foreground">{b.customerName}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-semibold text-foreground">{b.customerName}</p>
+                      {b.isManual ? (
+                        <Badge variant="outline" className="text-[8px] h-3.5 py-0 bg-slate-500/5 text-slate-500 border-slate-500/20 font-black">MANUAL</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[8px] h-3.5 py-0 bg-blue-500/5 text-blue-500 border-blue-500/20 font-black">ONLINE</Badge>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">{b.phone}</p>
                   </div>
                   <Badge variant={b.status === "confirmed" ? "default" : b.status === "cancelled" ? "destructive" : "secondary"}
