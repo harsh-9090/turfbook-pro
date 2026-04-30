@@ -7,7 +7,8 @@ const { bookingLimiter } = require('../middleware/rateLimiter');
 
 router.post('/', bookingLimiter, async (req, res) => {
   try {
-    const { name, phone, slot_id, paid_amount = 0, is_manual, payment_method } = req.body;
+    const { name, phone, slot_id, paid_amount = 0, payment_method } = req.body;
+    const is_manual = req.body.is_manual || req.body.isManual;
     if (!name || !phone || !slot_id) return res.status(400).json({ error: 'Name, phone, and slot_id required' });
 
     // Check availability
