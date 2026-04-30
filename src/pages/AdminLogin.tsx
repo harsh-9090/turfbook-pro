@@ -87,7 +87,16 @@ export default function AdminLogin() {
                   className="space-y-4"
                 >
                   <div>
-                    <label className="text-xs font-bold text-muted-foreground mb-1.5 block uppercase tracking-wider">Password</label>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Password</label>
+                      <button 
+                        type="button"
+                        onClick={() => navigate("/admin/forgot-password")}
+                        className="text-[10px] font-bold text-primary hover:underline"
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" type="password" className="pl-10 bg-background border-border" />

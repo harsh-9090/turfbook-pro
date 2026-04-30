@@ -4,6 +4,10 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const pool = require('../config/db');
 const { loginLimiter } = require('../middleware/rateLimiter');
+const { Resend } = require('resend');
+const crypto = require('crypto');
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const authMiddleware = require('../middleware/auth');
 
@@ -166,6 +170,98 @@ router.post('/login-staff-pin', loginLimiter, async (req, res) => {
     );
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, allowed_tabs: user.allowed_tabs || [] } });
   } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Forgot Password - Initiate Reset
+router.post('/forgot-password', loginLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    // Verify user exists and is admin/staff
+    const result = await pool.query('SELECT id, name FROM users WHERE email = $1 AND role IN ($2, $3)', [email, 'admin', 'staff']);
+    const user = result.rows[0];
+
+    // Security: Even if user doesn't exist, we return success to prevent email enumeration
+    if (!user) {
+      return res.json({ message: 'If this email exists, a reset link has been sent.' });
+    }
+
+    // Generate Token
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+
+    // Save to DB
+    await pool.query('INSERT INTO password_resets (user_id, token, expires_at) VALUES ($1, $2, $3)', [user.id, token, expiresAt]);
+
+    // Send Email
+    if (resend) {
+      const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
+      
+      await resend.emails.send({
+        from: 'Akola Sports Arena <onboarding@resend.dev>',
+        to: email,
+        subject: 'Reset Your Admin Password',
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #4CAF50; text-align: center;">Password Reset Request</h2>
+            <p>Hi ${user.name},</p>
+            <p>We received a request to reset your admin password for <strong>Akola Sports Arena</strong>.</p>
+            <p>Click the button below to set a new password. This link is valid for 1 hour.</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetLink}" style="background-color: #4CAF50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+            </div>
+            <p style="color: #666; font-size: 12px;">If you didn't request this, please ignore this email or contact the main administrator.</p>
+            <hr style="border: none; border-top: 1px solid #eee;" />
+            <p style="color: #999; font-size: 10px; text-align: center;">&copy; 2024 Akola Sports Arena</p>
+          </div>
+        `
+      });
+    } else {
+      console.warn('[AUTH] Resend API Key missing. Reset link:', `${process.env.FRONTEND_URL}/reset-password?token=${token}`);
+    }
+
+    await logAction(user.id, 'FORGOT_PASSWORD_REQUEST', `Reset link sent to ${email}`);
+    res.json({ message: 'If this email exists, a reset link has been sent.' });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Reset Password - Finalize via Token
+router.post('/reset-password', loginLimiter, async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) return res.status(400).json({ error: 'Token and new password required' });
+
+    // Validate token
+    const result = await pool.query(
+      'SELECT r.* FROM password_resets r WHERE r.token = $1 AND r.expires_at > NOW()',
+      [token]
+    );
+    const resetRequest = result.rows[0];
+
+    if (!resetRequest) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    // Update Password
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newHash, resetRequest.user_id]);
+
+    // Update token version to logout from everywhere else
+    await pool.query('UPDATE users SET token_version = token_version + 1 WHERE id = $1', [resetRequest.user_id]);
+
+    // Clean up used token
+    await pool.query('DELETE FROM password_resets WHERE token = $1', [token]);
+
+    await logAction(resetRequest.user_id, 'PASSWORD_RESET_SUCCESS', 'User successfully reset password via email token');
+    res.json({ message: 'Password reset successful. You can now login with your new password.' });
+  } catch (err) {
+    console.error('Reset password error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

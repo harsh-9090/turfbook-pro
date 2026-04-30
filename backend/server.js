@@ -131,6 +131,17 @@ server.listen(PORT, async () => {
       WHERE (facility_type ILIKE '%cricket%' OR facility_type ILIKE '%football%')
       AND (physical_resource_id IS NULL OR physical_resource_id != 1)
     `);
+    
+    // Password Resets Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id SERIAL PRIMARY KEY,
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        token TEXT NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
     // Re-define generate_daily_slots to support safe table count reduction
     await pool.query(`

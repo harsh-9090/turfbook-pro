@@ -29,6 +29,8 @@ import AdminScanner from "./pages/admin/AdminScanner";
 import AdminPresence from "./pages/admin/AdminPresence";
 import AdminStaff from "./pages/admin/AdminStaff";
 import StaffLogin from "./pages/StaffLogin";
+import ForgotPassword from "./pages/admin/ForgotPassword";
+import ResetPassword from "./pages/admin/ResetPassword";
 import MyBookings from "./pages/MyBookings";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
@@ -56,6 +58,8 @@ const App = () => (
             <Route path="/tournaments/:id" element={<TournamentDetails />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/staff-login" element={<StaffLogin />} />
+            <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/admin"
               element={
