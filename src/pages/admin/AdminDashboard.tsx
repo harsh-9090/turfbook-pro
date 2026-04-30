@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import { Calendar, DollarSign, TrendingUp, Clock, ArrowUpRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Calendar, DollarSign, TrendingUp, Clock, ArrowUpRight, ChevronDown, ChevronUp } from "lucide-react";
 import { formatTime12Hour } from "@/lib/utils";
 import { getFacilityLabel } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ export default function AdminDashboard() {
   });
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isBookingsExpanded, setIsBookingsExpanded] = useState(true);
 
   const fetchDashboardData = async () => {
     try {
@@ -89,10 +90,26 @@ export default function AdminDashboard() {
       <LiveOccupancyPulse />
 
       <div className="rounded-xl bg-card border border-border">
-        <div className="px-5 py-4 border-b border-border">
+        <button 
+          onClick={() => setIsBookingsExpanded(!isBookingsExpanded)}
+          className="w-full px-5 py-4 border-b border-border flex items-center justify-between text-left hover:bg-secondary/10 transition-colors"
+        >
           <h3 className="font-heading font-semibold text-foreground">Upcoming Bookings</h3>
-        </div>
-        <div className="hidden md:block">
+          <div className="text-muted-foreground p-1 hover:bg-secondary/20 rounded-md">
+            {isBookingsExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </div>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {isBookingsExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="hidden md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
@@ -131,41 +148,43 @@ export default function AdminDashboard() {
           </table>
         </div>
 
-        {/* Mobile: Card View */}
-        <div className="md:hidden divide-y divide-border/50">
-          {recentBookings.map((b) => (
-            <div key={b.id} className="p-4 space-y-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-semibold text-foreground">{b.customerName}</p>
-                  <p className="text-xs text-muted-foreground">{b.phone}</p>
+          <div className="md:hidden divide-y divide-border/50">
+            {recentBookings.map((b) => (
+              <div key={b.id} className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold text-foreground">{b.customerName}</p>
+                    <p className="text-xs text-muted-foreground">{b.phone}</p>
+                  </div>
+                  <Badge variant={b.status === "confirmed" ? "default" : b.status === "cancelled" ? "destructive" : "secondary"}
+                    className={b.status === "confirmed" ? "bg-primary/10 text-primary border-primary/20" : "text-[10px]"}>
+                    {b.status}
+                  </Badge>
                 </div>
-                <Badge variant={b.status === "confirmed" ? "default" : b.status === "cancelled" ? "destructive" : "secondary"}
-                  className={b.status === "confirmed" ? "bg-primary/10 text-primary border-primary/20" : "text-[10px]"}>
-                  {b.status}
+                <div className="flex justify-between items-center text-xs">
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> {b.date}
+                    </p>
+                    <p className="text-muted-foreground flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {b.startTime}–{b.endTime}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-foreground">₹{b.amount}</p>
+                    <p className="text-[10px] lowercase text-muted-foreground">{b.id.substring(0, 8)}...</p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="text-[10px] text-primary border-primary/20">
+                  {getFacilityLabel(b.facility)}
                 </Badge>
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <div className="space-y-1">
-                  <p className="text-muted-foreground flex items-center gap-1">
-                    <Calendar className="w-3 h-3" /> {b.date}
-                  </p>
-                  <p className="text-muted-foreground flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {b.startTime}–{b.endTime}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-foreground">₹{b.amount}</p>
-                  <p className="text-[10px] lowercase text-muted-foreground">{b.id.substring(0, 8)}...</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="text-[10px] text-primary border-primary/20">
-                {getFacilityLabel(b.facility)}
-              </Badge>
-            </div>
-          ))}
-          {recentBookings.length === 0 && <p className="p-8 text-center text-muted-foreground">No upcoming bookings</p>}
-        </div>
+            ))}
+            {recentBookings.length === 0 && <p className="p-8 text-center text-muted-foreground">No upcoming bookings</p>}
+          </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

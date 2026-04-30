@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Activity, Clock, User, AlertCircle, CircleDot } from "lucide-react";
+import { Activity, Clock, User, AlertCircle, CircleDot, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { formatTime12Hour } from "@/lib/utils";
 
@@ -24,6 +24,7 @@ interface Resource {
 export function LiveOccupancyPulse() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
     const fetchPulse = async () => {
@@ -57,7 +58,10 @@ export function LiveOccupancyPulse() {
 
   return (
     <div className="rounded-xl bg-card border border-border overflow-hidden">
-      <div className="px-5 py-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="px-5 py-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:bg-secondary/10 transition-colors"
+      >
         <div className="flex items-center gap-3">
           <div className="relative">
             <Activity className="w-5 h-5 text-primary" />
@@ -74,21 +78,38 @@ export function LiveOccupancyPulse() {
               Real-time physical state of the arena
             </p>
           </div>
+          <div className="sm:hidden text-muted-foreground ml-auto">
+             {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </div>
         </div>
-        <div className="flex items-center gap-4 text-[11px] font-medium">
-          <span className="flex items-center gap-1.5 opacity-80">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Available
-          </span>
-          <span className="flex items-center gap-1.5 opacity-80">
-             <span className="w-2 h-2 rounded-full bg-destructive animate-pulse"></span> In Use ({inUse})
-          </span>
-          <span className="flex items-center gap-1.5 opacity-80">
-             <span className="w-2 h-2 rounded-full bg-amber-500"></span> Booked Soon ({bookedSoon})
-          </span>
+        <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto">
+          <div className="flex items-center gap-4 text-[11px] font-medium">
+            <span className="flex items-center gap-1.5 opacity-80">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Available
+            </span>
+            <span className="flex items-center gap-1.5 opacity-80">
+               <span className="w-2 h-2 rounded-full bg-destructive animate-pulse"></span> In Use ({inUse})
+            </span>
+            <span className="flex items-center gap-1.5 opacity-80">
+               <span className="w-2 h-2 rounded-full bg-amber-500"></span> Booked Soon ({bookedSoon})
+            </span>
+            <div className="hidden sm:block text-muted-foreground ml-2">
+               {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="p-5">
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="p-5">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {resources.map((res, i) => {
             const isTurf = ["cricket", "football"].includes(res.facilityType.toLowerCase());
@@ -178,6 +199,9 @@ export function LiveOccupancyPulse() {
           )}
         </div>
       </div>
+      </motion.div>
+      )}
+      </AnimatePresence>
     </div>
   );
 }
