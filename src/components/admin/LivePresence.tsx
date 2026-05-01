@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Users, AlertTriangle, CheckCircle2, Clock, MapPin, User, LogIn } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +11,37 @@ import { useSocket } from "@/hooks/useSocket";
 export default function LivePresence() {
   const [presence, setPresence] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(localStorage.getItem('presence_sync_time'));
+
+  // Load from cache on mount if offline or just to show something fast
+  useEffect(() => {
+    const cached = localStorage.getItem('presence_cache');
+    if (cached) {
+      setPresence(JSON.parse(cached));
+    }
+    
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const fetchPresence = async () => {
     try {
       const res = await api.get('/bookings/live-presence');
       setPresence(res.data);
+      // Cache data
+      localStorage.setItem('presence_cache', JSON.stringify(res.data));
+      const now = new Date().toLocaleTimeString();
+      localStorage.setItem('presence_sync_time', now);
+      setLastUpdated(now);
     } catch (err) {
       console.error("Failed to fetch presence", err);
     } finally {
@@ -33,6 +60,31 @@ export default function LivePresence() {
 
   return (
     <div className="space-y-6">
+      {isOffline && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl flex items-center justify-between"
+        >
+          <div className="flex items-center gap-2 text-amber-700 text-sm font-bold">
+            <AlertTriangle className="w-4 h-4" />
+            Offline Mode
+          </div>
+          <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">
+            Last Synced: {lastUpdated || 'Unknown'}
+          </span>
+        </motion.div>
+      )}
+
+      {!isOffline && (
+        <div className="flex justify-end">
+          <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Live Sync Active
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
          <Card className="bg-emerald-500/10 border-emerald-500/20">
             <CardContent className="p-4 flex items-center gap-4">
