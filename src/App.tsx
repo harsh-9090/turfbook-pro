@@ -51,8 +51,8 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <CursorGlow />
         <BrowserRouter>
+          <CursorGlow />
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />

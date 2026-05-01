@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, useSpring, useMotionValue } from "framer-motion";
 
 export const CursorGlow = () => {
+  const location = useLocation();
   const [isHovered, setIsHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -46,7 +48,7 @@ export const CursorGlow = () => {
     };
   }, [mouseX, mouseY, isVisible]);
 
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined" || location.pathname !== "/") return null;
 
   return (
     <motion.div
