@@ -59,9 +59,6 @@ export default function Navbar() {
             >
               {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
-            <Link to="/admin/login">
-              <Button variant="ghost" size="sm" className="text-zinc-200 hover:text-white hover:bg-white/10">Admin</Button>
-            </Link>
             <Link to="/book">
               <Button size="sm" className="bg-gradient-turf text-primary-foreground font-semibold shadow-turf hover:opacity-90 transition-opacity">
                 Book Now
@@ -101,9 +98,6 @@ export default function Navbar() {
                 </Link>
               ))}
               <div className="pt-2 flex gap-2">
-                <Link to="/admin/login" className="flex-1" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" size="sm" className="w-full">Admin</Button>
-                </Link>
                 <Link to="/book" className="flex-1" onClick={() => setIsOpen(false)}>
                   <Button size="sm" className="w-full bg-gradient-turf text-primary-foreground">Book Now</Button>
                 </Link>

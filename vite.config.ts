@@ -20,12 +20,14 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'logo.png', 'robots.txt'],
       manifest: {
-        name: 'Akola Sports Arena Admin',
-        short_name: 'ASA Admin',
+        name: 'Akola Sports Arena',
+        short_name: 'ASA',
         description: 'Management dashboard for Akola Sports Arena',
         theme_color: '#8b0000',
         background_color: '#0a0a0a',
         display: 'standalone',
+        start_url: '/admin/login',
+        scope: '/',
         icons: [
           {
             src: 'logo.png',
