@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => ({
         name: 'Akola Sports Arena',
         short_name: 'ASA',
         description: 'Management dashboard for Akola Sports Arena',
-        theme_color: '#8b0000',
+        theme_color: '#0a0a0a',
         background_color: '#0a0a0a',
         display: 'standalone',
         start_url: '/admin/login',
