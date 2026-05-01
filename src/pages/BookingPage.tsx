@@ -134,16 +134,22 @@ export default function BookingPage() {
 
       const response = await api.get(`/slots?date=${formattedDate}&facility_type=${facility}`);
 
-      if (response.data.is_closed) {
+      if (response.data && response.data.is_closed) {
         setIsArenaClosed(true);
-        setClosureReason(response.data.reason);
+        setClosureReason(response.data.reason || "Arena is closed for administrative reasons.");
         setGroupedSlots([]);
         setSelectedSlotGroup(null);
         setSelectedSlot(null);
         setStep("slot");
         return;
       }
+      
       setIsArenaClosed(false);
+      
+      if (!Array.isArray(response.data)) {
+        console.error("Expected slot array but received:", response.data);
+        throw new Error("Invalid response format from server");
+      }
 
       const groups: Record<string, any[]> = {};
       response.data.forEach((s: any) => {
@@ -175,7 +181,8 @@ export default function BookingPage() {
       setSelectedSlot(null);
       setStep("slot");
     } catch (error) {
-      toast.error("Failed to load slots");
+      console.error("Booking page error:", error);
+      toast.error("Failed to load slots. Please check your connection or try again.");
     }
   };
 
