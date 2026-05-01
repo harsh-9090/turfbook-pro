@@ -19,6 +19,9 @@ export default function AdminSlots() {
   const [facilityTypes, setFacilityTypes] = useState<string[]>([]);
   const [facilities, setFacilities] = useState<any[]>([]);
   const [selectedTable, setSelectedTable] = useState(1);
+  const [isArenaClosed, setIsArenaClosed] = useState(false);
+  const [closureReason, setClosureReason] = useState("");
+
 
   // Fetch available facility types and facilities list
   useEffect(() => {
@@ -33,6 +36,22 @@ export default function AdminSlots() {
   const fetchSlots = async (date: Date) => {
     try {
       const response = await api.get(`/slots?date=${format(date, "yyyy-MM-dd")}`);
+      
+      if (response.data && response.data.is_closed) {
+        setIsArenaClosed(true);
+        setClosureReason(response.data.reason || "Arena is closed for this date.");
+        setSlots([]);
+        return;
+      }
+      
+      setIsArenaClosed(false);
+      
+      if (!Array.isArray(response.data)) {
+        console.error("Expected array but got:", response.data);
+        setSlots([]);
+        return;
+      }
+
       const mapped = response.data
         .filter((s: any) => s.facility_type === facility || !s.facility_type)
         .map((s: any) => ({
@@ -238,72 +257,92 @@ export default function AdminSlots() {
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-            {slots.filter(s => s.tableNumber === selectedTable).map((slot) => {
-              // Mathematical Telemetry Logic
-              const startDateTime = parse(`${format(selectedDate, "yyyy-MM-dd")} ${slot.startTime}`, "yyyy-MM-dd hh:mm a", new Date());
-              const endDateTime = parse(`${format(selectedDate, "yyyy-MM-dd")} ${slot.endTime}`, "yyyy-MM-dd hh:mm a", new Date());
-              const isRunning = slot.isBooked && isAfter(now, startDateTime) && isBefore(now, endDateTime);
-              const isPast = isAfter(now, endDateTime);
-              const remainingSecs = isRunning ? differenceInSeconds(endDateTime, now) : 0;
-
-              return (
-                <div key={slot.id} onClick={() => handleCardClick(slot)}
-                  className={`relative p-4 rounded-xl border transition-all duration-300 overflow-hidden flex flex-col ${
-                    slot.isBooked && isPast
-                      ? "bg-secondary/30 border-border cursor-pointer hover:bg-secondary/50"
-                      : slot.isBooked 
-                        ? "bg-primary/10 border-primary/40 cursor-pointer hover:border-primary" 
-                        : isPast && slot.isAvailable
-                          ? "bg-amber-500/5 border-amber-500/20"
-                        : slot.isAvailable 
-                          ? "bg-card border-border hover:border-primary/30" 
-                          : "bg-destructive/5 border-destructive/20"
-                  } ${isRunning ? 'ring-2 ring-green-500/60 ring-offset-2 ring-offset-background' : ''}`}>
-                  
-                  {isRunning && (
-                    <div className="flex items-center gap-1.5 text-green-500 font-bold text-[10px] uppercase tracking-wider mb-3 bg-green-500/10 w-fit px-2 py-1 rounded-md animate-pulse">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></div>
-                      Live • {formatCountdown(remainingSecs)}
-                    </div>
-                  )}
-
-                  <p className={`font-heading font-bold text-lg ${isPast && !isRunning ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
-                    {slot.startTime} <span className="text-muted-foreground text-sm font-normal mx-1">to</span> {slot.endTime}
-                  </p>
-                  <p className="text-sm text-muted-foreground font-medium mb-4 mt-1">₹{slot.price}</p>
-                  
-                  <div className="flex items-center justify-between mt-auto">
-                    {slot.isBooked && isPast ? (
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5 bg-background border border-border/60 shadow-sm px-2.5 py-1 rounded-md">
-                        <Lock className="w-3 h-3" /> Completed
-                      </span>
-                    ) : slot.isBooked ? (
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-primary flex items-center gap-1.5 bg-primary/20 px-2.5 py-1 rounded-md">
-                        <Lock className="w-3 h-3" /> Booked
-                      </span>
-                    ) : (
-                      <>
-                        <span className={`text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md ${
-                          isPast && slot.isAvailable ? "text-amber-500 bg-amber-500/10" 
-                          : slot.isAvailable ? "text-emerald-400 bg-emerald-500/10" 
-                          : "text-destructive bg-destructive/10"
-                        }`}>
-                          {isPast && slot.isAvailable ? "Expired" : slot.isAvailable ? "Available" : "Blocked"}
-                        </span>
-                        {!isPast && (
-                          <div className="flex items-center gap-1">
-                            <Button size="sm" variant="ghost" className="h-7 px-2 text-muted-foreground hover:text-foreground z-10 relative" 
-                              onClick={(e) => { e.stopPropagation(); toggleSlot(slot.id); }}>
-                              {slot.isAvailable ? <><Lock className="w-3.5 h-3.5 mr-1" /> <span className="text-xs">Block</span></> : <><Unlock className="w-3.5 h-3.5 text-foreground mr-1" /> <span className="text-xs">Unblock</span></>}
-                            </Button>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
+            {isArenaClosed ? (
+              <div className="col-span-full py-16 px-4 text-center border-2 border-destructive/20 rounded-3xl bg-destructive/5 flex flex-col items-center">
+                <Lock className="w-12 h-12 text-destructive mb-3" />
+                <h4 className="font-bold text-foreground text-lg">Arena Globally Closed</h4>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1 mb-6">
+                  This date is blocked via Dynamic Closures: <br/> 
+                  <span className="font-semibold text-foreground italic">"{closureReason}"</span>
+                </p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => window.location.href='/admin/closures'}>
+                    Manage Closures
+                  </Button>
                 </div>
-              );
-            })}
+              </div>
+            ) : slots.filter(s => s.tableNumber === selectedTable).length === 0 ? (
+              <div className="col-span-full py-20 text-center border border-dashed border-border rounded-xl">
+                 <p className="text-muted-foreground">No slots available for this configuration.</p>
+              </div>
+            ) : (
+              slots.filter(s => s.tableNumber === selectedTable).map((slot) => {
+                // Mathematical Telemetry Logic
+                const startDateTime = parse(`${format(selectedDate, "yyyy-MM-dd")} ${slot.startTime}`, "yyyy-MM-dd hh:mm a", new Date());
+                const endDateTime = parse(`${format(selectedDate, "yyyy-MM-dd")} ${slot.endTime}`, "yyyy-MM-dd hh:mm a", new Date());
+                const isRunning = slot.isBooked && isAfter(now, startDateTime) && isBefore(now, endDateTime);
+                const isPast = isAfter(now, endDateTime);
+                const remainingSecs = isRunning ? differenceInSeconds(endDateTime, now) : 0;
+
+                return (
+                  <div key={slot.id} onClick={() => handleCardClick(slot)}
+                    className={`relative p-4 rounded-xl border transition-all duration-300 overflow-hidden flex flex-col ${
+                      slot.isBooked && isPast
+                        ? "bg-secondary/30 border-border cursor-pointer hover:bg-secondary/50"
+                        : slot.isBooked 
+                          ? "bg-primary/10 border-primary/40 cursor-pointer hover:border-primary" 
+                          : isPast && slot.isAvailable
+                            ? "bg-amber-500/5 border-amber-500/20"
+                          : slot.isAvailable 
+                            ? "bg-card border-border hover:border-primary/30" 
+                            : "bg-destructive/5 border-destructive/20"
+                    } ${isRunning ? 'ring-2 ring-green-500/60 ring-offset-2 ring-offset-background' : ''}`}>
+                    
+                    {isRunning && (
+                      <div className="flex items-center gap-1.5 text-green-500 font-bold text-[10px] uppercase tracking-wider mb-3 bg-green-500/10 w-fit px-2 py-1 rounded-md animate-pulse">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></div>
+                        Live • {formatCountdown(remainingSecs)}
+                      </div>
+                    )}
+
+                    <p className={`font-heading font-bold text-lg ${isPast && !isRunning ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                      {slot.startTime} <span className="text-muted-foreground text-sm font-normal mx-1">to</span> {slot.endTime}
+                    </p>
+                    <p className="text-sm text-muted-foreground font-medium mb-4 mt-1">₹{slot.price}</p>
+                    
+                    <div className="flex items-center justify-between mt-auto">
+                      {slot.isBooked && isPast ? (
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5 bg-background border border-border/60 shadow-sm px-2.5 py-1 rounded-md">
+                          <Lock className="w-3 h-3" /> Completed
+                        </span>
+                      ) : slot.isBooked ? (
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-primary flex items-center gap-1.5 bg-primary/20 px-2.5 py-1 rounded-md">
+                          <Lock className="w-3 h-3" /> Booked
+                        </span>
+                      ) : (
+                        <>
+                          <span className={`text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md ${
+                            isPast && slot.isAvailable ? "text-amber-500 bg-amber-500/10" 
+                            : slot.isAvailable ? "text-emerald-400 bg-emerald-500/10" 
+                            : "text-destructive bg-destructive/10"
+                          }`}>
+                            {isPast && slot.isAvailable ? "Expired" : slot.isAvailable ? "Available" : "Blocked"}
+                          </span>
+                          {!isPast && (
+                            <div className="flex items-center gap-1">
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-muted-foreground hover:text-foreground z-10 relative" 
+                                onClick={(e) => { e.stopPropagation(); toggleSlot(slot.id); }}>
+                                {slot.isAvailable ? <><Lock className="w-3.5 h-3.5 mr-1" /> <span className="text-xs">Block</span></> : <><Unlock className="w-3.5 h-3.5 text-foreground mr-1" /> <span className="text-xs">Unblock</span></>}
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
