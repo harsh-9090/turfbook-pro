@@ -35,6 +35,7 @@ import ResetPassword from "./pages/admin/ResetPassword";
 import MyBookings from "./pages/MyBookings";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
+import { CursorGlow } from "./components/CursorGlow";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <CursorGlow />
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
