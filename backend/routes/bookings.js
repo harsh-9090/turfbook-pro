@@ -56,6 +56,17 @@ router.post('/', bookingLimiter, async (req, res) => {
     `, [slot.turf_id, slot.date]);
     if (overlayTournament.rows.length > 0) return res.status(400).json({ error: 'This turf is currently reserved for a tournament event' });
 
+    // Ensure date is not in arena_closures
+    const arenaClosure = await pool.query(
+      'SELECT reason FROM arena_closures WHERE date = $1 AND (turf_id IS NULL OR turf_id = $2)',
+      [slot.date, slot.turf_id]
+    );
+    if (arenaClosure.rows.length > 0) {
+      return res.status(400).json({ 
+        error: `Arena is closed on this date for: ${arenaClosure.rows[0].reason}` 
+      });
+    }
+
 
     // Create or find user
     let userResult = await pool.query('SELECT * FROM users WHERE phone = $1', [phone]);

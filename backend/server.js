@@ -72,6 +72,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/slots', slotsRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/closures', require('./routes/closures'));
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/facilities', facilitiesRoutes);
 app.use('/api/templates', templatesRoutes);
@@ -143,6 +144,17 @@ server.listen(PORT, async () => {
       )
     `);
 
+    // Arena Closures Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS arena_closures (
+        id SERIAL PRIMARY KEY,
+        date DATE NOT NULL UNIQUE,
+        reason TEXT,
+        turf_id UUID REFERENCES turfs(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Re-define generate_daily_slots to support safe table count reduction
     await pool.query(`
       CREATE OR REPLACE FUNCTION generate_daily_slots(target_date DATE, target_turf_id UUID)
@@ -158,7 +170,19 @@ server.listen(PORT, async () => {
         is_weekend BOOLEAN;
         o_hour INT;
         c_hour INT;
+        is_closed BOOLEAN;
       BEGIN
+        -- Check if arena is closed for this date
+        SELECT EXISTS (
+          SELECT 1 FROM arena_closures 
+          WHERE date = target_date 
+          AND (turf_id IS NULL OR turf_id = target_turf_id)
+        ) INTO is_closed;
+
+        IF is_closed THEN
+          RETURN;
+        END IF;
+
         SELECT 
           weekday_day_price, weekday_night_price, 
           weekend_day_price, weekend_night_price, 

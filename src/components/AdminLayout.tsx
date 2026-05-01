@@ -1,12 +1,24 @@
 import { useState, useMemo } from "react";
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom";
 import logoImage from "@/assets/logo.png";
-import { LayoutDashboard, Calendar, CalendarDays, Settings, LogOut, BarChart3, Menu, X, Layers, Clock, Timer, DollarSign, Image as LucideImage, MessageSquare, Sun, Moon, Trophy, Megaphone, Shield, Users, QrCode, Activity } from "lucide-react";
+import { LayoutDashboard, Calendar, CalendarDays, Settings, LogOut, BarChart3, Menu, X, Layers, Clock, Timer, DollarSign, Image as LucideImage, MessageSquare, Sun, Moon, Trophy, Megaphone, Shield, Users, QrCode, Activity, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import { title } from "process";
 
-const sidebarGroups = [
+interface SidebarLink {
+  name: string;
+  path: string;
+  icon: any;
+  adminOnly?: boolean;
+}
+
+interface SidebarGroup {
+  title: string;
+  links: SidebarLink[];
+}
+
+const sidebarGroups: SidebarGroup[] = [
   {
     title: "Overview",
     links: [
@@ -34,6 +46,7 @@ const sidebarGroups = [
       { name: "Pricing Plans", path: "/admin/pricing", icon: DollarSign },
       { name: "Sports Events", path: "/admin/facilities", icon: Layers },
       { name: "Tournaments", path: "/admin/tournaments", icon: Trophy },
+      { name: "Dynamic Closures", path: "/admin/closures", icon: Lock },
     ]
   },
   {

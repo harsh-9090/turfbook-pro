@@ -52,6 +52,9 @@ export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState<any>(null);
   const [feeSettings, setFeeSettings] = useState({ gateway: 2.0, gst: 18.0 });
+  const [isArenaClosed, setIsArenaClosed] = useState(false);
+  const [closureReason, setClosureReason] = useState("");
+
  
   // Fetch settings for dynamic fee calculation
   useEffect(() => {
@@ -130,6 +133,17 @@ export default function BookingPage() {
       setBlockingTournament(null);
 
       const response = await api.get(`/slots?date=${formattedDate}&facility_type=${facility}`);
+
+      if (response.data.is_closed) {
+        setIsArenaClosed(true);
+        setClosureReason(response.data.reason);
+        setGroupedSlots([]);
+        setSelectedSlotGroup(null);
+        setSelectedSlot(null);
+        setStep("slot");
+        return;
+      }
+      setIsArenaClosed(false);
 
       const groups: Record<string, any[]> = {};
       response.data.forEach((s: any) => {
@@ -433,6 +447,18 @@ export default function BookingPage() {
                       <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
                         This turf is booked from <span className="font-semibold text-foreground">{format(new Date(blockingTournament.start_date), "MMM d, yyyy")}</span> to <span className="font-semibold text-foreground">{format(new Date(blockingTournament.end_date), "MMM d, yyyy")}</span> for a tournament. You can visit the turf to enjoy the matches!
                       </p>
+                    </div>
+                  ) : isArenaClosed ? (
+                    <div className="col-span-full py-16 px-4 text-center border-2 border-destructive/20 rounded-3xl bg-destructive/5">
+                      <Lock className="w-16 h-16 text-destructive mx-auto mb-4" />
+                      <h3 className="text-2xl font-black text-foreground mb-2">Arena Closed for Today</h3>
+                      <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed mb-6">
+                        The facility is temporarily closed for: <br/> 
+                        <span className="font-bold text-foreground text-lg">"{closureReason || "Maintenance"}"</span>
+                      </p>
+                      <Button onClick={() => setStep("date")} variant="outline" className="rounded-xl font-bold">
+                        Check Another Date
+                      </Button>
                     </div>
                   ) : groupedSlots.length === 0 ? (
                     <div className="col-span-full py-12 text-center text-muted-foreground">

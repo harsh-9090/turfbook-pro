@@ -23,6 +23,7 @@ import AdminGallery from "./pages/admin/AdminGallery";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminTournaments from "./pages/admin/AdminTournaments";
+import AdminClosures from "./pages/admin/AdminClosures";
 import AdminAdStudio from "./pages/admin/AdminAdStudio";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminScanner from "./pages/admin/AdminScanner";
@@ -78,6 +79,7 @@ const App = () => (
               <Route path="facilities" element={<AdminFacilities />} />
               <Route path="schedules" element={<AdminSchedules />} />
               <Route path="tables" element={<AdminTables />} />
+              <Route path="closures" element={<AdminClosures />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="finance" element={<AdminFinance />} />
               <Route path="pricing" element={<AdminPricing />} />

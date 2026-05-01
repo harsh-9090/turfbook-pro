@@ -17,6 +17,16 @@ router.get('/', async (req, res) => {
     }
 
     // JIT: Auto-generate missing slots for ALL active turfs before fetching!
+    // Check for global closure first
+    const closureCheck = await pool.query('SELECT reason FROM arena_closures WHERE date = $1 AND turf_id IS NULL', [date]);
+    if (closureCheck.rows.length > 0) {
+      return res.json({ 
+        is_closed: true, 
+        reason: closureCheck.rows[0].reason,
+        slots: [] 
+      });
+    }
+
     await pool.query('SELECT generate_daily_slots($1, id) FROM turfs', [date]);
 
     
