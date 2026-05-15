@@ -16,6 +16,22 @@ export default function GallerySection() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const cardW = el.scrollWidth / Math.max(images.length, 1);
+    setActiveIdx(Math.round(el.scrollLeft / cardW));
+  };
+
+  const scrollToIdx = (i: number) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const cardW = el.scrollWidth / Math.max(images.length, 1);
+    el.scrollTo({ left: cardW * i, behavior: "smooth" });
+  };
 
   const showNext = useCallback(() => {
     setSelectedIndex(prev => (prev !== null ? (prev + 1) % images.length : null));
