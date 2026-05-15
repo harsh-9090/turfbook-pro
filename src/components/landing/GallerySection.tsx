@@ -97,46 +97,108 @@ export default function GallerySection() {
           </h2>
         </motion.div>
 
-        {/* Gallery Container: Horizontal scroll on mobile, Grid on desktop */}
-        <div className="relative group/gallery">
-          <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-3 max-w-5xl mx-auto overflow-x-auto md:overflow-visible snap-x snap-mandatory scrollbar-hide pb-4 md:pb-0">
-            {images.map((img, i) => (
-              <motion.div
-                key={img.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className={cn(
-                  "overflow-hidden rounded-2xl cursor-zoom-in shrink-0 w-[85vw] sm:w-[60vw] md:w-auto snap-start",
-                  img.span_type === 'large' ? 'md:col-span-2 md:row-span-2' : ''
-                )}
-                onClick={() => setSelectedIndex(i)}
-              >
-                <div className="relative aspect-[4/3] md:aspect-auto md:w-full md:h-full">
-                  {img.resource_type === 'video' ? (
-                    <div className="w-full h-full relative group">
-                      <video src={img.cloudinary_url} className="w-full h-full object-cover min-h-[160px] pointer-events-none" />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                        <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 transform group-hover:scale-110 transition-transform duration-300">
-                          <div className="ml-1 border-t-[8px] border-t-transparent border-l-[14px] border-l-white border-b-[8px] border-b-transparent" />
+        {/* Mobile: peek scroller with active card pop */}
+        <div className="md:hidden">
+          <div
+            ref={scrollerRef}
+            onScroll={handleScroll}
+            className="flex gap-4 overflow-x-auto pt-6 pb-6 snap-x snap-mandatory scrollbar-hide"
+            style={{ paddingLeft: "1.5rem", paddingRight: "1.5rem" }}
+          >
+            {images.map((img, i) => {
+              const isActive = i === activeIdx;
+              return (
+                <motion.div
+                  key={img.id}
+                  animate={{
+                    scale: isActive ? 1 : 0.92,
+                    y: isActive ? -6 : 0,
+                    opacity: isActive ? 1 : 0.6,
+                  }}
+                  transition={{ type: "spring", stiffness: 200, damping: 22 }}
+                  onClick={() => setSelectedIndex(i)}
+                  className="overflow-hidden rounded-2xl cursor-zoom-in shrink-0 snap-center shadow-turf-lg"
+                  style={{ width: "calc(100vw - 6rem)", maxWidth: "320px" }}
+                >
+                  <div className="relative aspect-[4/3]">
+                    {img.resource_type === 'video' ? (
+                      <div className="w-full h-full relative">
+                        <video src={img.cloudinary_url} className="w-full h-full object-cover pointer-events-none" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                            <div className="ml-1 border-t-[8px] border-t-transparent border-l-[14px] border-l-white border-b-[8px] border-b-transparent" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ) : (
-                    <img src={img.cloudinary_url} alt={img.alt_text} loading="lazy"
-                      className="w-full h-full object-cover min-h-[160px] hover:scale-105 transition-transform duration-500" />
-                  )}
-                </div>
-              </motion.div>
-            ))}
+                    ) : (
+                      <img src={img.cloudinary_url} alt={img.alt_text} loading="lazy"
+                        className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
 
-          {/* Swipe Hint for Mobile */}
-          <div className="flex md:hidden items-center justify-center gap-2 mt-4 text-muted-foreground/60 animate-pulse">
-            <span className="text-[10px] uppercase font-bold tracking-[0.2em]">Swipe to explore</span>
-            <div className="w-10 h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+          {/* Swipe hint + dots */}
+          <div className="flex flex-col items-center gap-3 mt-2">
+            {activeIdx === 0 && images.length > 1 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, x: [0, 6, 0] }}
+                transition={{ x: { repeat: Infinity, duration: 1.4, ease: "easeInOut" }, opacity: { duration: 0.4 } }}
+                className="flex items-center gap-1 text-xs text-muted-foreground"
+              >
+                Swipe to explore <ChevronRight className="w-3.5 h-3.5 text-primary" />
+              </motion.div>
+            )}
+            <div className="flex items-center gap-2 flex-wrap justify-center max-w-[240px]">
+              {images.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => scrollToIdx(i)}
+                  aria-label={`Go to image ${i + 1}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === activeIdx ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
+        </div>
+
+        {/* Desktop: grid */}
+        <div className="hidden md:grid md:grid-cols-4 gap-3 max-w-5xl mx-auto">
+          {images.map((img, i) => (
+            <motion.div
+              key={img.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className={cn(
+                "overflow-hidden rounded-2xl cursor-zoom-in",
+                img.span_type === 'large' ? 'md:col-span-2 md:row-span-2' : ''
+              )}
+              onClick={() => setSelectedIndex(i)}
+            >
+              <div className="relative w-full h-full">
+                {img.resource_type === 'video' ? (
+                  <div className="w-full h-full relative group">
+                    <video src={img.cloudinary_url} className="w-full h-full object-cover min-h-[160px] pointer-events-none" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                      <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 transform group-hover:scale-110 transition-transform duration-300">
+                        <div className="ml-1 border-t-[8px] border-t-transparent border-l-[14px] border-l-white border-b-[8px] border-b-transparent" />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <img src={img.cloudinary_url} alt={img.alt_text} loading="lazy"
+                    className="w-full h-full object-cover min-h-[160px] hover:scale-105 transition-transform duration-500" />
+                )}
+              </div>
+            </motion.div>
+          ))}
         </div>
 
         <AnimatePresence>
