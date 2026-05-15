@@ -63,19 +63,19 @@ A comprehensive, full-stack sports facility management and booking platform desi
 ## ⚙️ Installation & Setup
 
 ### 1. Clone the repository
-\`\`\`bash
+```bash
 git clone <repository-url>
 cd turfbook-pro
-\`\`\`
+```
 
 ### 2. Backend Setup
-\`\`\`bash
+```bash
 cd backend
 npm install
-\`\`\`
+```
 
-Create a \`.env\` file in the \`backend\` directory based on \`.env.example\`:
-\`\`\`env
+Create a `.env` file in the `backend` directory based on `.env.example`:
+```env
 PORT=5000
 DATABASE_URL=postgresql://user:pass@host:5432/dbname
 JWT_SECRET=your-super-secret-jwt-key
@@ -95,33 +95,33 @@ RAZORPAY_KEY_SECRET=...
 
 # Resend
 RESEND_API_KEY=your_key_here
-\`\`\`
+```
 
 Initialize the database using the provided schema:
-\`\`\`bash
+```bash
 psql -U postgres -d dbname -f database_schema.sql
-\`\`\`
+```
 
 Start the backend server:
-\`\`\`bash
+```bash
 npm run dev
-\`\`\`
+```
 
 ### 3. Frontend Setup
 Open a new terminal in the root directory:
-\`\`\`bash
+```bash
 npm install
-\`\`\`
+```
 
-Create a \`.env\` file in the root directory based on \`.env.example\`:
-\`\`\`env
+Create a `.env` file in the root directory based on `.env.example`:
+```env
 VITE_API_BASE_URL=http://localhost:5000/api
-\`\`\`
+```
 
 Start the frontend development server:
-\`\`\`bash
+```bash
 npm run dev
-\`\`\`
+```
 
 ## 📚 Documentation
 For a deep dive into the architecture, database schema, and core workflows, see [DOCUMENTATION.md](./DOCUMENTATION.md).
