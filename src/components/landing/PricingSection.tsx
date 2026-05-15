@@ -19,6 +19,23 @@ interface Plan {
 export default function PricingSection() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const cardW = el.scrollWidth / Math.max(plans.length, 1);
+    const idx = Math.round(el.scrollLeft / cardW);
+    setActiveIdx(idx);
+  };
+
+  const scrollToIdx = (i: number) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const cardW = el.scrollWidth / Math.max(plans.length, 1);
+    el.scrollTo({ left: cardW * i, behavior: "smooth" });
+  };
 
   useEffect(() => {
     api.get("/pricing")
