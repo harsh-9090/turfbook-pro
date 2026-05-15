@@ -211,8 +211,8 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Smooth transition into next section */}
-      <div className="absolute bottom-0 left-0 right-0 h-20 md:h-28 bg-gradient-to-b from-transparent to-background pointer-events-none z-[3]" />
+      {/* Smooth transition into next section - layered for both themes */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 md:h-40 bg-gradient-to-b from-transparent via-background/60 to-background pointer-events-none z-[3]" />
     </section>
   );
 }
