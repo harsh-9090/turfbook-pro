@@ -66,15 +66,15 @@ export default function PricingSection() {
         </motion.div>
 
         {/* Mobile: horizontal scroll / Desktop: grid */}
-        <div className="md:hidden flex gap-4 overflow-x-auto pt-6 pb-4 px-1 snap-x snap-mandatory" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+        <div className="md:hidden flex gap-4 overflow-x-auto pt-6 pb-8 px-1 snap-x snap-mandatory" style={{ scrollbarWidth: "none", msOverflowStyle: "none", perspective: "1200px" }}>
           {plans.map((plan, i) => (
             <motion.div
               key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className={`relative rounded-2xl p-5 border transition-all duration-300 flex-shrink-0 w-[280px] snap-center ${
+              initial={{ opacity: 0, y: 20, rotateX: 8 }}
+              whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ delay: i * 0.1, duration: 0.5, ease: "easeOut" }}
+              className={`relative rounded-2xl p-5 border transition-all duration-300 flex-shrink-0 w-[280px] snap-center origin-bottom ${
                 plan.popular
                   ? "bg-card border-primary/50 shadow-turf-lg"
                   : "bg-card border-border"
