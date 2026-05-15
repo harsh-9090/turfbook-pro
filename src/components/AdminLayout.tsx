@@ -100,6 +100,7 @@ export default function AdminLayout() {
     );
   }, [isAdmin, allowedTabs]);
 
+
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     navigate("/admin/login");
